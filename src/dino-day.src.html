@@ -1,0 +1,1835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dino Day</title>
+<meta name="theme-color" content="#FBF6EC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: Rex's illustrated world on top, a cream task sheet sliding over it; pull the world down to play */
+:root{
+  --page:#F6E4D6; --cream:#FBF1E7; --sheet:#FFF9F2; --card:#FFFFFF; --chip:#F5EEE4; --line:#EFE4D6; --ink:#24453A; --text:#3A4A42; --muted:#7D867C;
+  --sage:#8DB07A; --olive:#4F7A4F; --olive-ink:#24453A; --coral:#EE7F62; --coral-ink:#fff; --teal:#4F8C80;
+  --peach:#FBE3D4; --mint:#E3EDD3; --upnext:#DDE9CB; --sky:#E1ECF4; --lav:#ECE6F5; --rose:#FBE1E1; --butter:#FCEFCB;
+  --glass:rgba(255,250,243,.86); --toast:#24453A; --toast-ink:#fff; --shadow:rgba(90,60,30,.10);
+  --display:"Fredoka",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r-lg:30px; --r-md:20px; --r-sm:12px;
+  color-scheme:light;
+}
+/* the UI follows the sky: same soft palette, dimmed at golden hour, dusky at dusk, deep at night */
+.app[data-phase=golden]{ --cream:#FAEBDD; --sheet:#FFF4EA; --chip:#F7EBDD; --line:#F0DFCC; --upnext:#EFE0C2; --mint:#EEE5CC; }
+html[data-phase=dusk]{ --page:#E9DCE3; }
+html[data-phase=night]{ --page:#151A28; }
+.app[data-phase=dusk]{ --page:#E9DCE3; --cream:#F1E6EA; --sheet:#F8F0F1; --card:#FFFBFB; --chip:#EFE5EA; --line:#E6D8DF; --ink:#33364F; --text:#3E4258; --muted:#857F92;
+  --mint:#E4E6EE; --upnext:#E3DDEF; --peach:#F5DCD8; --sky:#DDE3F1; --lav:#E5DDF1; --rose:#F5DCE0; --butter:#F3E7CF; --olive:#5A6C8C; --olive-ink:#33364F;
+  --glass:rgba(250,243,246,.84); --toast:#33364F; }
+.app[data-phase=night]{ --page:#151A28; --cream:#1C2233; --sheet:#20273A; --card:#2A3248; --chip:#323B53; --line:#363F57; --ink:#F1EADF; --text:#E3DCD2; --muted:#9AA2B6;
+  --sage:#7FA77A; --olive:#A9C59A; --olive-ink:#E9F0DE; --coral:#F08D70; --coral-ink:#2A1A14;
+  --mint:#2E3D3D; --upnext:#2D3F3A; --peach:#43363A; --sky:#2C3A50; --lav:#363553; --rose:#46343D; --butter:#433D33;
+  --glass:rgba(32,39,58,.84); --toast:#F1EADF; --toast-ink:#20273A; --shadow:rgba(0,0,0,.35); color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outline-offset:2px}
+.app{position:fixed;inset:0;max-width:480px;height:auto;margin:0 auto;background:var(--cream);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 20px 60px rgba(60,50,30,.15)}
+@media (min-width:520px) and (min-height:600px){.app{top:16px;bottom:16px;width:min(480px,calc(100% - 32px));max-height:932px;margin:auto;border-radius:32px}}
+
+/* ---------- world ---------- */
+.world{position:absolute;inset:0 0 auto 0;height:var(--worldH,38%);transition:height .55s cubic-bezier(.2,.8,.2,1);overflow:hidden;touch-action:pan-x;user-select:none}
+.app.expanded .world{height:100%}
+.world svg.scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.layer{transition:transform .9s ease-out}
+.world .zoom{position:absolute;inset:0;transform-origin:50% 80%;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.app.expanded .world .zoom{transform:scale(1.04);bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
+.world{background:var(--groundC,#74A85B)}
+.world .zoom{transition:transform .7s cubic-bezier(.2,.8,.2,1),bottom .55s cubic-bezier(.2,.8,.2,1)}
+.rex{position:absolute;bottom:var(--ground,14%);left:0;width:var(--rexW,120px);transform-origin:50% 100%;pointer-events:auto;cursor:pointer;touch-action:none}
+.rex .body{position:relative;width:100%;transform-origin:50% 100%}
+.rex img{display:block;width:100%;height:auto;pointer-events:none;-webkit-user-drag:none;position:relative}
+.rex .tint,.rex .rim{position:absolute;inset:0;pointer-events:none;-webkit-mask:var(--rexmask) center/100% 100% no-repeat;mask:var(--rexmask) center/100% 100% no-repeat;transition:background .8s,opacity .8s}
+.rex .tint{background:var(--tint,#fff);opacity:var(--tintA,0);mix-blend-mode:multiply}
+.rex .rim{background:radial-gradient(circle at var(--rimX,50%) var(--rimY,30%),var(--rim,#fff) 0,transparent 46%);opacity:var(--rimA,0);mix-blend-mode:screen}
+.rex .shadow{position:absolute;left:10%;right:10%;bottom:-7px;height:14px;border-radius:50%;background:rgba(25,20,30,var(--shadowA,.22));filter:blur(2px)}
+.bubble{position:absolute;left:50%;bottom:50%;transform:translate(-50%,8px) scale(.7);transform-origin:50% 100%;opacity:0;background:var(--card);color:var(--ink);font:600 13.5px/1.3 var(--display);padding:8px 12px;border-radius:16px;max-width:min(270px,80vw);width:max-content;text-align:center;box-shadow:0 4px 14px rgba(40,40,20,.15);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1);pointer-events:none;z-index:6}
+.bubble.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.bubble.btns{pointer-events:auto}
+.bubble .bb{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
+.bubble .bb button{padding:6px 11px;border-radius:999px;background:var(--coral);color:#fff;font:600 12.5px var(--display)}
+.bubble .bb button.g{background:var(--chip);color:var(--olive-ink)}
+.wakechip[hidden]{display:none}
+.wakechip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;display:flex;align-items:center;gap:8px;background:var(--card);color:var(--olive-ink);font:700 15px var(--display);padding:12px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(20,30,50,.3)}
+.bubble::after{content:"";position:absolute;left:50%;top:100%;margin-left:-7px;border:7px solid transparent;border-top-color:var(--card)}
+.fx{position:absolute;pointer-events:none;z-index:4}
+.heart{width:22px;height:22px;animation:rise 1.2s ease-out forwards}
+@keyframes rise{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:1;transform:translate(0,-10px) scale(1)}100%{transform:translate(var(--dx,0),-80px) scale(.9);opacity:0}}
+.prop{position:absolute;bottom:var(--ground,14%);pointer-events:none;z-index:2}
+.fg{position:absolute;bottom:-4%;width:48%;height:40%;pointer-events:none;filter:blur(5px);opacity:0;transition:opacity .6s,filter .6s;z-index:5}
+.fg img{position:absolute;bottom:0;max-width:none}
+.chips-r{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;display:flex;gap:6px;z-index:5}
+.chips-r .timechip,.chips-r .placechip{position:static}
+.placechip{display:flex;align-items:center;gap:6px;background:var(--glass);backdrop-filter:blur(6px);padding:6px 11px;border-radius:999px;font:600 12.5px var(--display);color:var(--olive-ink)}
+.app.expanded .fg{opacity:.95}
+.timechip{display:flex;align-items:center;gap:6px;background:var(--glass);backdrop-filter:blur(6px);padding:6px 11px 6px 9px;border-radius:999px;font:600 12.5px var(--display);color:var(--olive-ink);z-index:5}
+.timechip svg{width:16px;height:16px}
+.expandbtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;display:flex;align-items:center;gap:6px;background:var(--glass);backdrop-filter:blur(6px);padding:6px 12px;border-radius:999px;font:600 12.5px var(--display);color:var(--olive-ink);z-index:5}
+.app.expanded .expandbtn .lbl-open{display:none}
+.app:not(.expanded) .expandbtn .lbl-close{display:none}
+
+/* play bar */
+.playbar{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:grid;grid-template-columns:repeat(6,1fr);gap:6px;background:var(--glass);backdrop-filter:blur(8px);border-radius:24px;padding:8px;box-shadow:0 10px 30px rgba(40,40,20,.18);transform:translateY(140%);transition:transform .5s cubic-bezier(.2,.8,.2,1);z-index:6}
+.app.expanded .playbar{transform:none}
+.playbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font:600 12px var(--display);color:var(--ink)}
+.playbar button:hover{background:var(--mint)}
+.playbar .ic{width:38px;height:38px;border-radius:13px;display:grid;place-items:center}
+.playbar .ic svg{width:22px;height:22px}
+
+/* ---------- sheet ---------- */
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(var(--worldH,38%) - 26px);background:var(--sheet);border-radius:var(--r-lg) var(--r-lg) 0 0;display:flex;flex-direction:column;transition:top .55s cubic-bezier(.2,.8,.2,1),transform .55s cubic-bezier(.2,.8,.2,1);box-shadow:0 -8px 30px rgba(60,50,20,.08);z-index:7}
+.app.expanded .sheet{transform:translateY(105%)}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:9px auto 0;flex:none}
+.scroll{flex:1;overflow-y:auto;padding:10px 18px 110px;overscroll-behavior:contain}
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 14px}
+.hello h1{font:700 24px/1.12 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.hello .date{color:var(--muted);font-size:13.5px;margin-top:3px}
+.next{display:flex;align-items:center;gap:12px;background:var(--mint);border-radius:var(--r-md);padding:12px 12px 12px 14px;margin-bottom:16px}
+.next .who{width:38px;height:38px;border-radius:12px;background:var(--card);display:grid;place-items:center;flex:none;overflow:hidden}
+.next .who img{width:34px;margin-top:6px}
+.next .txt{flex:1;min-width:0}
+.next .k{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--olive)}
+.next .t{font:600 15px/1.3 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.next .acts{display:flex;gap:6px;flex:none}
+.pill{border-radius:999px;padding:8px 13px;font:600 13px var(--display)}
+.pill.coral{background:var(--coral);color:var(--coral-ink)}
+.pill.ghost{background:var(--card);color:var(--olive-ink)}
+.next.focus{background:#F3E7D3}
+.add{display:flex;gap:8px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:6px 6px 6px 14px;margin-bottom:12px}
+.add input{flex:1;min-width:0;border:0;outline:0;background:none;font:16px var(--body);color:var(--ink);padding:7px 0}
+.add input::placeholder{color:#A9AE9F}
+.add button{width:36px;height:36px;border-radius:12px;background:var(--olive);color:#fff;display:grid;place-items:center;flex:none}
+.cats{display:flex;gap:6px;margin:-4px 0 12px;flex-wrap:wrap}
+.cats button{padding:5px 11px;border-radius:999px;font:600 12.5px var(--display);background:var(--chip);color:var(--muted)}
+.cats button[aria-pressed="true"]{background:var(--olive);color:#fff}
+.list{display:flex;flex-direction:column;gap:9px}
+.task{display:flex;align-items:center;gap:11px;background:var(--card);border-radius:var(--r-md);padding:11px 8px 11px 11px;box-shadow:0 1px 0 var(--line),0 2px 10px rgba(60,50,20,.04);transition:transform .25s,opacity .25s}
+.task .tile{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:none}
+.task .tile svg{width:24px;height:24px}
+.task .tt{flex:1;min-width:0}
+.task .title{font:600 15px/1.3 var(--body)}
+.task .meta{font-size:12.5px;color:var(--muted)}
+.task .more{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+.task .check{width:44px;height:44px;border-radius:14px;background:var(--chip);display:grid;place-items:center;flex:none;box-shadow:inset 0 -3px 0 rgba(0,0,0,.06)}
+.task .check svg{width:22px;height:22px;opacity:.35}
+.task.done .check{background:var(--sage)}
+.task.done .check svg{opacity:1;color:#fff}
+.task.done .title{text-decoration:line-through;color:var(--muted)}
+.task.leaving{transform:translateX(30px);opacity:0}
+.section{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 9px;font:700 14px var(--display);color:var(--muted)}
+.section button{font:600 13px var(--display);color:var(--olive)}
+.empty{padding:22px;text-align:center;color:var(--muted);background:var(--card);border-radius:var(--r-md);border:1.5px dashed var(--line)}
+.menu{position:absolute;right:52px;z-index:20;background:var(--card);border-radius:14px;box-shadow:0 10px 30px rgba(40,40,20,.18);padding:6px;display:flex;flex-direction:column;min-width:170px}
+.menu button{text-align:left;padding:10px 12px;border-radius:10px;font:600 14px var(--body)}
+.menu button:hover{background:var(--mint)}
+
+/* tabs */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:var(--glass);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 8px);z-index:8}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font:600 11.5px var(--display);color:#A3A897;padding:4px 10px;border-radius:12px}
+.tabs button svg{width:24px;height:24px}
+.tabs button[aria-current="page"]{color:var(--olive-ink)}
+.tabs button[aria-current="page"] .dot{opacity:1}
+.tabs .dot{width:4px;height:4px;border-radius:50%;background:var(--coral);opacity:0}
+.app.expanded .tabs{transform:translateY(110%);transition:transform .4s}
+.tabs{transition:transform .4s}
+.toast{position:absolute;left:50%;bottom:86px;transform:translate(-50%,20px);opacity:0;background:var(--toast);color:var(--toast-ink);font:600 13px var(--display);padding:9px 14px;border-radius:999px;transition:all .3s;z-index:30;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.group{background:var(--card);border-radius:var(--r-md);padding:4px 14px;box-shadow:0 1px 0 var(--line);margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .lab{font:600 15px var(--body)}
+.row .hint{font-size:12.5px;color:var(--muted)}
+.row input[type=text]{width:150px;max-width:50%;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;font:16px var(--body);color:var(--ink);background:var(--cream)}
+.seg{display:flex;background:var(--chip);border-radius:999px;padding:3px;flex:none}
+.seg button{padding:6px 11px;border-radius:999px;font:600 12.5px var(--display);color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--olive-ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rowcol{flex-direction:column;align-items:stretch}
+.glabel{font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 4px 8px}
+.danger{color:#C2553F;font:600 14px var(--display);padding:12px 0}
+
+/* ---------- ported features ---------- */
+.hello{align-items:center}
+.hello .pill{flex:none}
+.pill.mint{background:var(--mint);color:var(--olive-ink)}
+.pill.sm{padding:6px 11px;font-size:12.5px}
+.link{font:600 13.5px var(--display);color:var(--olive);padding:6px 4px}
+.hint{font-size:12.5px;color:var(--muted)}
+.hint.pad{padding:14px 0}
+.fcard{background:var(--mint);border-radius:var(--r-md);padding:13px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.fcard.insess{background:#F3E7D3}
+.fhead{display:flex;gap:12px;align-items:center}
+.fhead .who{width:42px;height:42px;border-radius:13px;background:var(--card);display:grid;place-items:center;flex:none;overflow:hidden}
+.fhead .who img{width:38px;margin-top:8px}
+.fhead .txt{flex:1;min-width:0}
+.fcard .k{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--olive)}
+.fcard .ft{font:600 17px/1.25 var(--display);text-wrap:balance}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.acts.small{gap:2px;margin-top:-4px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.step{display:flex;align-items:center;gap:9px;text-align:left;padding:6px 8px;border-radius:10px;font:600 14px var(--body);color:var(--ink)}
+.step.next{background:rgba(255,255,255,.7)}
+.step.done{color:var(--muted);text-decoration:line-through}
+.step .sb{width:20px;height:20px;border-radius:7px;background:var(--card);display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 1.5px #D8D2C4}
+.step.done .sb{background:var(--sage);box-shadow:none;color:#fff}
+.step .sb svg{width:14px;height:14px}
+.opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.olbl{width:100%;font:700 12px var(--display);color:var(--olive);margin-top:2px}
+.chip{padding:7px 12px;border-radius:999px;background:var(--card);font:600 13px var(--display);color:var(--olive-ink)}
+.chip.on{background:var(--olive);color:#fff}
+.sess{display:flex;align-items:center;gap:12px}
+.ring{width:54px;height:54px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4}
+.ring .rbg{stroke:#E6D7BD}
+.ring .rfill{stroke:var(--coral);stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.stime{font:700 24px var(--display);font-variant-numeric:tabular-nums}
+.pickc .stickies{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sticky{min-height:86px;padding:10px;border-radius:6px 6px 14px 6px;font:600 13.5px/1.25 var(--display);color:#3A3320;text-align:left;box-shadow:0 3px 8px rgba(60,50,20,.12);transition:transform .2s}
+.sticky:hover{transform:translateY(-2px) rotate(-1deg)}
+.sticky.s0{background:#FCE9A8;transform:rotate(-2deg)}.sticky.s1{background:#F9D3C4;transform:rotate(1.5deg)}.sticky.s2{background:#D8EAC8;transform:rotate(-1deg)}
+.nudge{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#FFF4E2;border-radius:var(--r-md);padding:11px 12px;margin-bottom:10px}
+.nudge .nt{flex:1 1 180px;font:600 14px/1.35 var(--body)}
+.nudge.wrap{flex-direction:column;align-items:stretch;background:#EEE9F6}
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0}
+.wrow span:first-child{font:600 14px var(--body);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tline{background:var(--card);border-radius:var(--r-md);padding:10px 14px 12px;margin-bottom:14px;box-shadow:0 1px 0 var(--line)}
+.tlhead{display:flex;justify-content:space-between;font:600 13px var(--display);color:var(--muted);margin-bottom:6px}
+.tlhead b{color:var(--ink)}
+.tltrack{position:relative;height:44px;border-radius:10px;background:linear-gradient(90deg,#FCEBC6,#E3EEDB 45%,#F7DCC6 75%,#E9E4F3)}
+.tick{position:absolute;bottom:2px;transform:translateX(-50%);font:600 10px var(--display);color:#9A9F92}
+.tlitem{position:absolute;top:4px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;max-width:70px}
+.tlitem i{width:12px;height:12px;border-radius:50%;background:var(--coral);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.tlitem.thab i{background:var(--teal)}
+.tlitem.done i{background:var(--sage)}
+.tlitem span{font:600 10px var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58px}
+.tlitem.lo{top:auto;bottom:12px;flex-direction:column-reverse}
+.tltrack{height:58px}
+.tlnow{position:absolute;top:0;bottom:0;width:2px;background:var(--olive-ink);border-radius:2px}
+.qprev{display:none;flex-wrap:wrap;gap:6px;align-items:center;margin:-6px 2px 10px}
+.qprev.on{display:flex}
+.qchip{background:var(--olive);color:#fff;font:600 12px var(--display);padding:3px 9px;border-radius:999px}
+.qtext{font-size:13px;color:var(--muted)}
+.addopts{display:none;align-items:center;flex-wrap:wrap;gap:8px;margin:-4px 0 12px}
+.addopts select{border:1.5px solid var(--line);border-radius:999px;padding:5px 10px;font:600 12.5px var(--display);background:var(--card);color:var(--olive-ink)}
+.section .link{padding:0}
+.addopts.on{display:flex}
+.addopts .cats{margin:0}
+.trow{position:relative;border-radius:var(--r-md)}
+.trow .swbg{position:absolute;inset:0;border-radius:var(--r-md);display:flex;align-items:center;padding:0 18px;font:700 14px var(--display);color:#fff;opacity:0;transition:background .15s}
+.trow.swing[data-dir=r] .swbg.r,.trow.swing[data-dir=l] .swbg.l{opacity:1}
+.swbg.l{justify-content:flex-end}
+.trow .swbg{background:#C9C2B3}
+.trow.swr[data-sw=done] .swbg.r,.trow.swl[data-sw=done] .swbg.l{background:var(--sage)}
+.trow.swr[data-sw=someday] .swbg.r,.trow.swl[data-sw=someday] .swbg.l{background:#8E86C8}
+.trow.swr[data-sw=tomorrow] .swbg.r,.trow.swl[data-sw=tomorrow] .swbg.l{background:#E2A23B}
+.trow.swr[data-sw=delete] .swbg.r,.trow.swl[data-sw=delete] .swbg.l{background:#D9604A}
+.swsel{border:1.5px solid var(--line);border-radius:999px;padding:6px 10px;font:600 13px var(--display);background:var(--card);color:var(--olive-ink)}
+.trow .del{position:absolute;right:0;top:0;bottom:0;width:96px;border-radius:var(--r-md);background:#D9604A;color:#fff;font:600 14px var(--display);opacity:0}
+.trow.open .del{opacity:1}
+.task{position:relative;touch-action:pan-y;transition:transform .22s,box-shadow .2s}
+.task.lift{transition:none;box-shadow:0 12px 30px rgba(60,50,20,.18);z-index:5}
+.trow.dropa{box-shadow:0 -3px 0 var(--coral)}
+.task.sel{box-shadow:0 0 0 2px var(--sage),0 2px 10px rgba(60,50,20,.04)}
+.task:focus-visible{outline:2.5px solid var(--coral);outline-offset:2px}
+.task .imp{display:inline-grid;place-items:center;width:18px;height:18px;margin-right:6px;border-radius:6px;background:var(--coral);color:#fff;font:700 12px var(--display);vertical-align:1px}
+.task .frog{color:var(--olive);font-weight:700}
+.bar{height:4px;border-radius:4px;background:#EFE8DA;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sage);border-radius:4px}
+.park{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted);padding:6px 8px 2px}
+.section.toggle{width:100%;text-align:left}
+.habs{display:flex;flex-direction:column;gap:8px}
+.hab{background:var(--card);border-radius:var(--r-md);padding:10px 12px;box-shadow:0 1px 0 var(--line)}
+.hn{display:flex;justify-content:space-between;align-items:center;font:600 14.5px var(--body);margin-bottom:8px}
+.x{width:28px;height:28px;border-radius:9px;color:var(--muted);font-size:20px;line-height:1}
+.hw{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.hd{height:34px;border-radius:10px;background:var(--chip);font:600 12px var(--display);color:var(--muted)}
+.hd.on{background:var(--sage);color:#fff}
+.hd.td{box-shadow:inset 0 0 0 2px var(--olive)}
+.hd:disabled{opacity:.45}
+.add.mh{margin-top:8px}
+.rowr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.rowr input[type=time]{border:1.5px solid var(--line);border-radius:10px;padding:6px 8px;font:15px var(--body);background:var(--cream);color:var(--ink)}
+.wrapb{max-width:60%}
+.menu .dz{color:#C2553F}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}
+.stat{background:var(--card);border-radius:var(--r-md);padding:14px;box-shadow:0 1px 0 var(--line);display:flex;flex-direction:column}
+.stat b{font:700 28px var(--display);font-variant-numeric:tabular-nums;color:var(--olive-ink)}
+.stat span{font-size:13px;color:var(--muted)}
+.weekbars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:130px;align-items:end;padding:12px 14px}
+.wb{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.wb i{width:70%;min-height:3px;border-radius:6px 6px 3px 3px;background:var(--sage)}
+.wb.td i{background:var(--coral)}
+.wb span{font:600 11px var(--display);color:var(--muted)}
+.wb em{position:absolute;top:0;font:600 11px var(--display);font-style:normal;color:var(--ink)}
+.keeps{display:grid;grid-template-columns:1fr;padding:6px 14px}
+.keep{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font:600 14px var(--body)}
+.keep:last-child{border-bottom:0}
+.keep span{font-size:20px}
+.keep em{margin-left:auto;font-style:normal;font-size:12px;color:var(--muted)}
+.snack{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);display:flex;align-items:center;gap:10px;background:var(--toast);color:var(--toast-ink);font:600 13.5px var(--display);padding:10px 12px 10px 16px;border-radius:14px;transform:translateY(20px);opacity:0;pointer-events:none;transition:all .25s;z-index:31}
+.snack.on{transform:none;opacity:1;pointer-events:auto}
+.app.expanded .snack,.app.expanded .toast{bottom:calc(env(safe-area-inset-bottom,0px) + 116px)}
+.playbar{scroll-snap-type:x mandatory}.playbar button{scroll-snap-align:start}
+.snack span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snack button{color:#FCE9A8;font:700 13.5px var(--display);padding:4px 6px}
+.ov{position:absolute;inset:0;background:rgba(30,35,30,.38);display:grid;place-items:center;padding:16px;z-index:40;opacity:0;transition:opacity .25s}
+.ov.on{opacity:1}
+.card{background:var(--sheet);border-radius:24px;padding:18px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(30,30,20,.25);display:flex;flex-direction:column;gap:12px;max-height:90%;overflow:auto}
+.card h2{font:700 21px/1.2 var(--display);margin:0;text-wrap:balance}
+.card p{margin:0;color:var(--muted)}
+.card textarea{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font:15px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card);color:var(--ink);resize:vertical}
+.sh{display:flex;justify-content:space-between;align-items:center}
+.row2{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.imprev{font-size:13.5px;color:var(--muted);min-height:18px}
+.ob{align-items:center;text-align:center}
+.obimg{width:120px}
+.obbody{display:flex;flex-direction:column;gap:8px}
+.ob .row2{width:100%}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:50%;background:#E3DCCD}
+.dots i.on{background:var(--coral)}.dots i.done{background:var(--sage)}
+.tribtns{display:flex;flex-direction:column;gap:8px;width:100%}
+.trieff{display:flex;flex-direction:column;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--card);box-shadow:0 1px 0 var(--line);text-align:left}
+.trieff b{font:700 15px var(--display)}
+.trieff span{font-size:13px;color:var(--muted)}
+.trieff.e{border-left:5px solid #9CC28A}.trieff.m{border-left:5px solid #F2B84B}.trieff.h{border-left:5px solid #E8775A}
+.tript{padding:11px 14px;border-radius:14px;background:var(--card);text-align:left;font:600 14px var(--body);box-shadow:0 1px 0 var(--line)}
+.trilbl{font:700 12px var(--display);color:var(--muted);letter-spacing:.04em}
+.hello.compact{margin:2px 2px 10px}
+.hello.compact h1{font-size:21px}
+.hello.compact .date{font-size:12.5px;margin-top:1px}
+.fcard.mini{flex-direction:row;align-items:center;gap:10px;padding:8px 10px 8px 8px}
+.fmini{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left}
+.fmini .who,.fhead .who{width:38px;height:38px;border-radius:12px;background:var(--card);display:grid;place-items:center;flex:none;overflow:hidden}
+.fmini .who img{width:34px;margin-top:7px}
+.fmini .txt{flex:1;min-width:0}
+.ft1{font:600 15px/1.25 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hint.one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{color:var(--olive);display:grid;place-items:center;flex:none}
+.fcard .go{flex:none}
+.x.fold{color:var(--olive);display:grid;place-items:center;flex:none;align-self:flex-start}
+.lens{display:inline-flex;background:rgba(255,255,255,.7);border-radius:999px;padding:2px}
+.lenb{min-width:30px;padding:5px 8px;border-radius:999px;font:600 12px var(--display);color:var(--muted)}
+.lenb.on{background:var(--card);color:var(--olive-ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.amb{display:flex;flex-wrap:wrap;gap:2px;background:rgba(255,255,255,.6);border-radius:999px;padding:2px;align-self:flex-start}
+.tline.mini{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px}
+.tlh{display:flex;flex-direction:column;flex:none;max-width:52%;font:600 12px var(--display);color:var(--muted)}
+.tlh b{font-size:13px;color:var(--ink)}
+.tlh span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlmini{position:relative;flex:1;height:10px;border-radius:6px;background:linear-gradient(90deg,#FCEBC6,#E3EEDB 45%,#F7DCC6 75%,#E9E4F3)}
+.tlmini i{position:absolute;top:2px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--coral)}
+.tlmini i.thab{background:var(--teal)}.tlmini i.done{background:var(--sage)}
+.tlmini .nowm{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--olive-ink);border-radius:2px}
+.tlhead{align-items:center;gap:8px}
+.tlhead span{flex:1;text-align:right}
+.tlspan{position:absolute;top:7px;height:6px;border-radius:4px;background:rgba(232,119,90,.3);pointer-events:none}
+.opts.col{flex-direction:column;align-items:stretch}
+.spv{color:var(--coral);margin-left:4px}
+#spice{width:100%;accent-color:var(--coral)}
+.spl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.playbar{grid-template-columns:repeat(9,minmax(0,1fr));overflow-x:auto}
+@media (max-width:460px){.playbar{grid-template-columns:repeat(9,62px);justify-content:start}}
+.playbar button.locked{opacity:.55}
+.playbar .ic{position:relative}
+.lk{position:absolute;right:-4px;bottom:-4px;font-size:12px;font-style:normal}
+.bubb{border-radius:50%;border:2px solid rgba(255,255,255,.85);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.7),rgba(180,220,240,.18));animation:bub 3s ease-out forwards}
+@keyframes bub{0%{transform:translate(0,0) scale(.3);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+.shoot{width:90px;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,247,221,0),#FFF7DD);transform:rotate(-20deg);animation:shoot 1.2s ease-out forwards}
+@keyframes shoot{0%{transform:translate(0,0) rotate(-20deg);opacity:0}20%{opacity:1}100%{transform:translate(180px,60px) rotate(-20deg);opacity:0}}
+.unl .row{padding:9px 0}
+.fxc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fxc.dark{mix-blend-mode:multiply;z-index:1}
+.fxc.light{mix-blend-mode:screen;z-index:1}
+.fxc.front{z-index:4}
+#props{position:relative;z-index:2}
+
+/* ================= v8 UI pass: mockup look (logo, soft palette, rounded type) ================= */
+body{color:var(--text);transition:background .8s}
+.app{background:var(--cream);transition:background .8s}
+.sheet,.tabs,.card,.group,.task,.tline,.stat,.hab,.empty,.menu{transition:background-color .8s,color .8s,border-color .8s}
+h1,h2,.hello h1,.card h2{color:var(--ink)}
+.hello h1{font:600 26px/1.1 var(--display);letter-spacing:0}
+.hello.compact h1{font-size:25px}
+.hello .date{font:600 13.5px var(--body)}
+.logo{position:relative;display:inline-flex;align-items:flex-start;font:700 24px/1 var(--display);color:var(--ink);letter-spacing:-.01em}
+.logo .spark{width:15px;height:15px;margin:-6px 0 0 1px;flex:none}
+.logo.big{font-size:40px}.logo.big .spark{width:24px;height:24px}
+.tophead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--mint);color:var(--olive-ink);display:grid;place-items:center;flex:none}
+.avatar svg{width:22px;height:22px}
+.profile{display:flex;align-items:center;gap:14px;margin:6px 2px 6px}
+.profile .pav{width:56px;height:56px;border-radius:50%;background:var(--mint);color:var(--olive);display:grid;place-items:center;flex:none}
+.profile .pav svg{width:30px;height:30px}
+.profile h1{font:600 24px/1.1 var(--display);margin:0}
+.profile .date{color:var(--muted);font-size:13.5px}
+.sheet{background:var(--sheet);box-shadow:0 -10px 30px var(--shadow)}
+.grab{background:var(--line)}
+.pill{font:600 14px var(--display);display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.pill.coral{box-shadow:0 3px 0 rgba(170,70,40,.18)}
+.pill.coral svg{flex:none}
+.pill.mint{background:var(--mint);color:var(--olive-ink)}
+.link{color:var(--olive)}
+.section{font:600 17px var(--display);color:var(--ink);margin:18px 2px 8px}
+.section button,.section .link{font:600 14px var(--display);color:var(--olive)}
+/* up next */
+.fcard{background:var(--upnext);border-radius:22px;padding:14px 16px}
+.fcard .k{font:600 11.5px var(--display);letter-spacing:.09em;color:var(--olive)}
+.fcard .ft,.ft1{font:600 18px/1.25 var(--display);color:var(--ink)}
+.fcard.mini{flex-direction:column;align-items:stretch;gap:10px;padding:13px 14px 13px 16px}
+.fmini{gap:8px;align-items:flex-start}
+.fmini .chev{margin-top:14px}
+.ft1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fmeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font:600 13px var(--body);color:var(--text)}
+.fmeta>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.fmeta>span.one{max-width:40%;overflow:hidden;text-overflow:ellipsis}
+.fmeta{flex-wrap:nowrap;gap:10px}.fmeta .go{margin-left:auto;padding:10px 14px;font-size:14px;white-space:nowrap}.fcard.mini{gap:8px}
+.fcard.insess{background:var(--peach)}
+.step.next{background:var(--card)}
+.step{color:var(--text)}
+.chip{background:var(--card)}
+.lens,.amb{background:var(--glass)}
+.lenb.on{background:var(--card)}
+/* add field */
+.add{background:var(--card);border-color:var(--line);border-radius:18px}
+.add input{color:var(--text)}
+.add button{background:var(--olive-ink);color:var(--sheet);border-radius:13px}
+.app[data-phase=night] .add button{background:var(--olive);color:#1C2233}
+/* task list: one soft card with dividers */
+.list{gap:0;background:var(--card);border-radius:22px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow);overflow:hidden}
+.list>.empty{border:0;border-radius:0}
+.trow{border-radius:0}
+.trow+.trow{border-top:1px solid var(--line)}
+.trow .swbg{border-radius:0}
+.task{border-radius:0;box-shadow:none;padding:12px 6px 12px 12px;gap:12px;background:var(--card)}
+.task.lift{border-radius:16px}
+.task.sel{box-shadow:inset 3px 0 0 var(--coral)}
+.task .title{font:600 15.5px/1.3 var(--body);color:var(--text)}
+.task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;margin-top:4px;font-size:12.5px;color:var(--muted)}
+.task .check{width:44px;height:44px;margin:-8px -6px -8px -8px;border-radius:50%;background:none;box-shadow:none}
+.task .check i{width:24px;height:24px;border-radius:50%;border:2px solid #C9C2B4;display:grid;place-items:center;transition:background .2s,border-color .2s,transform .2s}
+.app[data-phase=night] .task .check i{border-color:#5B6580}
+.task .check svg{width:15px;height:15px;opacity:0;color:#fff}
+.task .check:hover i{border-color:var(--sage)}
+.task.done .check{background:none}
+.task.done .check i{background:var(--olive);border-color:var(--olive);transform:scale(1.04)}
+.task.done .check svg{opacity:1}
+.app[data-phase=night] .task.done .check svg{color:#1C2233}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 5px;border-radius:7px;font:600 11.5px var(--display)}
+.tag svg{width:13px;height:13px}
+.tag.w{background:#FBE6D2;color:#9A5E2E}.tag.s{background:#E6EED5;color:#4F6B3A}.tag.h{background:#DFEAF5;color:#43698A}
+.app[data-phase=night] .tag.w{background:#4A3A30;color:#F2C9A4}.app[data-phase=night] .tag.s{background:#34432F;color:#C8DDB0}.app[data-phase=night] .tag.h{background:#2E3F55;color:#B8D0EA}
+.dur{display:inline-flex;align-items:center;gap:4px;font:600 12px var(--body);color:var(--muted)}
+.mt{color:var(--muted)}
+.frog{font:600 11.5px var(--display);color:#fff;background:var(--olive);padding:2px 8px;border-radius:7px}
+.task .more{color:var(--muted)}
+.bar{background:var(--chip)}
+.park{background:var(--card)}
+/* timeline */
+.tline{background:var(--card);border-radius:22px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.tlh b,.tlhead b{font:600 15px var(--display);color:var(--ink)}
+.tline.mini{padding:11px 14px;gap:14px}
+.tlmini{height:24px;background:none}
+.tlmini::before{content:"";position:absolute;left:0;right:0;top:11px;height:3px;border-radius:3px;background:var(--chip)}
+.tlmini .tlpast,.tltrack .tlpast{position:absolute;left:0;height:3px;border-radius:3px;background:var(--coral)}
+.tlmini .tlpast{top:11px}
+.tlmini i{top:9px;width:7px;height:7px;margin-left:-3.5px;background:var(--coral);box-shadow:0 0 0 2px var(--card)}
+.tlmini .tlic{position:absolute;top:2px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+.tlmini .tlic svg{width:15px;height:15px}
+.tlmini .nowm{top:5px;bottom:5px;width:9px;height:9px;margin:4px 0 0 -4.5px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px var(--card)}
+.tltrack{background:none;height:74px}
+.tltrack .tlline{position:absolute;left:0;right:0;top:27px;height:3px;border-radius:3px;background:var(--chip)}
+.tltrack .tlpast{top:27px}
+.tlitem{top:15px}
+.tlitem i{width:11px;height:11px;margin-top:7px;border-color:var(--card)}
+.tlitem .tic{width:28px;height:28px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:0 1px 4px var(--shadow)}
+.tlitem.hasic{top:14px}
+.tlitem .tic svg{width:18px;height:18px}
+.tlitem span{color:var(--text);font:600 10.5px var(--display);margin-top:3px}
+.tlitem.lo{top:auto;bottom:16px;flex-direction:column}
+.tick{bottom:0;color:var(--muted);font-size:10px}
+.tlnow{top:20px;bottom:auto;height:17px;width:3px;margin-left:-1.5px;background:var(--coral)}
+/* tabs */
+.tabs{background:var(--glass);border-top:1px solid var(--line);padding-top:6px;backdrop-filter:blur(12px)}
+.tabs button{font:500 12px var(--display);color:var(--muted);gap:3px;padding:4px 12px}
+.tabs .ti{width:30px;height:30px;display:grid;place-items:center;border-radius:12px;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.tabs button svg{width:25px;height:25px}
+.tabs button[aria-current="page"]{color:var(--olive-ink);font-weight:600}
+.tabs button[aria-current="page"] .ti{transform:translateY(-1px) scale(1.06)}
+.tabs button:not([aria-current]) svg{opacity:.7}
+/* settings */
+.group{background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 4px 14px var(--shadow)}
+.row .lab{color:var(--text)}
+.row input[type=text],.rowr input[type=time]{background:var(--cream);color:var(--text)}
+.seg{background:var(--chip)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--olive-ink)}
+.swsel,.addopts select{background:var(--card);color:var(--olive-ink)}
+.glabel{font:600 12px var(--display);color:var(--muted)}
+.stat b{color:var(--olive-ink)}
+.cats button{background:var(--chip)}
+.cats button[aria-pressed="true"]{background:var(--olive-ink);color:var(--sheet)}
+/* world chrome */
+.expandbtn{padding:8px 14px 8px 11px;font:600 13.5px var(--display);color:var(--olive-ink);background:var(--glass);box-shadow:0 3px 12px rgba(40,30,20,.12)}
+.expandbtn span{display:inline-flex;align-items:center;gap:6px}
+.app.expanded .expandbtn{width:46px;height:46px;padding:0;border-radius:50%;justify-content:center}
+.spacepill{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;display:flex;align-items:center;gap:8px;padding:10px 16px 10px 13px;border-radius:999px;background:var(--glass);backdrop-filter:blur(8px);font:600 15px var(--display);color:var(--olive-ink);box-shadow:0 3px 12px rgba(40,30,20,.12);z-index:5;opacity:0;transform:translateY(-12px);transition:opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.app.expanded .spacepill{opacity:1;transform:none}
+.placechip,.timechip{background:var(--glass);color:var(--olive-ink);font:600 12.5px var(--display)}
+.app.expanded .chips-r{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + var(--panelH) + 22px);right:12px}
+.bubble{background:var(--card);color:var(--ink);font:500 14.5px/1.3 var(--display);border-radius:18px;padding:9px 14px}
+.bubble .bb button.g{background:var(--chip);color:var(--olive-ink)}
+/* Rex's Space panel */
+.app{--panelH:196px}
+.playbar{display:block;left:10px;right:10px;padding:14px 12px 12px;border-radius:28px;background:var(--sheet);box-shadow:0 12px 34px rgba(40,30,20,.22);overflow:visible;scroll-snap-type:none}
+.mood{display:flex;align-items:center;gap:12px;padding:0 4px 12px}
+.mood .mi{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none}
+.mood .mi svg{width:24px;height:24px}
+.mood b{display:block;font:600 17px var(--display);color:var(--ink)}
+.mood span{font-size:13px;color:var(--muted)}
+.tiles{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 30px)/4);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px}
+.tiles::-webkit-scrollbar{display:none}
+.playbar .tiles button{scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:88px;border-radius:22px;background:var(--tb);font:600 14px var(--display);color:var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.playbar .tiles button:hover{background:var(--tb);transform:translateY(-2px)}
+.playbar .tiles button:active{transform:scale(.95)}
+.playbar .ic{width:auto;height:auto;background:none!important}
+.playbar .ic svg{width:32px;height:32px}
+.app.expanded .world .zoom{bottom:calc(env(safe-area-inset-bottom,0px) + var(--panelH) - 14px)}
+.app.expanded .snack,.app.expanded .toast{bottom:calc(env(safe-area-inset-bottom,0px) + var(--panelH) + 30px)}
+/* overlays + onboarding */
+.ov{background:rgba(30,30,40,.4)}
+.card{background:var(--sheet);border-radius:28px}
+.card textarea{background:var(--card);color:var(--text)}
+.card p{color:var(--muted)}
+.ov.obov{padding:0;background:var(--cream)}
+.ov.obov .card{max-width:480px;height:100%;max-height:none;border-radius:0;padding:max(env(safe-area-inset-top,0px),14px) 22px calc(env(safe-area-inset-bottom,0px) + 18px);box-shadow:none;background:linear-gradient(var(--cream),var(--sheet));gap:10px}
+.obtop{align-self:stretch;display:flex;justify-content:center;align-items:center;position:relative;min-height:32px}
+.obtop .link{position:absolute;right:0;color:var(--muted)}
+.dots i{width:22px;height:5px;border-radius:5px;background:var(--line)}
+.dots i.on{background:var(--olive)}.dots i.done{background:var(--sage)}
+.obbody{flex:1;overflow:auto;text-align:left;gap:6px}
+.obbody h2{font:600 32px/1.1 var(--display);text-align:center}
+.obbody h2.hi{display:flex;justify-content:center;align-items:flex-start}
+.obbody h2 .spark{width:22px;height:22px;margin:-8px 0 0 2px}
+.obbody>p{text-align:center;color:var(--text);font-size:15.5px}
+.obimg{display:block;width:150px;margin:4px auto 6px}
+.obimg.sm{width:130px;margin-top:20%}
+.oq{display:block;font:600 16px var(--display);color:var(--ink);margin:12px 2px 6px}
+.namein{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:0 14px;color:var(--muted)}
+.namein svg{width:20px;height:20px;flex:none}
+.namein input{flex:1;min-width:0;border:0;outline:0;background:none;font:16px var(--body);color:var(--text);padding:13px 0}
+.ochips{display:grid;gap:8px}
+.ochips.two{grid-template-columns:1fr 1fr}.ochips.three{grid-template-columns:repeat(3,1fr)}
+.ochip{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:16px;background:var(--card);font:600 13.5px/1.2 var(--display);color:var(--text);text-align:left;box-shadow:0 1px 0 var(--line)}
+.ochips.three .ochip{font-size:12.5px;padding:10px}
+.ochip .oi{width:22px;height:22px;display:grid;place-items:center;flex:none}
+.ochip .oi svg{width:20px;height:20px}
+.ochip.on{background:var(--olive);color:#fff}
+.ochip.on .oi{background:#fff;border-radius:50%;color:var(--olive)}
+.ochip.on .oi svg{width:14px;height:14px}
+.ochips.three .ochip.on{background:var(--peach);color:#B04E33;box-shadow:inset 0 0 0 1.5px var(--coral)}
+.ochips.three .ochip.on .oi{background:none}
+.ochips.three .ochip.on .oi svg{width:20px;height:20px}
+.pill.big{width:100%;padding:16px;font-size:18px;border-radius:999px}
+.pill.big svg{width:18px;height:18px}
+.ob .row2{display:none}
+.nudge{background:var(--butter)}.nudge.wrap{background:var(--lav)}.nudge.wrap{flex-wrap:nowrap}.nudge.wrap .nt{flex:none}.wrow{min-width:0;width:100%}.wrow .seg{flex:none}.wrow .seg button{padding:5px 8px;font-size:12px}.wrow span:first-child{flex:1}
+.obbody{align-self:stretch;min-width:0;width:100%}
+.ochips.two{grid-template-columns:repeat(2,minmax(0,1fr))}.ochips.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.obbody h2 .spark{margin-top:-2px}
+@media (max-height:720px){.obimg{width:100px;margin:0 auto 2px}.obbody h2{font-size:28px}.oq{margin-top:8px}}
+.app .section{margin:14px 2px 6px}.fcard{margin-bottom:12px}.fcard.mini{padding:11px 14px 11px 16px}.add{margin-bottom:10px}.tline{margin-bottom:10px}
+.app{--worldH:34%}
+.thr{display:flex;align-items:center;gap:8px}
+.tophead{margin:0 2px 2px}
+.avatar{width:36px;height:36px}
+.hello.compact{margin:0 2px 10px}
+.hello.compact .date{margin-top:2px}
+.scroll{padding-top:6px}
+.fmeta>span{flex:none}.fmeta>span.one{flex:0 1 auto;min-width:0}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <section class="world" id="world" aria-label="Rex's world">
+    <div class="zoom" id="zoom">
+      <svg class="scene" id="scene" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+      <div id="props"></div>
+      <div class="rex" id="rex" role="button" tabindex="0" aria-label="Rex. Tap to say hi, hold to pet.">
+        <div class="body" id="rexBody"><div class="shadow"></div><img id="rexImg" alt=""><div class="tint" aria-hidden="true"></div><div class="rim" aria-hidden="true"></div></div>
+      </div>
+      <div class="bubble" id="bubble" role="status"></div>
+
+    </div>
+    <button class="expandbtn" id="expandBtn" aria-label="Play with Rex"><span class="lbl-open"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6.2" cy="10" r="2"/><circle cx="17.8" cy="10" r="2"/><circle cx="9.5" cy="6.5" r="2"/><circle cx="14.5" cy="6.5" r="2"/></svg>Play with Rex</span><span class="lbl-close"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span></button>
+    <div class="spacepill" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3.2 11.2 12 4l8.8 7.2a1 1 0 0 1-.6 1.8H19v6.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5h-4V21H6.5A1.5 1.5 0 0 1 5 19.5V13h-1.2a1 1 0 0 1-.6-1.8z"/></svg>Rex's Space</div>
+    <div class="chips-r"><button class="placechip" id="placeChip" title="Change where Rex is"></button><button class="timechip" id="timeChip" title="Preview another time of day"></button></div>
+    <nav class="playbar" id="playbar" aria-label="Play with Rex"></nav>
+    <button class="wakechip" id="wakeChip" hidden>☀ Start my day</button>
+  </section>
+
+  <section class="sheet" id="sheet">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="scroll" id="scroll"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="snack" id="snack" role="status"><span></span><button>Undo</button></div>
+</div>
+
+<script>
+const REX_SRC = "__REX__";
+const $ = s => document.querySelector(s);
+const app = $('#app'), world = $('#world'), scene = $('#scene'), rexEl = $('#rex'), rexBody = $('#rexBody'), bubble = $('#bubble');
+$('#rexImg').src = REX_SRC; rexBody.style.setProperty('--rexmask', `url(${REX_SRC})`);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- event bus ---------- */
+const bus = { h:{}, on(e,f){ (this.h[e] ||= []).push(f); }, emit(e,d){ (this.h[e]||[]).forEach(f=>f(d)); } };
+
+/* ---------- storage ---------- */
+const pad = n => String(n).padStart(2, '0');
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => dayKey(new Date());
+const tomorrow = () => { const d = new Date(); d.setDate(d.getDate()+1); return dayKey(d); };
+const KEY = 'dinoDay.v3';
+function sampleTasks(){ const at = (h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); return { at:d.getTime(), label:(h%12||12)+(m?':'+pad(m):'')+(h<12?' am':' pm'), day:today(), place:null }; };
+  return [
+    { t:'Reply to the client email', cat:'work', high:true },
+    { t:'Take a stretch break', cat:'self' },
+    { t:'Outline next week\'s shoot', cat:'work', steps:['Open a blank document','Write the title','Jot 3 bullet points','Turn one bullet into a paragraph'] },
+    { t:'Plan dinner', cat:'home', startAt: at(17, 0) },
+    { t:'Read for 15 minutes', cat:'self', repeat:'daily' },
+    { t:'Call the dentist', cat:'home', when: tomorrow() },
+    { t:'Clean out the garage', cat:'home', when:'someday' },
+    { t:'Learn a new song on guitar', cat:'self', when:'someday' },
+  ].map((x, i) => ({ id:i+1, when:'today', repeat:'', high:false, done:false, carry:0, startAt:null, order:i+1, ...x, steps:(x.steps||[]).map(s => ({ t:s, done:false })) })); }
+let S = { tasks: sampleTasks(), name:'Tim', lockDay:false, place:'meadow', chat:'sometimes', suggest:true, sound:true, timeline:true, habitsOn:false,
+  habits:{ water:true, lunch:true, lunchAt:'12:30', stretch:true, plants:false, walk:false, winddown:false }, myHabits:[], log:{}, days:[], keeps:[], sessions:0, asleep:false, lamp:true, swipeR:'someday', swipeL:'delete', sessionMin:5, ambient:'rain', aiSteps:true, spice:3, plays:0, tlOpen:false };
+try { const saved = JSON.parse(localStorage.getItem(KEY)||'null');
+  if (saved && saved.tasks) S = { ...S, ...saved, habits:{ ...S.habits, ...(saved.habits||{}) } };
+  else { const old = JSON.parse(localStorage.getItem('dinoDayProto.v2')||'null'); if (old){ ['name','lockDay','place','chat','suggest'].forEach(k => { if (k in old) S[k] = old[k]; }); } }
+} catch(e){}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+/* ---------- icons ---------- */
+const IC = {
+  house:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.2 11.2 12 4l8.8 7.2a1 1 0 0 1-.6 1.8H19v6.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5h-4V21H6.5A1.5 1.5 0 0 1 5 19.5V13h-1.2a1 1 0 0 1-.6-1.8z"/></svg>',
+  starO:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+  person:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.2c0-4 3.6-6.7 8-6.7s8 2.7 8 6.7c0 .5-.4.8-.8.8H4.8c-.4 0-.8-.3-.8-.8z"/></svg>',
+  personO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.8 20c.6-3.6 3.6-5.8 7.2-5.8s6.6 2.2 7.2 5.8" stroke-linecap="round"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  folder:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>',
+  play:'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2a1 1 0 0 0 0-1.6l-11-7.2C7.9 3.5 7 4 7 4.8z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  sun:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="#F4B84A"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3,7 7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" stroke="#F4B84A" stroke-width="2" stroke-linecap="round"/></svg>',
+  fork:'<svg viewBox="0 0 24 24" fill="none" stroke="#8A7D6B" stroke-width="2" stroke-linecap="round"><path d="M7 3v6a2 2 0 0 0 4 0V3M9 3v18M16.5 21V3c-2 1.5-3 4-3 7 0 1.5 1 2.5 3 2.5"/></svg>',
+  drop:'<svg viewBox="0 0 24 24"><path d="M12 3.2s6 6.6 6 10.8a6 6 0 0 1-12 0C6 9.8 12 3.2 12 3.2z" fill="#7FB2D9"/></svg>',
+  moonB:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.2A7 7 0 0 1 15.5 3.5z" fill="#8E86C8"/></svg>',
+  spark:'<svg class="spark" viewBox="0 0 30 30" aria-hidden="true"><path d="M8 13 4 4M15 11l1-9M20 16l8-5" stroke="#EE7F62" stroke-width="3.4" stroke-linecap="round"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  more:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  work:'<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="3" fill="#C98E5A"/><rect x="8" y="5" width="8" height="5" rx="2" fill="none" stroke="#8C5B33" stroke-width="2"/><rect x="3" y="12" width="18" height="2.5" fill="#A8703F"/></svg>',
+  self:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#F4B860"/><circle cx="9.3" cy="11" r="1.2" fill="#6B4A2B"/><circle cx="14.7" cy="11" r="1.2" fill="#6B4A2B"/><path d="M9 14.5c1.6 1.6 4.4 1.6 6 0" stroke="#6B4A2B" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5v8.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" fill="#7FA6C9"/><path d="M2.5 12L12 4l9.5 8" stroke="#4F7396" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="10" y="14" width="4" height="6.5" rx="1" fill="#F6E7C8"/></svg>',
+  today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke-linecap="round"/></svg>',
+  someday:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h16v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"/><path d="M3 4.5h18V8H3z"/><path d="M10 12h4" stroke-linecap="round"/></svg>',
+  paw:'<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6.2" cy="10" r="2"/><circle cx="17.8" cy="10" r="2"/><circle cx="9.5" cy="6.5" r="2"/><circle cx="14.5" cy="6.5" r="2"/></svg>',
+  heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.4 3.6 5 7 5c2 0 3.6 1.2 5 3 1.4-1.8 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 16.4 12 21 12 21z" fill="#EE6F68"/></svg>',
+  apple:'<svg viewBox="0 0 24 24"><path d="M12 7c-2-1.6-6-1.4-7 2.4-.9 3.4.8 8.2 3.4 10 1.2.8 2.3.6 3.6-.1 1.3.7 2.4.9 3.6.1 2.6-1.8 4.3-6.6 3.4-10C18 5.6 14 5.4 12 7z" fill="#E2614F"/><path d="M12 7c.2-2 1.2-3.4 3-4" stroke="#6B4A2B" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M13 5.2c1.6-.9 3.4-.6 4 .4-1.3.9-3 .9-4-.4z" fill="#7FAF5A"/></svg>',
+  ball:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#F2B84B"/><path d="M3.5 10.5c5 1.5 12 1.5 17 0M12 3c-2.5 5-2.5 13 0 18" stroke="#E2614F" stroke-width="2" fill="none"/></svg>',
+  roar:'<svg viewBox="0 0 24 24" fill="none" stroke="#5E7A45" stroke-width="2.2" stroke-linecap="round"><path d="M4 9.5c2 1 2 4 0 5M8 7c3.5 2 3.5 8 0 10"/><path d="M13 8l7-3v14l-7-3z" fill="#8DB07A" stroke="#5E7A45"/></svg>',
+  book:'<svg viewBox="0 0 24 24"><path d="M3 6c3-1.5 6-1.5 9 .5v13c-3-2-6-2-9-.5z" fill="#7FA6C9"/><path d="M21 6c-3-1.5-6-1.5-9 .5v13c3-2 6-2 9-.5z" fill="#5E86AB"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  chevup:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+  kite:'<svg viewBox="0 0 24 24"><path d="M12 2l7 8-7 8-7-8z" fill="#E8775A"/><path d="M12 2v16M5 10h14" stroke="#fff" stroke-width="1.5"/><path d="M12 18q-3 2 0 4" fill="none" stroke="#5E7A45" stroke-width="1.6"/></svg>',
+  bub:'<svg viewBox="0 0 24 24" fill="none" stroke="#5E86AB" stroke-width="1.8"><circle cx="9" cy="14" r="6"/><circle cx="17" cy="7" r="3.5"/><circle cx="18" cy="17" r="2"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="#F2B84B"/></svg>',
+  moon:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 13.2A7 7 0 0 1 15.5 3.5z" fill="#8E86C8"/></svg>',
+};
+const CAT = { work:{label:'Work', bg:'#F7E3CC', icon:IC.work, k:'w'}, self:{label:'For me', bg:'#FCEBC6', icon:IC.self, k:'s'}, home:{label:'Home', bg:'#DDE9F3', icon:IC.home, k:'h'} };
+const logoHTML = (sz='') => `<span class="logo ${sz}" aria-label="Dino Day">Dino Day${IC.spark}</span>`;
+
+/* ---------- scene drawing ---------- */
+const ENV = __ENV__;
+const PLACES = {
+  meadow: { label:'Meadow', feetY:812, art:{ morning:'meadow_day', day:'meadow_day', golden:'meadow_sunset', dusk:'meadow_dusk', night:'meadow_night' }, bed:.12, ground:{ day:'#8E9A4A', golden:'#6A5420', dusk:'#48462D', night:'#1F404A' } },
+  bedroom:{ label:'Bedroom', feetY:700, art:{ morning:'bedroom_day', day:'bedroom_day', golden:'bedroom_sunset', dusk:'bedroom_sunset', night:'bedroom_night' }, bed:.16, ground:{ day:'#E89A5E', golden:'#974831', dusk:'#7A3E30', night:'#463655' } },
+};
+const GRADE = { morning:['#FFE6C2',.12], day:[null,0], golden:[null,0], dusk:['#5C4A86',.22], night:[null,0] };
+// how Rex is lit: [multiply color, strength, rim color, rim strength, key side (-1 left, 1 right), shadow alpha]
+const REXLIGHT = {
+  meadow: { morning:['#FFE2BC',.35,'#FFF1C9',.18,1,.22], day:['#FFF1DA',.2,'#FFF6D8',.16,1,.22], golden:['#EE8F52',.85,'#FFB24E',.32,0,.32], dusk:['#86699C',.85,'#F7A06E',.26,0,.34], night:['#3B5287',.92,'#B9CCF2',.18,1,.4] },
+  bedroom:{ morning:['#FFC48A',.55,'#FFD08A',.24,0,.26], day:['#FFC48A',.55,'#FFD08A',.24,0,.26], golden:['#E07445',.85,'#FFA45A',.34,-1,.34], dusk:['#B86A5C',.85,'#FFA45A',.32,-1,.36], night:['#5E4A7C',.9,'#FFB86A',.4,-1,.42] },
+};
+const PHASE_LABEL = { morning:'Morning', day:'Afternoon', golden:'Golden hour', dusk:'Dusk', night:'Night' };
+const PAL = Object.fromEntries(ORDER_INIT().map(k => [k, { label: PHASE_LABEL[k] }]));
+function ORDER_INIT(){ return ['morning','day','golden','dusk','night']; }
+const ORDER = ORDER_INIT();
+function phaseNow(){ const h = new Date().getHours() + new Date().getMinutes()/60;
+  return h>=5&&h<10?'morning': h<16?'day': h<18.5?'golden': h<20.5?'dusk':'night'; }
+let preview = null;
+function phase(){ return S.lockDay ? 'day' : (preview || phaseNow()); }
+function place(){ return PLACES[S.place] ? S.place : 'meadow'; }
+function drawScene(){
+  const ph = phase(), L = PLACES[place()], [gc, ga] = GRADE[ph], night = ph==='night', dusk = ph==='dusk';
+  scene.innerHTML = `
+  <g class="layer" data-depth="1"><image href="${ENV[L.art[ph]]}" x="-40" y="0" width="1752" height="941" preserveAspectRatio="none"/></g>
+  ${gc ? `<rect x="-60" y="0" width="1800" height="941" fill="${gc}" opacity="${ga}" style="mix-blend-mode:${ph==='dusk'?'multiply':'soft-light'}"/>` : ''}
+`;
+  const [tc, ts, rc, rs, side, sh] = REXLIGHT[place()][ph];
+  rexEl.style.setProperty('--tint', tc); rexEl.style.setProperty('--tintA', ts); rexEl.style.setProperty('--rim', rc); rexEl.style.setProperty('--rimA', rs);
+  rexEl.style.setProperty('--rimX', side === -1 ? '-8%' : side === 1 ? '108%' : '50%'); rexEl.style.setProperty('--rimY', side === 0 ? '-12%' : '32%'); rexEl.style.setProperty('--shadowA', sh); rexEl.style.setProperty('--rimBase', rs); if (typeof FX !== 'undefined') FX.seed();
+  $('#timeChip').innerHTML = (night||dusk ? IC.moon : IC.today.replace('stroke="currentColor"','stroke="#E2A23B"')) + `<span>${S.lockDay ? 'Daytime' : PHASE_LABEL[ph]}</span>`;
+  $('#placeChip').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>${L.label}</span>`;
+  world.style.setProperty('--groundC', L.ground[ph] || L.ground.day);
+  if (app.dataset.phase !== ph){ app.dataset.phase = ph; document.documentElement.dataset.phase = ph; const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(app).getPropertyValue('--sheet').trim(); }
+}
+$('#placeChip') && ($('#placeChip').onclick = () => {
+  S.place = place()==='meadow' ? 'bedroom' : 'meadow'; save(); clearAllProps(); drawScene();
+  rex.x = .5; rex.tx = .5; rex.state = 'idle';
+  rex.say(S.place==='bedroom' ? pick(['Home sweet home.','My room!']) : pick(['Fresh air!','Let\'s go outside!']), 1500);
+});
+$('#timeChip').onclick = () => {
+  const cur = phase(); const i = ORDER.indexOf(cur);
+  if (S.lockDay){ S.lockDay = false; preview = null; toast('Following the real time of day'); }
+  else if (preview === 'night'){ preview = null; S.lockDay = true; toast('Locked to daytime'); }
+  else { preview = ORDER[(i+1)%ORDER.length]; toast('Previewing ' + PHASE_LABEL[preview].toLowerCase()); }
+  save(); drawScene(); rex.say(phase()==='night' ? 'It\'s getting late…' : phase()==='dusk' ? 'Ooh, pretty sky.' : 'What a nice day.', 1600);
+};
+
+/* ---------- Rex ---------- */
+const W = () => world.clientWidth, Hh = () => world.clientHeight;
+const rex = {
+  x: 0.5, tx: 0.5, face: 1, state:'idle', until:0, sq:0, sqv:0, hop:0, shake:0, busy:0, sitting:0, sleeping:false, reading:false,
+  say(t, ms=1800, buttons){ bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
+    bubble.classList.toggle('btns', !!(buttons && buttons.length));
+    if (buttons && buttons.length){ const row = document.createElement('div'); row.className = 'bb';
+      buttons.forEach(([label, fn, ghost]) => { const b = document.createElement('button'); b.textContent = label; if (ghost) b.className = 'g'; b.onclick = e => { e.stopPropagation(); bubble.classList.remove('on','btns'); fn && fn(); }; row.appendChild(b); });
+      bubble.appendChild(row); ms = Math.max(ms, 6000); }
+    bubble.classList.add('on'); clearTimeout(this._b); this._b = setTimeout(()=>bubble.classList.remove('on','btns'), ms); },
+  poke(k=1){ if (!RM) this.sqv -= 6*k; },
+  goTo(x, then){ this.tx = Math.max(.08, Math.min(.92, x)); this.state = 'walk'; this.after = then; this.sitting = 0; },
+};
+function rexSize(){ const h = $('#zoom').clientHeight; const w = Math.min(app.classList.contains('expanded') ? 190 : 128, Math.max(84, h*0.40)); return w; }
+function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); $('#zoom').appendChild(e); setTimeout(()=>e.remove(), 1300); }
+function rexBox(){ const r = rexEl.getBoundingClientRect(), z = $('#zoom').getBoundingClientRect(); return { x: r.left - z.left + r.width/2, y: r.top - z.top, w: r.width, h: r.height }; }
+
+/* interactions on Rex */
+let pressT = 0, petting = false, petTimer = null, lastPet = 0;
+rexEl.addEventListener('pointerdown', e => { e.preventDefault(); pressT = performance.now(); petting = false; rexEl.setPointerCapture(e.pointerId);
+  petTimer = setTimeout(()=>{ petting = true; rex.state='idle'; rex.say('Mmm…', 1400); }, 380); });
+rexEl.addEventListener('pointermove', e => { if (!petting) return; const now = performance.now(); if (now - lastPet > 160){ lastPet = now; const b = rexBox(); heart(b.x - 10 + Math.random()*20, b.y + 10); rex.sq = -0.05; } });
+rexEl.addEventListener('pointerup', e => { clearTimeout(petTimer); if (petting){ petting = false; rex.say(pick(['That was nice.','Hehe, again!','♥']), 1400); bus.emit('rex_petted'); played(); return; } tapRex(); });
+rexEl.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); tapRex(); } });
+function tapRex(){ if (S.asleep){ rex.poke(.4); rex.say('Zzz… (wake me with Start my day)', 1800); return; } rex.sleeping = false; rex.reading = false; rex.poke(1); rex.hop = 1; const b = rexBox(); heart(b.x, b.y+10);
+  rex.say(pick(phase()==='night' ? ['*yawn* Hi.','Still up?','Sleepy…'] : ['Hi!','Hehe!','Boop!','What are we doing next?','I like you.','Rawr! (a small one)']), 1600); }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const CHAT = { often:1.5, sometimes:1, quiet:.25 };
+const talk = p => Math.random() < p*(CHAT[S.chat]||1);
+
+/* play actions */
+const ACTIONS = [
+  { id:'pet', label:'Pet', bg:'var(--rose)', icon:IC.heart, run(){ rex.state='idle'; rex.sq=-.06; const b=rexBox(); for(let i=0;i<5;i++) setTimeout(()=>heart(b.x-20+Math.random()*40, b.y+8), i*140); rex.say('Aww, thank you.', 1600); } },
+  { id:'feed', label:'Feed', bg:'var(--mint)', icon:IC.apple, run(){ feed(); } },
+  { id:'play', label:'Play', bg:'var(--butter)', icon:IC.ball, run(){ ballDrop(); } },
+  { id:'roar', label:'Roar', bg:'var(--peach)', icon:IC.roar, run(){ roar(); } },
+  { id:'read', label:'Read', bg:'var(--sky)', icon:IC.book, run(){ read(); } },
+  { id:'rest', label:'Rest', bg:'var(--lav)', icon:IC.moon, run(){ rest(); } },
+  { id:'kite', label:'Kite', bg:'var(--peach)', icon:IC.kite, lock:'kite', run(){ kite(); } },
+  { id:'bubbles', label:'Bubbles', bg:'var(--sky)', icon:IC.bub, lock:'bubbles', run(){ bubbles(); } },
+  { id:'stars', label:'Stars', bg:'var(--lav)', icon:IC.star, lock:'stars', run(){ stargaze(); } },
+];
+let lastPetAt = 0; bus.on('rex_petted', () => { lastPetAt = Date.now(); });
+function mood(){ const ph = phase();
+  if (S.asleep) return ['Rex is asleep', 'Shh. He\'ll be up when you start your day.', IC.moonB, 'var(--lav)'];
+  if (rex.reading) return ['Rex is reading', 'Something about volcanoes, probably.', IC.book, 'var(--sky)'];
+  if (Date.now() - lastPetAt < 90000) return ['Rex is happy!', 'A little play goes a long way.', IC.heart, 'var(--rose)'];
+  if (ph === 'night') return ['Rex is sleepy', 'Maybe one story, then bed.', IC.moonB, 'var(--lav)'];
+  if (ph === 'golden' || ph === 'dusk') return ['Rex is cozy', 'Golden light is his favorite.', IC.sun, 'var(--butter)'];
+  return ['Rex is curious', 'He wants to know what you\'re up to.', IC.star, 'var(--butter)']; }
+function paintPlaybar(){ const [mt, ms, mi, mb] = mood();
+  $('#playbar').innerHTML = `<div class="mood"><span class="mi" style="background:${mb}">${mi}</span><div><b>${mt}</b><span>${ms}</span></div></div><div class="tiles">` + ACTIONS.map(a => { const lk = a.lock && !unlocked(a.lock); const u = lk && UNLOCKS.find(x => x.id === a.lock);
+  return `<button data-a="${a.id}" style="--tb:${a.bg}" ${lk ? `data-locked="${esc(NEED_TXT(u.need))}… then we can play ${esc(a.label.toLowerCase())}." class="locked" aria-label="${a.label}, locked. ${esc(NEED_TXT(u.need))}"` : ''}><span class="ic">${a.icon}${lk ? '<em class="lk">🔒</em>' : ''}</span>${a.label}</button>`; }).join('') + '</div>'; }
+$('#playbar').onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (S.asleep){ rex.say('Zzz… (wake me first)', 1500); return; } if (b.dataset.locked){ rex.say(b.dataset.locked, 2200); return; } played(); rex.sleeping=false; rex.reading=false; clearProp('book'); ACTIONS.find(a=>a.id===b.dataset.a).run(); };
+
+const props = {};
+function makeProp(id, svg, x, size){ clearProp(id); const e = document.createElement('div'); e.className='prop'; e.innerHTML=svg; e.style.width=size+'px'; e.style.left=(x*W()-size/2)+'px'; $('#props').appendChild(e); props[id] = { el:e, x, y:0, vx:0, vy:0, size }; return props[id]; }
+function clearAllProps(){ Object.keys(props).forEach(clearProp); rex.chase = false; }
+function clearProp(id){ if (props[id]){ props[id].el.remove(); delete props[id]; } }
+function kite(){ clearProp('kite'); const p = makeProp('kite', `<svg viewBox="0 0 60 120"><path d="M30 2 L52 34 L30 66 L8 34 Z" fill="#E8775A"/><path d="M30 2 L30 66 M8 34 L52 34" stroke="#FBF6EC" stroke-width="3"/><path d="M30 66 q-8 12 0 22 q8 10 0 22" fill="none" stroke="#5E7A45" stroke-width="2.5"/></svg>`, rex.x, 44); p.fixed = false; p.kite = true; p.y = 0; p.t = 0;
+  rex.say('Wheee!', 1400); rex.goTo(rex.x < .5 ? .8 : .2, () => { rex.say('Higher!', 1400); setTimeout(() => { clearProp('kite'); rex.say('That was fun.', 1500); }, 6000); }); }
+function bubbles(){ rex.say('Bubbles!', 1300); const b = rexBox(); for (let i = 0; i < 14; i++) setTimeout(() => { const e = document.createElement('div'); e.className = 'fx bubb'; const sz = 10 + Math.random()*22; e.style.cssText = `left:${b.x + rex.face*20 + (Math.random()*40-20)}px;top:${b.y + b.h*.3}px;width:${sz}px;height:${sz}px;--dx:${(Math.random()*120-60)}px;--dy:${-(120 + Math.random()*160)}px`; $('#zoom').appendChild(e); setTimeout(() => e.remove(), 3200); }, i*140); setTimeout(() => rex.hop = 1, 900); }
+function stargaze(){ if (!['dusk','night'].includes(phase())){ rex.say('We need it to be dark for stars. Come back tonight!', 2600); return; }
+  rex.sitting = 1; rex.say('Look up…', 1600); for (let i = 0; i < 3; i++) setTimeout(() => { const e = document.createElement('div'); e.className = 'fx shoot'; e.style.cssText = `left:${10 + Math.random()*60}%;top:${6 + Math.random()*18}%`; $('#zoom').appendChild(e); setTimeout(() => e.remove(), 1400); if (i === 2) rex.say(pick(['Did you make a wish?','Whoa. Three!','That one was for you.']), 2400); }, 1200 + i*1500); }
+function feed(){ const x = Math.random()<.5 ? .25 : .75; const p = makeProp('apple', IC.apple, x, 34); p.y = Hh()*0.5; p.vy = 0; p.drop = true;
+  rex.say('Ooh, a snack!', 1200); setTimeout(()=> rex.goTo(x + (rex.x < x ? -.08 : .08), ()=>{ rex.face = x > rex.x ? 1 : -1; munch(p); }), 500); }
+function munch(p){ let bites = 0; const iv = setInterval(()=>{ bites++; rex.poke(.5); p.el.style.transform = `scale(${1 - bites*.28})`; if (bites>=3){ clearInterval(iv); clearProp('apple'); rex.say(pick(['Yum!','So crunchy.','Thank you!']), 1500); rex.hop = 1; } }, 520); }
+function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), 30); p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
+function roar(){ rex.state='idle'; rex.shake = 1; rex.sq = .12; rex.say('RAAAWR!', 1600); if (!RM){ world.animate([{transform:'translate(0,0)'},{transform:'translate(-3px,1px)'},{transform:'translate(3px,-1px)'},{transform:'translate(0,0)'}], {duration:220, iterations:3}); } setTimeout(()=>rex.say('…was that scary?', 1500), 1700); }
+function read(){ rex.state='idle'; rex.reading = true; rex.sitting = 1; const p = makeProp('book', IC.book, rex.x + rex.face*.06, 30); p.y = 26; p.fixed = true; rex.say('Story time.', 1400); }
+function rest(){ const go = () => { rex.state='idle'; rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2200); }; if (place()==='bedroom'){ rex.say('Nap time…', 1200); rex.goTo(PLACES.bedroom.bed, go); } else go(); }
+
+/* autonomy */
+function autonomous(){
+  if (bubble.classList.contains('btns')) return;
+  if (S.asleep){ rex.sleeping = true; rex.sitting = 1; return; }
+  if (petting || rex.state==='walk' || rex.chase || rex.reading || props.apple) return;
+  const night = phase()==='night';
+  if (night && Math.random()<.5){ if (!rex.sleeping){ rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2000); } return; }
+  if (rex.sleeping){ if (Math.random()<.3){ rex.sleeping=false; rex.sitting=0; rex.say('*yawn*', 1200); } return; }
+  const r = Math.random();
+  if (r < .45) rex.goTo(.12 + Math.random()*.76);
+  else if (r < .6){ rex.sitting = 1; }
+  else if (r < .72){ rex.face *= -1; }
+  else if (r < .8){ rex.hop = 1; }
+  else if (r < .86 && !night && phase()!=='dusk'){ rex.goTo(bfly.x/1672, ()=> rex.say(pick(['Come back, butterfly!','So fast…']), 1500)); }
+  else if (r < .9 && talk(.8)) rex.say(pick(['Hmm hmm hm…','*sniff sniff*','I like it here.','What\'s that?']), 1500);
+}
+setInterval(autonomous, 4200);
+
+/* ---------- animation loop ---------- */
+let last = performance.now(), t = 0; const bfly = { x:836, y:690 };
+function frame(now){
+  const dt = Math.min(.05, (now-last)/1000); last = now; t += dt;
+  const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
+  const tall = app.classList.contains('expanded') && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
+  const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
+  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc); z.style.setProperty('--ground', groundPx+'px');
+  const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
+  // walking
+  if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
+    if (Math.abs(d) < .006){ rex.state = 'idle'; const f = rex.after; rex.after = null; f && f(); }
+    else { rex.x += Math.sign(d)*Math.min(Math.abs(d), sp); rex.face = Math.sign(d); } }
+  // ball chase + physics
+  for (const id in props){ const p = props[id]; if (p.kite){ p.t += dt; p.x += ((rex.x - rex.face*.12) - p.x)*Math.min(1, dt*2.2); p.y = size*1.9 + Math.sin(p.t*2.2)*14; p.el.style.left = (p.x*w - p.size/2)+'px'; p.el.style.bottom = `calc(var(--ground,14%) + ${p.y}px)`; p.el.style.transform = `rotate(${Math.sin(p.t*1.7)*14}deg)`; continue; }
+    if (p.fixed){ p.el.style.left = ((rex.x + rex.face*.07)*w - p.size/2)+'px'; p.el.style.bottom = `calc(var(--ground,14%) + ${size*0.18}px)`; continue; }
+    if (p.drop || p.ball){ p.vy -= 900*dt; p.y += p.vy*dt; if (p.y < 0){ p.y = 0; p.vy = Math.abs(p.vy) > 60 ? -p.vy*.45 : 0; } }
+    if (p.ball){ p.x += p.vx*dt; p.vx *= (1 - 1.2*dt); if (p.x < .06 || p.x > .94){ p.vx *= -1; p.x = Math.max(.06, Math.min(.94, p.x)); }
+      p.el.style.transform = `rotate(${p.x*1400}deg)`;
+      if (rex.chase){ const d = p.x - rex.x; if (Math.abs(d) > .07){ rex.tx = p.x - Math.sign(d)*.06; if (rex.state!=='walk') rex.state='walk'; }
+        else if (p.y < 4 && Math.abs(p.vx) < .5){ p.vx = Math.sign(d||1)*(.35+Math.random()*.4); p.vy = 260; rex.hop = 1; rex.kicks = (rex.kicks||0)+1; if (rex.kicks > 4){ rex.chase = false; rex.kicks = 0; rex.say('Phew! Good game.', 1600); setTimeout(()=>clearProp('ball'), 2500); } } } }
+    p.el.style.left = (p.x*w - p.size/2)+'px'; p.el.style.bottom = `calc(var(--ground,14%) + ${p.y}px)`; }
+  // springs
+  rex.sqv += (-140*rex.sq - 10*rex.sqv)*dt; rex.sq += rex.sqv*dt;
+  if (rex.hop > 0) rex.hop = Math.max(0, rex.hop - dt*2.4);
+  if (rex.shake > 0) rex.shake = Math.max(0, rex.shake - dt*1.2);
+  const walking = rex.state==='walk';
+  const bob = walking ? Math.abs(Math.sin(t*9))*6 : 0, hopY = rex.hop>0 ? Math.sin((1-rex.hop)*Math.PI)*22 : 0;
+  const breathe = RM ? 0 : Math.sin(t*(rex.sleeping?1.4:2.2))*(rex.sleeping?.025:.012);
+  const sit = rex.sitting ? .9 : 1;
+  const sy = (1 + rex.sq + breathe)*sit, sx = 1 - rex.sq*.6 - breathe*.5 + (rex.sitting?.05:0);
+  const tilt = walking ? Math.sin(t*9)*3 : rex.sleeping ? -6*rex.face : rex.shake ? Math.sin(t*60)*4*rex.shake : 0;
+  rexEl.style.left = (rex.x*w - size/2)+'px';
+  rexBody.style.transform = `translateY(${-bob - hopY}px) rotate(${tilt}deg) scale(${sx*rex.face},${sy})`;
+  rexEl.style.zIndex = 3;
+  { const still = bubble.classList.contains('btns'), bw = bubble.offsetWidth || 120, rh = size*1.286; let bx = rex.x*w; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, bx)));
+    const by = Math.round(groundPx + rh + 10 + (still ? 0 : bob + hopY));
+    if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
+  // parallax follows Rex
+  const off = (rex.x - .5);
+  scene.querySelectorAll('.layer').forEach(l => l.setAttribute('transform', `translate(${-off*70} 0)`));
+  // clouds drift
+  scene.querySelectorAll('.cloud').forEach((c,i) => { let x = (+c.dataset.x + t*(6+i*3)) % 960 - 80; const tr = c.getAttribute('transform').replace(/translate\([^)]*\)/, `translate(${x} ${[140,90,190][i]})`); c.setAttribute('transform', tr); });
+  // butterfly + fireflies
+  const bf = scene.querySelector('#bfly'); if (bf){ bfly.x = 836 + Math.sin(t*.4)*560; bfly.y = 690 + Math.sin(t*1.3)*60; bf.setAttribute('transform', `translate(${bfly.x} ${bfly.y}) scale(${1 + Math.sin(t*14)*.3} 1)`); }
+  scene.querySelectorAll('.fly').forEach(f => { const i = +f.dataset.i; f.setAttribute('cx', 120+i*150 + Math.sin(t*.7+i)*45); f.setAttribute('cy', 640+(i%3)*60 + Math.cos(t*.9+i*2)*30); f.setAttribute('opacity', .4 + .6*Math.abs(Math.sin(t*1.5+i))); });
+  // zzz
+  if (rex.sleeping && Math.random() < dt*0.7){ const b = rexBox(); const z = document.createElement('div'); z.className='fx heart'; z.style.cssText += `left:${b.x+b.w*.25}px;top:${b.y}px;font:700 18px var(--display);color:#fff;width:auto;height:auto`; z.textContent='z'; $('#zoom').appendChild(z); setTimeout(()=>z.remove(), 1300); }
+  if (typeof FX !== 'undefined') FX.step(dt, t);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- expand / collapse ---------- */
+function setExpanded(on){ app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
+  if (on){ rex.say(pick(['Yay, playtime!','Hi! Wanna play?','You came to visit!']), 1600); } }
+$('#expandBtn').onclick = () => setExpanded(!app.classList.contains('expanded'));
+let dragY = null; world.addEventListener('pointerdown', e => { if (e.target.closest('.rex,.playbar,button')) return; dragY = e.clientY; });
+addEventListener('pointerup', e => { if (dragY===null) return; const d = e.clientY - dragY; dragY = null;
+  if (d > 50 && !app.classList.contains('expanded')) setExpanded(true); else if (d < -50 && app.classList.contains('expanded')) setExpanded(false); });
+
+/* ================= the day: tasks, focus, habits ================= */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const REPEAT_LABEL = { daily:'Every day', weekdays:'Weekdays', weekly:'Every week' };
+const EFF = { e:'Easy', m:'Medium', h:'Hard' };
+const KEEP_NAMES = ['an acorn','a jar of jam','a paper star','a little carved bird','a pinecone','a tiny sprout pot','a painted stone','a pressed leaf','a drawing','a little scarf','a paper boat','a candle','a seashell','a birdhouse','a sprout mug','some dried flowers'];
+let addWhen = 'today', addRepeat = '', addOpen = false, fcOpen = false;
+let tab = 'today', cat = 'work', focusId = null, focusWhy = '', panel = null, session = null, picking = false, nudges = [], kbIndex = -1;
+let lastTaskAct = Date.now(), lastStall = 0, snow = 0;
+const touch = () => { lastTaskAct = Date.now(); };
+const tasks = () => S.tasks;
+const todays = () => S.tasks.filter(t => t.when === 'today');
+function ensureOrder(){ let m = Math.max(0, ...S.tasks.map(t => t.order || 0)); S.tasks.forEach(t => { if (!t.order) t.order = ++m; }); }
+const openToday = () => { ensureOrder(); return todays().filter(t => !t.done).sort((a, b) => a.order - b.order); };
+const byId = id => S.tasks.find(t => t.id === id);
+const newId = () => Math.max(0, ...S.tasks.map(t => t.id)) + 1;
+function addTask(o){ const t = { id:newId(), t:o.t, est:o.est || null, when:o.when||'today', repeat:o.repeat||'', dow:o.dow, high:!!o.high, steps:(o.steps||[]).map(s => typeof s==='string' ? { t:s, done:false } : s), done:!!o.done, carry:0, startAt:o.startAt||null, cat:o.cat||cat, order:0 };
+  ensureOrder(); t.order = Math.min(0, ...S.tasks.map(x => x.order||0)) - 1; S.tasks.push(t); return t; }
+
+/* ---------- sounds + haptics ---------- */
+const SND = { ctx:null };
+function beep(spec){ if (!S.sound) return; try { SND.ctx = SND.ctx || new (window.AudioContext || window.webkitAudioContext)(); const c = SND.ctx, t0 = c.currentTime;
+  spec.forEach(([f, dt, st, type, vol]) => { const o = c.createOscillator(), g = c.createGain(); o.type = type||'sine'; o.frequency.setValueAtTime(f, t0+st); g.gain.setValueAtTime(0, t0+st); g.gain.linearRampToValueAtTime(vol||.08, t0+st+.012); g.gain.exponentialRampToValueAtTime(.0005, t0+st+dt); o.connect(g); g.connect(c.destination); o.start(t0+st); o.stop(t0+st+dt+.02); }); } catch(_){} }
+function buzz(p){ try { navigator.vibrate && navigator.vibrate(p); } catch(_){} }
+const SFX = {
+  tick(){ beep([[880,.09,0,'triangle',.06],[1320,.14,.06,'sine',.05]]); buzz(10); },
+  untick(){ beep([[660,.1,0,'triangle',.04]]); },
+  add(){ beep([[520,.08,0,'sine',.05],[780,.1,.05,'sine',.04]]); buzz(6); },
+  del(){ beep([[300,.14,0,'triangle',.05]]); buzz(8); },
+  done(){ beep([[523,.12,0,'sine',.07],[659,.12,.1,'sine',.07],[784,.12,.2,'sine',.07],[1047,.3,.3,'sine',.08]]); buzz([20,40,30]); },
+  session(){ beep([[440,.35,0,'sine',.06],[554,.35,.25,'sine',.06],[659,.6,.5,'sine',.07]]); buzz([30,60,30,60,60]); },
+  pop(){ beep([[900,.06,0,'sine',.035]]); },
+};
+document.addEventListener('pointerdown', () => { if (SND.ctx && SND.ctx.state === 'suspended') SND.ctx.resume(); }, { passive:true });
+
+/* ---------- a new day ---------- */
+function isDue(t, d = new Date()){ const w = d.getDay(); return t.repeat==='daily' || (t.repeat==='weekdays' && w>0 && w<6) || (t.repeat==='weekly' && w===t.dow); }
+function rollover(){
+  const td = today(); if (S.lastDay === td) return false;
+  const first = !S.lastDay;
+  S.tasks = S.tasks.filter(t => !(t.done && !t.repeat));
+  for (const t of S.tasks){
+    if (t.repeat){ t.done = false; t.when = isDue(t) ? 'today' : 'rest'; t.nudged = false; t.steps.forEach(s => s.done = false); continue; }
+    if (/^\d{4}-\d\d-\d\d$/.test(t.when) && t.when <= td) t.when = 'today';
+    else if (t.when === 'today' && !first) t.carry = (t.carry||0) + 1;
+    if (t.startAt && t.startAt.day && t.startAt.day < td) t.startAt = null;
+  }
+  S.greet = !first && (Date.now() - (S.lastOpen||Date.now())) > 36*36e5;
+  if (!first && S.asleep === false && new Date().getHours() < 5) {}
+  S.lastDay = td; S.days = Array.from(new Set([...(S.days||[]), td])); save(); if (typeof checkUnlocks === 'function'){ checkUnlocks(); paintPlaybar(); } return true;
+}
+
+/* ---------- quick add that understands dates and times ---------- */
+const DOWS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+function nextDow(d, strict){ const n = new Date(); let diff = (d - n.getDay() + 7) % 7; if (diff===0 && strict) diff = 7; n.setDate(n.getDate()+diff); return n; }
+function fmtMin(m){ const h = Math.floor(m/60), mm = m%60; return (h%12||12) + (mm ? ':'+pad(mm) : '') + (h<12 ? ' AM' : ' PM'); }
+function startAtFor(when, at){ if (at == null) return null; const d = when==='today' ? new Date() : new Date(when+'T12:00'); d.setHours(Math.floor(at/60), at%60, 0, 0); return { at:d.getTime(), label:fmtMin(at).toLowerCase(), day: when==='today' ? today() : when, place:null }; }
+function labelDay(k){ if (k===tomorrow()) return 'Tomorrow'; const d = new Date(k+'T12:00'), diff = Math.round((d - new Date(today()+'T12:00'))/864e5); return diff<7 ? d.toLocaleDateString([], { weekday:'long' }) : d.toLocaleDateString([], { month:'short', day:'numeric' }); }
+function parseQuick(raw){
+  let v = ' ' + raw.trim() + ' ', when = null, at = null, repeat = '', dow, high = false; const bits = [];
+  const eat = (re, fn) => { const m = v.match(re); if (m){ fn(m); v = v.replace(re, ' '); return true; } return false; };
+  const plus = n => { const d = new Date(); d.setDate(d.getDate()+n); return d; };
+  let est = null;
+  eat(/(?:^|\s)(?:~|for |takes? )?(\d+(?:\.\d+)?)\s?(m|min|mins|minutes?|h|hr|hrs|hours?)(?=\s|$)/i, m => { est = Math.round(+m[1] * (/^h/i.test(m[2]) ? 60 : 1)); bits.push(fmtDur(est)); });
+  if (eat(/(^|\s)!+(\s|$)/, () => {}) || /\burgent\b/i.test(v)){ high = true; v = v.replace(/\burgent\b/i, ' '); }
+  eat(/\b(every ?day|daily)\b/i, () => { repeat = 'daily'; bits.push('every day'); });
+  eat(/\b(every )?weekdays?\b/i, () => { repeat = 'weekdays'; bits.push('weekdays'); });
+  eat(/\bevery (week|(sun|mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?)(day)?)\b/i, m => { repeat = 'weekly'; const d = m[2] ? DOWS.findIndex(x => x.startsWith(m[2].slice(0,3).toLowerCase())) : new Date().getDay(); dow = d; bits.push('every '+DOWS[d].slice(0,3)); when = when || dayKey(nextDow(d, false)); });
+  eat(/\b(tomorrow|tmrw|tmr)\b/i, () => { when = dayKey(plus(1)); bits.push('tomorrow'); });
+  eat(/\b(today|tonight)\b/i, m => { when = 'today'; if (/tonight/i.test(m[0]) && at == null) at = 19*60; bits.push(m[0].toLowerCase()); });
+  eat(/\bday after tomorrow\b/i, () => { when = dayKey(plus(2)); bits.push('in 2 days'); });
+  eat(/\bin (\d+|a|an|one|two|three|four|five|six|seven) (day|days|week|weeks)\b/i, m => { const n = { a:1, an:1, one:1, two:2, three:3, four:4, five:5, six:6, seven:7 }[m[1].toLowerCase()] || +m[1]; when = dayKey(plus(/week/i.test(m[2]) ? n*7 : n)); bits.push('in '+n+' '+m[2].toLowerCase()); });
+  eat(/\bnext week\b/i, () => { when = dayKey(nextDow(1, true)); bits.push('next week'); });
+  eat(/\b(next |this |on )?(sun|mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?)(day)?\b/i, m => { const d = DOWS.findIndex(x => x.startsWith(m[2].slice(0,3).toLowerCase())); when = when || dayKey(nextDow(d, /next/i.test(m[1]||''))); bits.push(DOWS[d].slice(0,3)); });
+  eat(/\b(on )?(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]* (\d{1,2})(st|nd|rd|th)?\b/i, m => { const mo = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].slice(0,3).toLowerCase()); const d = new Date(); d.setMonth(mo, +m[3]); if (d < new Date(Date.now()-864e5)) d.setFullYear(d.getFullYear()+1); when = dayKey(d); bits.push(m[2].slice(0,3)+' '+m[3]); });
+  eat(/\b(\d{1,2})\/(\d{1,2})\b/, m => { const d = new Date(); d.setMonth(+m[1]-1, +m[2]); if (d < new Date(Date.now()-864e5)) d.setFullYear(d.getFullYear()+1); when = dayKey(d); bits.push(m[1]+'/'+m[2]); });
+  eat(/\b(at |@ ?)?(\d{1,2})(?::(\d{2}))? ?(am|pm|a\.m\.|p\.m\.)\b/i, m => { let h = +m[2] % 12; if (/p/i.test(m[4])) h += 12; at = h*60 + (+m[3]||0); bits.push(fmtMin(at)); });
+  eat(/\b(at |@ ?)(\d{1,2})(?::(\d{2}))?\b/, m => { let h = +m[2]; if (h < 7) h += 12; at = h*60 + (+m[3]||0); bits.push(fmtMin(at)); });
+  eat(/\b(at |@ ?)?noon\b/i, () => { at = 12*60; bits.push('noon'); });
+  eat(/\b(in the |this )?(morning|afternoon|evening)\b/i, m => { at = { morning:9*60, afternoon:14*60, evening:19*60 }[m[2].toLowerCase()]; bits.push(m[2].toLowerCase()); });
+  eat(/\b(someday|later)\b/i, () => { when = 'someday'; bits.push('someday'); });
+  v = v.replace(/\s+/g, ' ').replace(/\s+([,.!?])/g, '$1').trim().replace(/[,\s]+$/, '');
+  if (at != null && !when) when = (at > new Date().getHours()*60 + new Date().getMinutes()) ? 'today' : dayKey(plus(1));
+  if (when === today()) when = 'today';
+  return { text:v, when, at, repeat, dow, high, est, bits };
+}
+const BIG = /\b(taxes?|clean|organi[sz]e|plan|project|finish|write|prepare|sort|apply|fix|research|report|garage|closet|budget|move|declutter|study|essay|paperwork|resume|portfolio|website)\b/i;
+const isBig = t => BIG.test(t.t) || t.t.length > 48 || (t.est || 0) >= 60;
+const EST_OPTS = [5, 15, 30, 60, 120];
+function fmtDur(m){ if (m < 60) return m + ' min'; const h = Math.floor(m/60), r = m % 60; return r ? `${h}h ${r}m` : `${h}h`; }
+function sessLen(t){ return t && t._len || S.sessionMin || 5; }
+
+/* ---------- import (brain dump) ---------- */
+const IMPORT_FORMAT = `Format a to-do list for Dino Day so I can paste it straight in.
+
+Rules:
+- One task per line. Start each task with "- ".
+- Group tasks under these headings, each on its own line: "Today:", "Tomorrow:", "Someday:", "Every day:", "Weekdays:", "Every week:". Tasks with no heading go to Today.
+- Indent a line with 4 spaces under a task to make it a step of that task. Steps start with "- " too. Use 3 to 6 small, concrete steps for big or vague tasks, and make the first step take under 2 minutes.
+- Put " !" at the end of a task that is important or urgent.
+- Add a rough time like " ~15m" or " ~1h" at the end of a task when you can guess how long it takes.
+- Keep each task short (under 80 characters), starting with a verb.
+- Output only the list. No numbering, no extra commentary.
+
+Example:
+Today:
+- Reply to Dana about Friday !
+- Do my taxes
+    - Find last year's return
+    - Open the tax site and log in
+    - Fill in the easy parts
+Tomorrow:
+- Call the dentist
+Someday:
+- Clean out the garage
+Every day:
+- Take meds
+
+You can also send JSON instead: [{"title": "Do my taxes", "when": "today|tomorrow|someday", "repeat": "daily|weekdays|weekly", "important": true, "steps": ["Find last year's return"]}]
+
+Here's what I need turned into a list:
+`;
+function parseImport(text){
+  text = text.trim(); if (!text) return [];
+  const t0 = text.replace(/^```\w*\n?|```$/g, '').trim();
+  if (t0[0] === '[' || t0[0] === '{'){
+    try { let j = JSON.parse(t0); if (!Array.isArray(j)) j = j.tasks || [j];
+      return j.filter(x => x && (x.title || x.task || x.name)).map(x => ({ t:String(x.title||x.task||x.name).trim().slice(0,90),
+        when: /tom/i.test(x.when) ? 'tomorrow' : /some|later/i.test(x.when) ? 'someday' : 'today', repeat: ({ daily:'daily', 'every day':'daily', weekdays:'weekdays', weekly:'weekly', 'every week':'weekly' })[String(x.repeat||'').toLowerCase()] || '',
+        high: !!(x.important || x.urgent || x.priority==='high'), steps:(x.steps||[]).map(s => String(s.title||s).trim()).filter(Boolean).slice(0,8), done:!!x.done })); } catch(e){}
+  }
+  const out = []; let when = 'today', repeat = '', last = null;
+  for (const raw of t0.split(/\r?\n/)){
+    if (!raw.trim()) continue;
+    const indent = raw.match(/^\s*/)[0].replace(/\t/g, '    ').length; let line = raw.trim();
+    const head = line.replace(/[:#*]/g, '').trim().toLowerCase();
+    if (/:$/.test(line) || /^#+\s/.test(line)){
+      const H = { today:['today',''], tomorrow:['tomorrow',''], someday:['someday',''], later:['someday',''], 'every day':['today','daily'], daily:['today','daily'], weekdays:['today','weekdays'], 'every week':['today','weekly'], weekly:['today','weekly'] }[head];
+      if (H){ [when, repeat] = H; last = null; continue; }
+    }
+    let done = false; line = line.replace(/^([-*•·]|\d+[.)])\s+/, '');
+    const box = line.match(/^\[( |x|X)\]\s*/); if (box){ done = box[1] !== ' '; line = line.slice(box[0].length); }
+    if (!line) continue;
+    if (indent >= 2 && last){ if (last.steps.length < 8) last.steps.push(line.replace(/\s*!+$/, '').slice(0,80)); continue; }
+    let est = null; line = line.replace(/\s~(\d+(?:\.\d+)?)\s?(m|min|h|hr)\b/i, (_, n, u) => { est = Math.round(+n * (/^h/i.test(u) ? 60 : 1)); return ''; });
+    let high = false; if (/(^!|\s!+$|\burgent\b)/i.test(line)){ high = true; line = line.replace(/^!+\s*|\s*!+$/g, '').trim(); }
+    last = { t:line.slice(0,90), when, repeat, high, est, steps:[], done }; out.push(last);
+  }
+  return out;
+}
+
+/* ---------- make it smaller ---------- */
+const TEMPLATES = [
+  [/email|reply|inbox|message|text\b/i, ['Open your inbox','Find the first email','Write one sentence back','Finish and send it','Do the next one']],
+  [/laundry|fold|clothes|wash/i, ['Bring the basket to the bed','Fold just the shirts','Fold everything else','Put it all away']],
+  [/clean|tidy|declutter|organi[sz]e|closet|garage|room/i, ['Set a 5-minute timer','Pick up 5 things','Clear one surface','Put things back where they live']],
+  [/tax|bill|form|paperwork|budget|insurance/i, ['Find the folder or login','Open last year\'s version','Fill in the easy parts','Note what\'s missing','Finish one section']],
+  [/write|essay|report|post|resume|article|outline/i, ['Open a blank document','Write the title','Jot 3 bullet points','Turn one bullet into a paragraph']],
+  [/call|phone|appointment|book/i, ['Find the number','Write what you want to say','Dial','Note the outcome']],
+  [/walk|run|exercise|gym|stretch/i, ['Put on your shoes','Step outside','Walk to the end of the street','Keep going for 10 minutes']],
+];
+function templateSteps(text, n){ const hit = TEMPLATES.find(([re]) => re.test(text));
+  let steps = hit ? hit[1].slice() : ['Open what you need','Do the smallest first bit','Keep going for 5 minutes','Decide the next bit'];
+  return n >= 6 ? ['Get up and get set up'].concat(steps).concat(['Take a short break']) : steps.slice(0, n); }
+const SPICE = [['A few', 3], ['Some', 4], ['Small', 5], ['Smaller', 7], ['Tiny', 10]];
+let thinking = false, sampleFn = null;
+(async () => { try { sampleFn = window.claude && await window.claude.use('sample'); } catch(e){ sampleFn = null; } })();
+async function smallerAI(t, lv){ const n = SPICE[lv-1][1];
+  if (!S.aiSteps || !sampleFn){ smaller(t, n); return; }
+  thinking = true; render(); rex.say('Hmm, let me think…', 20000);
+  try {
+    const r = await sampleFn.json(`Break this task into exactly ${n} short steps for someone who finds it hard to start tasks. The first step must take under two minutes and be physical and concrete (open, find, put on, write one line). Each step is under 9 words and starts with a verb. No numbering. Task: "${t.t}". Reply with only JSON: {"steps": ["..."]}`, { modelTier:'quick', cache:false });
+    const steps = r && Array.isArray(r.steps) ? r.steps.map(x => String(x).trim()).filter(Boolean).slice(0, 12) : null;
+    thinking = false; if (!steps || !steps.length) throw { code:'empty' };
+    t.steps = steps.map(x => ({ t:x, done:false })); panel = null; save(); render();
+    rex.hop = 1; rex.say(`First step: ${t.steps[0].t}. That's it.`, 3200, [['Start with Rex', () => startSession(t)], ['Okay', null, true]]);
+  } catch(e){ thinking = false; if (e && (e.code === 'not_granted' || e.code === 'sampling_disabled')) { sampleFn = null; } smaller(t, n); if (e && e.code === 'rate_limited') toast('Rex used his own ideas this time'); }
+}
+function smaller(t, n){ touch(); t.steps = templateSteps(t.t, n).map(s => ({ t:s, done:false })); focusTask(t, focusWhy || 'You picked'); panel = null; save(); render();
+  rex.hop = 1; rex.say(`First step: ${t.steps[0].t}. That's it.`, 3200, [['Start with Rex', () => startSession(t)], ['Okay', null, true]]); }
+
+/* ---------- picking what's next ---------- */
+function pickThree(){ const now = Date.now(), list = openToday(); const due = t => t.startAt && t.startAt.at && t.startAt.at < now + 30*60e3 ? 1 : 0;
+  if (S.planDay === today()) return list.slice().sort((a, b) => (due(b) - due(a)) || (a.order - b.order)).slice(0, 3);
+  return list.slice().sort((a, b) => (due(b) - due(a)) || ((b.high?1:0) - (a.high?1:0)) || ((b.carry||0) - (a.carry||0)) || ((b.steps.length?1:0) - (a.steps.length?1:0)) || (a.t.length - b.t.length)).slice(0, 3); }
+function focusTask(t, why){ focusId = t ? t.id : null; focusWhy = why || 'You picked'; picking = false; panel = null; fcOpen = true; render(); }
+function focused(){ const f = focusId && byId(focusId); if (f && !f.done && f.when === 'today') return [f, focusWhy];
+  if (S.suggest === false) return [null]; const p = pickThree()[0]; return p ? [p, 'Up next'] : [null]; }
+function pickOne(){ if (openToday().length < 2){ const p = openToday()[0]; if (p) focusTask(p, 'Rex suggested'); return; } picking = true; panel = null; render();
+  rex.say('I picked three. Which one first?', 2600); setExpandedIf(false); }
+
+/* ---------- complete, delete, undo ---------- */
+let undoFn = null;
+function snack(text, fn){ const s = $('#snack'); s.querySelector('span').textContent = text; undoFn = fn; s.querySelector('button').hidden = !fn; s.classList.add('on'); clearTimeout(s._t); s._t = setTimeout(() => s.classList.remove('on'), 4200); }
+function doUndo(){ const s = $('#snack'); if (undoFn){ const f = undoFn; undoFn = null; f(); save(); render(); } s.classList.remove('on'); }
+function logDone(n){ S.log = S.log || {}; S.log[today()] = Math.max(0, (S.log[today()]||0) + n); }
+function toggle(t){
+  touch(); const was = t.done; t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
+  if (t.done){ t.steps.forEach(s => s.done = true); logDone(1); SFX.tick(); if (focusId === t.id) focusId = null; if (session && session.id === t.id) endSession(false);
+    snack(`Nice. "${t.t}" is done`, () => { t.done = false; t.doneAt = null; logDone(-1); });
+    bus.emit('task_done', t);
+    if (!openToday().length && todays().length) setTimeout(celebrate, 700);
+  } else { logDone(-1); SFX.untick(); if (talk(.6)) rex.say('Oh! Back on the list.', 1400); }
+  save(); render(); }
+const SWIPE_OPTS = [['done','Finish'],['someday','Someday'],['tomorrow','Tomorrow'],['delete','Delete'],['none','Nothing']];
+const SWIPE_LABEL = Object.fromEntries(SWIPE_OPTS);
+function swipeDo(act, t){ if (!t) return;
+  if (act === 'done') toggle(t);
+  else if (act === 'delete') removeTask(t);
+  else if (act === 'someday'){ t.when = 'someday'; t.carry = 0; if (focusId === t.id) focusId = null; save(); render(); bus.emit('task_someday', t); snack(`Saved "${t.t}" for later`, () => { t.when = 'today'; }); }
+  else if (act === 'tomorrow'){ t.when = tomorrow(); if (focusId === t.id) focusId = null; save(); render(); snack(`Moved "${t.t}" to tomorrow`, () => { t.when = 'today'; }); } }
+/* ---------- time with Rex: unlocks earned by being together, never by tasks done ---------- */
+const UNLOCKS = [
+  { id:'amb_rain', name:'Rain sounds', kind:'Sound', need:{ days:1 } },
+  { id:'kite', name:'Kite', kind:'Toy', need:{ days:2 } },
+  { id:'amb_crickets', name:'Cricket sounds', kind:'Sound', need:{ sessions:3 } },
+  { id:'bubbles', name:'Bubbles', kind:'Toy', need:{ plays:15 } },
+  { id:'amb_fire', name:'Campfire sounds', kind:'Sound', need:{ days:5 } },
+  { id:'amb_pencil', name:'Rex\'s pencil', kind:'Sound', need:{ sessions:10 } },
+  { id:'stars', name:'Stargazing', kind:'At night', need:{ days:7 } },
+];
+const NEED_TXT = n => n.days ? `After ${n.days} ${n.days === 1 ? 'day' : 'days'} together` : n.sessions ? `After ${n.sessions} focus sessions` : `After playing ${n.plays} times`;
+function together(){ return { days:(S.days||[]).length, sessions:S.sessions||0, plays:S.plays||0 }; }
+function unlocked(id){ const u = UNLOCKS.find(x => x.id === id); if (!u) return true; const g = together(); return Object.entries(u.need).every(([k, v]) => g[k] >= v); }
+function checkUnlocks(){ S.seen = S.seen || []; for (const u of UNLOCKS){ if (unlocked(u.id) && !S.seen.includes(u.id)){ S.seen.push(u.id); save();
+  if (S.seen.length > 1 || u.id !== 'amb_rain'){ setTimeout(() => { rex.hop = 1; rex.say(`Look! We unlocked ${u.name.toLowerCase()}.`, 3200); toast(`New: ${u.name}`); }, 1200); } } } }
+function played(){ S.plays = (S.plays||0) + 1; save(); checkUnlocks(); }
+
+/* ---------- background sound for focus sessions ---------- */
+const AMBIENTS = [['off','Off'],['rain','Rain'],['crickets','Crickets'],['fire','Fire'],['pencil','Pencil']];
+const ambient = (() => { let ctx = null, nodes = [], timers = [], cur = null;
+  const noise = (c, color) => { const len = c.sampleRate*2, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); let last = 0;
+    for (let i = 0; i < len; i++){ const w = Math.random()*2 - 1; if (color === 'brown'){ last = (last + .02*w)/1.02; d[i] = last*3.5; } else d[i] = w; }
+    const src = c.createBufferSource(); src.buffer = b; src.loop = true; return src; };
+  function stop(){ timers.forEach(clearInterval); timers = []; nodes.forEach(n => { try { n.stop ? n.stop() : n.disconnect(); } catch(_){} }); nodes = []; cur = null; }
+  function start(kind){ if (kind === cur) return; stop(); if (!kind || kind === 'off' || !S.sound) return;
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); } catch(_){ return; }
+    const c = ctx, out = c.createGain(); out.gain.value = 0; out.gain.linearRampToValueAtTime(.9, c.currentTime + 1.5); out.connect(c.destination); nodes.push(out); cur = kind;
+    const blip = (f, dur, vol, type = 'sine') => { const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(vol, c.currentTime + .005); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + dur); o.connect(g); g.connect(out); o.start(); o.stop(c.currentTime + dur + .02); };
+    if (kind === 'rain'){ const n = noise(c), f = c.createBiquadFilter(), g = c.createGain(); f.type = 'lowpass'; f.frequency.value = 1400; g.gain.value = .09; n.connect(f); f.connect(g); g.connect(out); n.start(); nodes.push(n);
+      timers.push(setInterval(() => { if (Math.random() < .5) blip(1800 + Math.random()*2600, .04, .012); }, 90)); }
+    if (kind === 'fire'){ const n = noise(c, 'brown'), f = c.createBiquadFilter(), g = c.createGain(); f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = .22; n.connect(f); f.connect(g); g.connect(out); n.start(); nodes.push(n);
+      timers.push(setInterval(() => { if (Math.random() < .35) blip(300 + Math.random()*900, .03, .05, 'square'); }, 120)); }
+    if (kind === 'crickets'){ const n = noise(c, 'brown'), g = c.createGain(); g.gain.value = .05; n.connect(g); g.connect(out); n.start(); nodes.push(n);
+      timers.push(setInterval(() => { const base = 4300 + Math.random()*400; for (let k = 0; k < 3; k++) setTimeout(() => blip(base, .035, .02), k*45); }, 900)); }
+    if (kind === 'pencil'){ const n = noise(c), f = c.createBiquadFilter(), g = c.createGain(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = .8; g.gain.value = 0; n.connect(f); f.connect(g); g.connect(out); n.start(); nodes.push(n);
+      timers.push(setInterval(() => { if (Math.random() < .6){ const t0 = c.currentTime, d = .08 + Math.random()*.25; g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.05, t0 + .02); g.gain.linearRampToValueAtTime(0, t0 + d); } }, 260)); }
+  }
+  return { start, stop }; })();
+
+function removeTask(t){ touch(); const i = S.tasks.indexOf(t); S.tasks.splice(i, 1); if (focusId === t.id) focusId = null; SFX.del(); save(); render();
+  snack(`Deleted "${t.t}"`, () => { S.tasks.splice(i, 0, t); }); bus.emit('task_deleted', t); }
+function celebrate(){ if (S.allDoneDay === today()) return; S.allDoneDay = today(); S.pendingKeep = true; save(); SFX.done();
+  rex.hop = 1; const b = rexBox(); for (let i = 0; i < 10; i++) setTimeout(() => heart(b.x - 40 + Math.random()*80, b.y + 10), i*90);
+  rex.say('All done! I\'ll make you something tonight.', 3200); }
+
+/* ---------- 5 minutes with Rex ---------- */
+function startSession(t){ if (!t) return; touch(); const len = sessLen(t); focusId = t.id; focusWhy = focusWhy || 'You picked'; panel = null; session = { id:t.id, len, end: Date.now() + len*60e3, over:false }; ambient.start(S.ambient); S.sessions = (S.sessions||0) + 1; save(); checkUnlocks(); paintPlaybar(); render();
+  setExpandedIf(false); rex.say(pick(['Let\'s do it together.',`${len} minutes. I\'ll be right here.`,'Ready when you are.']), 2000); rex.goTo(.3, () => read()); }
+function endSession(stretch){ if (!session) return; session = null; ambient.stop(); rex.reading = false; rex.sitting = 0; clearProp('book'); render();
+  if (stretch && S.habits.stretch) setTimeout(() => rex.say('Stretch with me?', 3000, [['Okay', () => { rex.hop = 1; rex.say('Reach up high…', 1600); }], ['Not now', null, true]]), 1600); }
+function sessionTick(){ if (!session) return; const left = session.end - Date.now(), el = $('#sTime'), ring = $('#ringFill');
+  if (left <= 0 && !session.over){ session.over = true; SFX.session(); render(); rex.hop = 1; rex.say(session.len <= 5 ? 'Five minutes! You started, and that\'s the hard part.' : `${session.len} minutes! Nice focus.`, 3400); return; }
+  if (el) el.textContent = session.over ? '0:00' : `${Math.floor(left/60e3)}:${pad(Math.floor(left/1000)%60)}`;
+  if (ring){ const f = Math.max(0, left)/(session.len*60e3); ring.style.strokeDashoffset = String(113 * (1 - f)); } }
+setInterval(sessionTick, 500);
+function stepDone(t, i){ touch(); t.steps[i].done = !t.steps[i].done; SFX.tick(); const next = t.steps.find(s => !s.done);
+  if (!next){ toggle(t); return; } if (t.steps[i].done) rex.say(`Next: ${next.t}`, 2200); rex.hop = t.steps[i].done ? 1 : 0; save(); render(); }
+
+/* ---------- when + where ---------- */
+const WHEN_OPTS = [['In 15 minutes', () => Date.now() + 15*60e3, 'in 15 min'], ['After lunch', () => at(13,0), 'after lunch'], ['This afternoon', () => at(14,30), 'this afternoon'], ['This evening', () => at(19,0), 'this evening'], ['Tomorrow morning', () => at(9,0,1), 'tomorrow morning']];
+const PLACES_OPTS = ['At my desk','On the couch','In the kitchen','Out and about'];
+function at(h, m, plusDays = 0){ const d = new Date(); d.setDate(d.getDate()+plusDays); d.setHours(h, m, 0, 0); return d.getTime(); }
+function setWhen(t, i){ const [, f, label0] = WHEN_OPTS[i]; let ms = f(), label = label0; if (ms < Date.now()){ ms += 864e5; label = 'tomorrow, ' + label0.replace(/^this /, ''); } panel = null; const d = new Date(ms); const day = dayKey(d);
+  t.startAt = { at:ms, label, day, place: t.startAt && t.startAt.place || null }; t.nudged = false; if (day !== today()){ t.when = day; if (focusId === t.id) focusId = null; } save(); render(); toast(`Rex will remind you ${label}`); }
+
+/* ---------- nudges (cards in the list) ---------- */
+let askQ = [];
+function nudge(k, text, buttons){ askQ = askQ.filter(n => n.k !== k); askQ.push({ k, text, buttons }); pumpAsk(); }
+function pumpAsk(){ if (!askQ.length || bubble.classList.contains('btns')) return; const n = askQ.shift();
+  rex.hop = 1; rex.say(n.text, 14000, n.buttons.map(([l, fn, g]) => [l, () => { fn && fn(); setTimeout(pumpAsk, 600); }, g])); }
+setInterval(pumpAsk, 2500);
+function dropNudge(k){ askQ = askQ.filter(n => n.k !== k); nudges = nudges.filter(n => n.k !== k); render(); }
+
+/* ---------- keepsakes, morning, evening ---------- */
+function giveKeepsake(){ S.keeps = S.keeps || []; const k = S.keeps.length; S.keeps.push({ k, day:today() }); S.pendingKeep = false; save(); return KEEP_NAMES[k % KEEP_NAMES.length]; }
+function morning(){
+  if (S.morningDay === today() || S.asleep) return; S.morningDay = today(); save();
+  let delay = 900;
+  if (S.pendingKeep){ setTimeout(() => { const n = giveKeepsake(); rex.hop = 1; rex.say(`I made you ${n} last night.`, 3400); }, delay); delay += 3800; }
+  else if (S.greet){ S.greet = false; save(); setTimeout(() => rex.say('Hey! Good to see you.', 2400), delay); delay += 2800; }
+  if (S.habits.water && S.waterDay !== today() && new Date().getHours() < 14){ S.waterDay = today(); save(); setTimeout(() => { rex.say('*sip* Water first.', 1800); nudge('water', 'Rex had a glass of water. Want one too?', [['Done', () => { rex.hop = 1; }], ['Skip', null, true]]); }, delay); delay += 2600; }
+  if (openToday().length > 1) setTimeout(() => rex.say('What\'s first today?', 4200, [['Pick one with me', pickOne], ['I\'ve got it', null, true]]), delay);
+  delay += 5000;
+  if (triageNeeded()) setTimeout(() => nudge('sort', 'Want to sort today\'s list? It takes a minute.', [['Sort it', triageStart], ['Not now', null, true]]), delay);
+}
+function wrapUp(thenBed){
+  S.wrapDay = today(); save(); const open = openToday();
+  if (!open.length){ if (thenBed) goToBed(); return; }
+  wrapChoice = new Map(open.map(t => [t.id, t.repeat ? 'keep' : 'tomorrow'])); nudges = nudges.filter(n => n.k !== 'wrap'); nudges.push({ k:'wrap', wrap:true }); tab = 'today'; render(); $('#scroll').scrollTop = 0;
+  rex.say('*yawn* Ready to call it a day?', 2400);
+}
+let wrapChoice = new Map();
+function goToBed(){ endSession(false); for (const [id, v] of wrapChoice){ const t = byId(id); if (!t || t.done) continue; if (v === 'tomorrow' && !t.repeat){ t.when = tomorrow(); t.carry = (t.carry||0) + 1; } else if (v === 'someday'){ t.when = 'someday'; t.carry = 0; } }
+  wrapChoice = new Map(); dropNudge('wrap'); focusId = null;
+  if (S.log && S.log[today()] > 0 && S.keptDay !== today()){ S.pendingKeep = true; }
+  S.asleep = true; save(); render(); paintWake();
+  const go = () => { rex.sleeping = true; rex.sitting = 1; rex.say(S.pendingKeep ? 'I\'ll make you something tonight. Night!' : 'Good night!', 2600); };
+  if (place() === 'bedroom') rex.goTo(PLACES.bedroom.bed, go); else go(); }
+function wake(){ S.asleep = false; save(); rex.sleeping = false; rex.sitting = 0; rex.hop = 1; paintWake(); rex.say('*yawn* Good morning!', 2000); morning(); }
+function paintWake(){ $('#wakeChip').hidden = !S.asleep; }
+$('#wakeChip').onclick = e => { e.stopPropagation(); wake(); };
+
+/* ---------- morning sort: effort + today's frog ---------- */
+const untagged = () => openToday().filter(t => !t.eff && !t.repeat);
+function triageNeeded(){ return S.triageDay !== today() && openToday().length > 1 && untagged().length > 0; }
+function frogGuess(){ const rank = t => (t.eff==='h'?3:t.eff==='m'?1:0) + (t.high?1:0) + Math.min(2, t.carry||0)*.5 + (t.steps.length?.5:0); return openToday().slice().sort((a, b) => rank(b) - rank(a))[0] || null; }
+function applyPlan(){ const f = S.frogDay === today() ? S.frogId : null; ensureOrder();
+  const w = t => t.id === f ? 1 : t.eff==='e' ? 0 : t.eff==='m' ? 2 : t.eff==='h' ? 3 : 2.5;
+  let n = 0; openToday().sort((a, b) => (w(a) - w(b)) || (a.order - b.order)).forEach(t => t.order = ++n); S.planDay = today(); save(); render(); }
+function triageStart(){
+  dropNudge('sort'); const queue = untagged(); let i = 0;
+  const ov = overlay(`<div class="card ob"><img class="obimg" src="${REX_SRC}" alt=""><div class="obbody"></div><div class="tribtns"></div><div class="dots"></div><button class="link" data-x>Skip for today</button></div>`);
+  const body = ov.querySelector('.obbody'), btns = ov.querySelector('.tribtns'), dots = ov.querySelector('.dots');
+  const finish = planned => { S.triageDay = today(); save(); closeOverlay(); if (planned){ applyPlan(); rex.say('Easy ones first, then the frog. Then it\'s downhill.', 3000); } };
+  ov.querySelector('[data-x]').onclick = () => finish(false);
+  const paintDots = () => { dots.innerHTML = queue.map((_, k) => `<i class="${k < i ? 'done' : k === i ? 'on' : ''}"></i>`).join(''); };
+  const askFrog = () => { dots.innerHTML = ''; const g = frogGuess(); if (!g || S.frogDay === today()){ finish(true); return; }
+    body.innerHTML = `<h2>The heavy one</h2><p>This looks like today's frog: <b>${esc(g.t)}</b>. Do it right after the easy ones?</p>`;
+    btns.innerHTML = `<button class="pill coral" data-f="${g.id}">That's the one</button><button class="pill ghost" data-other>Pick another</button><button class="link" data-none>No frog today</button>`;
+    btns.onclick = e => { const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.f){ S.frogDay = today(); S.frogId = +b.dataset.f; save(); SFX.pop(); finish(true); }
+      else if ('other' in b.dataset){ body.innerHTML = '<h2>Which one is the frog?</h2>'; btns.innerHTML = openToday().filter(t => t.id !== g.id).slice(0, 6).map(t => `<button class="tript" data-f="${t.id}">${esc(t.t)}</button>`).join('') + '<button class="link" data-none>No frog today</button>'; }
+      else if ('none' in b.dataset){ S.frogDay = today(); S.frogId = null; save(); finish(true); } }; };
+  const show = () => { if (i >= queue.length){ askFrog(); return; } const t = queue[i]; paintDots();
+    body.innerHTML = `<div class="trilbl">${i+1} of ${queue.length} · How much effort?</div><h2>${esc(t.t)}</h2>`;
+    btns.innerHTML = [['e','Easy','A few minutes, no dread'],['m','Medium','Takes some focus'],['h','Hard','Big, fuzzy, or dreaded']].map(([k, l, h]) => `<button class="trieff ${k}" data-e="${k}"><b>${l}</b><span>${h}</span></button>`).join('');
+    btns.onclick = e => { const b = e.target.closest('[data-e]'); if (!b) return; t.eff = b.dataset.e; save(); SFX.tick(); i++; show(); }; };
+  show();
+}
+
+/* ---------- overlays ---------- */
+function overlay(html){ closeOverlay(); const o = document.createElement('div'); o.className = 'ov'; o.innerHTML = html; app.appendChild(o); requestAnimationFrame(() => o.classList.add('on')); o.addEventListener('click', e => { if (e.target === o) closeOverlay(); }); return o; }
+function closeOverlay(){ const o = app.querySelector('.ov'); if (o){ o.classList.remove('on'); setTimeout(() => o.remove(), 250); } }
+function openImport(){ const o = overlay(`<div class="card sheetcard"><div class="sh"><h2>Paste a list</h2><button class="x" data-x aria-label="Close">×</button></div>
+  <p class="hint">One task per line. Headings like <b>Today:</b>, <b>Tomorrow:</b>, <b>Someday:</b>, or <b>Every day:</b> sort the lines below them. Indent a line to make it a step. End a task with <b>!</b> to mark it important.</p>
+  <textarea id="impText" rows="9" placeholder="Today:&#10;- Reply to Dana !&#10;- Do my taxes&#10;    - Find last year's return&#10;Someday:&#10;- Clean out the garage"></textarea>
+  <div class="imprev" id="impPrev"></div><div class="row2"><button class="pill ghost" id="copyFmt">Copy format for an AI</button><button class="pill coral" id="impGo" disabled>Add tasks</button></div></div>`);
+  const ta = o.querySelector('#impText'), go = o.querySelector('#impGo'), pv = o.querySelector('#impPrev');
+  const upd = () => { const list = parseImport(ta.value), n = list.length; go.disabled = !n; go.textContent = n ? `Add ${n} ${n===1?'task':'tasks'}` : 'Add tasks';
+    if (!n){ pv.textContent = ta.value.trim() ? 'Nothing Rex can read yet.' : ''; return; }
+    const c = w => list.filter(x => x.when === w && !x.repeat).length, r = list.filter(x => x.repeat).length, st = list.reduce((a, x) => a + x.steps.length, 0);
+    pv.innerHTML = [c('today') && `<b>${c('today')}</b> today`, c('tomorrow') && `<b>${c('tomorrow')}</b> tomorrow`, c('someday') && `<b>${c('someday')}</b> someday`, r && `<b>${r}</b> repeating`, st && `<b>${st}</b> steps`].filter(Boolean).join(' · '); };
+  ta.oninput = upd; o.querySelector('[data-x]').onclick = closeOverlay; o.querySelector('#copyFmt').onclick = copyFormat;
+  go.onclick = () => { const list = parseImport(ta.value); list.forEach(x => { const t = addTask({ t:x.t, est:x.est, when: x.when === 'tomorrow' ? tomorrow() : x.when, repeat:x.repeat, dow: x.repeat==='weekly' ? new Date().getDay() : undefined, high:x.high, steps:x.steps, done:x.done }); if (t.repeat && !isDue(t)) t.when = 'rest'; });
+    save(); closeOverlay(); tab = 'today'; render(); SFX.add(); rex.hop = 1; rex.say(`Got all ${list.length}. They're on the list.`, 2600); };
+  setTimeout(() => ta.focus(), 60); }
+function copyFormat(){ const done = () => toast('Copied. Paste it into any AI with your list.'); try { navigator.clipboard.writeText(IMPORT_FORMAT).then(done, () => showCopy(IMPORT_FORMAT)); } catch(e){ showCopy(IMPORT_FORMAT); } }
+function showCopy(text){ const o = overlay(`<div class="card sheetcard"><div class="sh"><h2>Copy this</h2><button class="x" data-x aria-label="Close">×</button></div><textarea rows="10" readonly>${esc(text)}</textarea></div>`); o.querySelector('[data-x]').onclick = closeOverlay; const ta = o.querySelector('textarea'); setTimeout(() => { ta.focus(); ta.select(); }, 60); }
+function backup(){ const data = JSON.stringify({ app:'dino-day', v:3, at:new Date().toISOString(), S }, null, 0);
+  try { navigator.clipboard.writeText(data).then(() => toast('Backup copied. Paste it somewhere safe.'), () => showCopy(data)); } catch(e){ showCopy(data); } }
+function restore(){ const o = overlay(`<div class="card sheetcard"><div class="sh"><h2>Restore a backup</h2><button class="x" data-x aria-label="Close">×</button></div><p class="hint">Paste a Dino Day backup. It replaces what's here.</p><textarea id="rsText" rows="8"></textarea><div class="row2"><span class="hint" id="rsMsg"></span><button class="pill coral" id="rsGo">Restore</button></div></div>`);
+  o.querySelector('[data-x]').onclick = closeOverlay;
+  o.querySelector('#rsGo').onclick = () => { try { const j = JSON.parse(o.querySelector('#rsText').value); if (j.app !== 'dino-day' || !j.S) throw 0; S = { ...S, ...j.S }; save(); closeOverlay(); drawScene(); render(); toast('Restored'); } catch(e){ o.querySelector('#rsMsg').textContent = 'That doesn\'t look like a Dino Day backup.'; } }; }
+const FOCI = [['done','Get things done',IC.check],['routine','Build a routine',IC.sun],['better','Feel better',IC.heart],['mindful','Be more mindful',IC.moonB]];
+const SUPPORT = [['quiet','Gentle reminders','<svg viewBox="0 0 24 24" fill="#EE7F62"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM9.5 18.5a2.5 2.5 0 0 0 5 0z"/></svg>'],['sometimes','Encouraging messages','<svg viewBox="0 0 24 24"><path d="M4 11c0-4 3.6-7 8-7s8 3 8 7-3.6 7-8 7c-1 0-2-.1-2.9-.4L5 19l1-3.3C4.8 14.4 4 12.8 4 11z" fill="#6C7FB8"/><circle cx="8.5" cy="11" r="1.2" fill="#fff"/><circle cx="12" cy="11" r="1.2" fill="#fff"/><circle cx="15.5" cy="11" r="1.2" fill="#fff"/></svg>'],['often','Playful check-ins',IC.star]];
+function onboard(){ if (S.onboarded) return;
+  const foci = new Set(S.focusAreas || ['done']); let sup = S.chat || 'sometimes';
+  const steps = [null,
+    ['One small thing.', 'Add a task below. You can type things like "call mom tomorrow at 3." Swipe right to save one for Someday, left to delete. Big ones can be made smaller. Nothing is scored, and nothing you skip costs anything.'],
+    ['Start with me.', 'When a task feels heavy, press Start with Rex. We work for a few minutes together, and that\'s usually enough to get going.']];
+  let i = 0; const o = overlay(`<div class="card ob"><div class="obtop"><div class="dots"></div><button class="link" data-skip>Skip</button></div><div class="obbody"></div><button class="pill coral big" data-next>Next</button></div>`);
+  o.classList.add('obov');
+  const paint = () => { const body = o.querySelector('.obbody');
+    if (i === 0){ body.innerHTML = `<h2 class="hi">Hi, I'm Rex!${IC.spark}</h2><p>Your new little friend for brighter, more productive days.</p><img class="obimg" src="${REX_SRC}" alt="Rex waving hello">
+      <label class="oq" for="obName">What's your name?</label><div class="namein">${IC.personO}<input id="obName" placeholder="Your name" autocomplete="given-name" maxlength="24" value="${esc(S.name === 'Tim' && !S.namedOnce ? '' : S.name)}"></div>
+      <div class="oq">What would you like to focus on?</div><div class="ochips two">${FOCI.map(([k, l, ic]) => `<button class="ochip ${foci.has(k)?'on':''}" data-focus="${k}" aria-pressed="${foci.has(k)}"><span class="oi">${foci.has(k) ? IC.check : ic}</span>${l}</button>`).join('')}</div>
+      <div class="oq">How should Rex support you?</div><div class="ochips three">${SUPPORT.map(([k, l, ic]) => `<button class="ochip ${sup===k?'on':''}" data-sup="${k}" aria-pressed="${sup===k}"><span class="oi">${ic}</span>${l}</button>`).join('')}</div>`; }
+    else { const [h, p] = steps[i]; body.innerHTML = `<img class="obimg sm" src="${REX_SRC}" alt=""><h2>${h}</h2><p>${p}</p>`; }
+    o.querySelector('.dots').innerHTML = steps.map((_, k) => `<i class="${k===i?'on':k<i?'done':''}"></i>`).join('');
+    o.querySelector('[data-next]').innerHTML = i === 0 ? 'Let\'s go! ' + IC.chev.replace('M6 9l6 6 6-6','M9 6l6 6-6 6') : i === 2 ? 'Start my day' : 'Next'; };
+  const keep = () => { const n = o.querySelector('#obName'); if (n && n.value.trim()){ S.name = n.value.trim(); S.namedOnce = true; }
+    S.focusAreas = [...foci]; S.chat = sup;
+    if (foci.has('routine')) S.habitsOn = true;
+    if (foci.has('better')) S.habits.stretch = true;
+    if (foci.has('mindful')) S.habits.winddown = true;
+    S.suggest = foci.has('done') || S.suggest; save(); };
+  o.onclick = e => { const f = e.target.closest('[data-focus]'), u = e.target.closest('[data-sup]');
+    if (f){ const n = o.querySelector('#obName').value; foci.has(f.dataset.focus) ? foci.delete(f.dataset.focus) : foci.add(f.dataset.focus); paint(); o.querySelector('#obName').value = n; }
+    if (u){ const n = o.querySelector('#obName').value; sup = u.dataset.sup; paint(); o.querySelector('#obName').value = n; } };
+  const finish = () => { if (i === 0) keep(); S.onboarded = true; save(); closeOverlay(); render(); SFX.pop(); setTimeout(morning, 400); };
+  o.querySelector('[data-skip]').onclick = finish; o.querySelector('[data-next]').onclick = () => { if (i === 0) keep(); if (i < 2){ i++; paint(); } else finish(); }; paint(); }
+
+/* ---------- rendering ---------- */
+function greet(){ const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+function meta(t){ const c = CAT[t.cat]; const bits = []; const frog = S.frogDay === today() && S.frogId === t.id && !t.done;
+  if (t.startAt && t.startAt.label && t.when === 'today') bits.push(t.startAt.label + (t.startAt.place ? ', ' + t.startAt.place.toLowerCase() : ''));
+  if (t.repeat) bits.push(REPEAT_LABEL[t.repeat]);
+  if (t.eff && !frog) bits.push(EFF[t.eff]);
+  if (t.steps.length) bits.push(`${t.steps.filter(s => s.done).length} of ${t.steps.length} steps`);
+  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}">${c.icon}${c.label}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : ''); }
+function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.steps.length ? t.steps.filter(s => s.done).length / t.steps.length : 0;
+  return `<div class="trow" data-id="${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
+  <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0">
+    ${opts.bring ? '' : `<button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}"><i>${IC.check}</i></button>`}
+    <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar"><i style="width:${prog*100}%"></i></div>` : ''}</div>
+    ${opts.bring ? `<button class="pill ghost mint" data-bring="${t.id}">Today</button>` : `<button class="more" aria-label="More options for ${esc(t.t)}" data-more="${t.id}">${IC.more}</button>`}
+  </div>${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
+function focusCard(){
+  if (picking){ const three = pickThree(); return `<div class="fcard pickc"><div class="k">Rex is holding up three. Which one first?</div><div class="stickies">${three.map((t, i) => `<button class="sticky s${i}" data-pick="${t.id}">${esc(t.t)}</button>`).join('')}</div><button class="link" data-cancelpick>Never mind</button></div>`; }
+  const [f, why] = focused(); if (!f) return '';
+  const next = f.steps.find(s => !s.done), inS = session && session.id === f.id;
+  let body = '';
+  if (inS){ body = `<div class="sess"><svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" class="rbg"/><circle cx="20" cy="20" r="18" class="rfill" id="ringFill" style="stroke-dasharray:113;stroke-dashoffset:0"/></svg><div><div class="stime" id="sTime">${session.len}:00</div><div class="hint">${session.over ? 'Time\'s up. How did it go?' : 'Working on it with Rex'}</div></div></div>
+    <div class="amb" role="group" aria-label="Background sound">${AMBIENTS.filter(a => a[0]==='off' || unlocked('amb_'+a[0])).map(([k, l]) => `<button class="lenb ${S.ambient===k?'on':''}" data-amb="${k}">${l}</button>`).join('')}</div>
+    <div class="acts">${session.over ? `<button class="pill ghost" data-act="more5">Keep going</button><button class="pill ghost" data-act="break">Take a break</button><button class="pill coral" data-act="done">I finished it</button>`
+      : `${next ? '<button class="pill ghost" data-act="step">Did that step</button>' : ''}<button class="pill coral" data-act="done">I did it</button><button class="link" data-act="stop">Stop for now</button>`}</div>`; }
+  else if (panel === 'when'){ body = `<div class="opts"><div class="olbl">When?</div>${WHEN_OPTS.map(([l], i) => `<button class="chip" data-when="${i}">${l}</button>`).join('')}${f.startAt ? '<button class="chip" data-when="clear">No time</button>' : ''}
+    <div class="olbl">Where?</div>${PLACES_OPTS.map(p => `<button class="chip ${f.startAt && f.startAt.place === p ? 'on' : ''}" data-place="${esc(p)}">${p}</button>`).join('')}</div><div class="acts"><button class="link" data-act="closepanel">Done</button></div>`; }
+  else if (panel === 'smaller'){ const lv = S.spice || 3; body = `<div class="opts col"><label class="olbl" for="spice">How small? <span class="spv">${SPICE[lv-1][0]}</span></label>
+      <input type="range" id="spice" min="1" max="5" step="1" value="${lv}" aria-valuetext="${SPICE[lv-1][0]}"><div class="spl"><span>A few big steps</span><span>Tiny steps</span></div>
+      ${thinking ? `<div class="hint">Rex is thinking…</div>` : ''}</div><div class="acts"><button class="pill coral" data-smallgo ${thinking ? 'disabled' : ''}>Break it down</button><button class="link" data-act="closepanel">Never mind</button></div>`; }
+  else if (panel === 'est'){ body = `<div class="opts"><div class="olbl">How long will it take?</div>${EST_OPTS.map(m => `<button class="chip ${f.est===m?'on':''}" data-est="${m}">${fmtDur(m)}</button>`).join('')}${f.est ? '<button class="chip" data-est="0">Not sure</button>' : ''}</div><div class="acts"><button class="link" data-act="closepanel">Done</button></div>`; }
+  else { const L = sessLen(f); body = `<div class="acts"><button class="pill coral" data-act="start">${IC.play}Start with Rex · ${L} min</button><span class="lens">${[5,15,25].map(m => `<button class="lenb ${L===m?'on':''}" data-len="${m}" aria-label="${m} minutes">${m}</button>`).join('')}</span><button class="pill ghost" data-act="done">Done</button></div>
+    <div class="acts small"><button class="link" data-act="smaller">${f.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><button class="link" data-act="est">${f.est ? fmtDur(f.est) : 'How long?'}</button><button class="link" data-act="when">When?</button><button class="link" data-act="another">Pick another</button></div>`; }
+  const sub = [f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label ? f.startAt.label + (f.startAt.place ? ', ' + f.startAt.place.toLowerCase() : '') : '', f.steps.length && next ? 'Next: ' + next.t : ''].filter(Boolean).join(' · ');
+  const open = fcOpen || inS || panel;
+  const fc = CAT[f.cat], L0 = sessLen(f);
+  if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div><span class="chev">${IC.chev}</span></button>
+    <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
+  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
+    ${f.steps.length ? `<div class="steps">${f.steps.map((s, i) => `<button class="step ${s.done?'done':''} ${s === next ? 'next' : ''}" data-step="${i}"><span class="sb">${s.done ? IC.check : ''}</span>${esc(s.t)}</button>`).join('')}</div>` : ''}
+    ${body}</div>`; }
+function timeline(){ if (S.timeline === false) return '';
+  const T0 = 7*60, T1 = 23*60, now = new Date(), nm = now.getHours()*60 + now.getMinutes();
+  const items = todays().filter(t => t.startAt && t.startAt.at && t.startAt.day === today()).map(t => { const d = new Date(t.startAt.at); return { m:d.getHours()*60 + d.getMinutes(), l:t.t, id:t.id, done:t.done, est:t.est }; });
+  if (S.habits.water) items.push({ m:9*60+30, l:'Water', hab:true, ic:IC.drop }); if (S.habits.lunch){ const [h, m] = (S.habits.lunchAt||'12:30').split(':').map(Number); items.push({ m:h*60+m, l:'Lunch', hab:true, ic:IC.fork }); } if (S.habits.winddown) items.push({ m:21*60, l:'Wind down', hab:true, ic:IC.moonB });
+  const estMin = openToday().reduce((a, t) => a + (t.est || 0), 0), unk = openToday().filter(t => !t.est).length;
+  const endM = Math.max(nm, S.habits.winddown ? 21*60 : 22*60), freeMin = Math.max(0, endM - nm);
+  const fit = estMin ? `About ${fmtDur(estMin)} planned${unk ? ` + ${unk} unsized` : ''} · ${fmtDur(freeMin)} left before ${fmtMin(endM)}` : '';
+  if (!items.length && !fit) return '';
+  const pos = m => Math.max(0, Math.min(100, (m - T0) / (T1 - T0) * 100));
+  if (!S.tlOpen) return `<button class="tline mini" data-tlopen aria-expanded="false"><span class="tlh"><b>Your day</b>${fit ? `<span>${esc(fit)}</span>` : ''}</span><span class="tlmini"><em class="tlpast" style="width:${pos(nm)}%"></em>${items.map(it => it.ic ? `<b class="tlic" style="left:${pos(it.m)}%">${it.ic}</b>` : `<i class="${it.done?'done':''}" style="left:${pos(it.m)}%"></i>`).join('')}${nm >= T0 && nm <= T1 ? `<b class="nowm" style="left:${pos(nm)}%"></b>` : ''}</span><span class="chev">${IC.chev}</span></button>`;
+  return `<div class="tline"><div class="tlhead"><b>Your day</b><span>${fit ? esc(fit) + ' · ' : ''}${now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}</span><button class="x fold" data-tlclose aria-label="Fold the timeline">${IC.chevup}</button></div><div class="tltrack"><em class="tlline"></em><em class="tlpast" style="width:${pos(nm)}%"></em>
+    ${[9,12,15,18,21].map(h => `<span class="tick" style="left:${pos(h*60)}%">${h>12?h-12:h}${h<12?'a':'p'}</span>`).join('')}
+    ${items.sort((a, b) => a.m - b.m).map((it, i, arr) => { it.lo = i > 0 && (it.m - arr[i-1].m) < 100 && !arr[i-1].lo; return it; }).map(it => `<button class="tlitem ${it.hab?'thab':''} ${it.done?'done':''} ${it.lo?'lo':''} ${it.ic?'hasic':''}" style="left:${pos(it.m)}%" ${it.id ? `data-tl="${it.id}"` : ''} title="${esc(it.l)} · ${fmtMin(it.m)}">${it.ic ? `<b class="tic">${it.ic}</b>` : '<i></i>'}<span>${esc(it.l)}</span></button>${it.est ? `<span class="tlspan" style="left:${pos(it.m)}%;width:${pos(it.m + it.est) - pos(it.m)}%"></span>` : ''}`).join('')}
+    ${nm >= T0 && nm <= T1 ? `<div class="tlnow" style="left:${pos(nm)}%"></div>` : ''}</div></div>`; }
+function nudgeCards(){ return nudges.map(n => {
+  if (n.wrap){ const open = openToday(); return `<div class="nudge wrap"><div class="nt">Ready to call it a day? Where should these go?</div>${open.map(t => `<div class="wrow"><span>${esc(t.t)}</span><span class="seg">${[['Tomorrow','tomorrow'],['Someday','someday'],['Keep','keep']].map(([l, v]) => `<button data-wrap="${t.id}" data-v="${v}" aria-pressed="${(wrapChoice.get(t.id)||'tomorrow') === v}">${l}</button>`).join('')}</span></div>`).join('')}
+    <div class="acts"><button class="pill coral" data-gn>Good night, Rex</button><button class="link" data-notyet>Not yet</button></div></div>`; }
+  return `<div class="nudge" data-nk="${n.k}"><span class="nt">${esc(n.text)}</span>${n.buttons.map(([l, , g], i) => `<button class="pill ${g ? 'ghost' : 'coral'} sm" data-nb="${i}">${esc(l)}</button>`).join('')}</div>`; }).join(''); }
+function myHabits(){ if (!S.habitsOn) return '';
+  const wk = weekKeys(), L = ['M','T','W','T','F','S','S'];
+  return `<div class="section"><span>My habits</span></div><div class="habs">${(S.myHabits||[]).map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
+    <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div>`; }
+function weekKeys(){ const d = new Date(); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow); return Array.from({ length:7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate()+i); return dayKey(x); }); }
+function streakOf(h){ let n = 0; const d = new Date(); if (!h.log[dayKey(d)]) d.setDate(d.getDate()-1); while (h.log[dayKey(d)]){ n++; d.setDate(d.getDate()-1); } return n; }
+
+function render(){
+  const sc = $('#scroll'), keepScroll = sc.scrollTop;
+  const dateStr = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  if (tab === 'today'){
+    const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
+    sc.innerHTML = `
+      <div class="tophead">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></div>
+      <div class="hello compact"><div><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div></div>
+      ${nudgeCards()}
+      ${focusCard()}
+      <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+      <div class="qprev" id="qPrev"></div>
+      <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
+        <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
+        <select id="repeatSel" aria-label="Repeat"><option value="">Once</option>${Object.entries(REPEAT_LABEL).map(([v, l]) => `<option value="${v}" ${addRepeat===v?'selected':''}>${l}</option>`).join('')}</select>
+        <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${c.label}</button>`).join('')}</div>
+      </div>
+      ${timeline()}
+      <div class="section"><span>Today</span><button type="button" class="link" data-import>Paste a list</button></div>
+      <div class="list" id="list">${open.length ? open.map(t => row(t)).join('') : `<div class="empty">${todays().length ? 'Nothing left for today. Rex is happy to just hang out.' : 'Nothing here yet. Add one small thing.'}</div>`}</div>
+      ${done.length ? `<button class="section toggle" data-showdone>${S.showDone ? 'Hide completed' : 'Completed'}</button>${S.showDone ? `<div class="list">${done.map(t => row(t)).join('')}</div>` : ''}` : ''}
+      ${myHabits()}`;
+  } else if (tab === 'someday'){
+    const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1), sd = S.tasks.filter(t => t.when === 'someday'), rest = S.tasks.filter(t => t.when === 'rest');
+    sc.innerHTML = `<div class="hello"><div><h1>Later</h1><div class="date">No pressure. Bring something back when you're ready.</div></div></div>
+      ${later.length ? `<div class="section"><span>Coming up</span></div><div class="list">${later.map(t => row(t, { bring:true }).replace('class="meta">', `class="meta"><span class="mt when">${labelDay(t.when)}</span>`)).join('')}</div>` : ''}
+      <div class="section"><span>Someday</span><button class="link" data-import>Paste a list</button></div><div class="list">${sd.length ? sd.map(t => row(t, { bring:true })).join('') : '<div class="empty">Your Someday box is empty.</div>'}</div>
+      ${rest.length ? `<div class="section"><span>Resting until their day</span></div><div class="list">${rest.map(t => row(t, { bring:true })).join('')}</div>` : ''}`;
+  } else if (tab === 'settings'){ sc.innerHTML = settingsHTML();
+  } else if (tab === 'stats'){ sc.innerHTML = statsHTML(); }
+  $('#tabs').innerHTML = [['today','Today',IC.house],['someday','Later',IC.starO],['rex','Rex',IC.paw],['settings','Profile',IC.person]].map(([k, l, i]) => `<button data-tab="${k}" ${tab===k || (tab==='stats' && k==='settings') ? 'aria-current="page"' : ''}><span class="ti">${i}</span><span>${l}</span></button>`).join('');
+  sc.scrollTop = keepScroll; sessionTick(); paintQuick();
+}
+function seg(key, opts, obj = S){ return `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-set="${key}" data-val="${v}" aria-pressed="${String(key.includes('.') ? key.split('.').reduce((o, k) => o && o[k], S) : obj[key]) === String(v)}">${l}</button>`).join('')}</div>`; }
+function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div class="row"><div><div class="lab">${l}</div><div class="hint">${hint}</div></div>${seg('habits.'+k, [[true,'On'],[false,'Off']])}</div>`;
+  return `<div class="tophead">${logoHTML()}</div><div class="profile"><span class="pav">${IC.person}</span><div><h1>${esc(S.name || 'Friend')}</h1><div class="date">Profile and settings. Make Dino Day yours.</div></div></div>
+  <div class="glabel">You</div><div class="group">
+    <div class="row"><div><div class="lab">Your name</div><div class="hint">Rex uses it to greet you.</div></div><input type="text" id="setName" value="${esc(S.name)}" aria-label="Your name" autocomplete="given-name"></div>
+    <div class="row"><div><div class="lab">Your stats</div><div class="hint">What you've done, sessions, keepsakes. Only here, never on Today.</div></div><button class="pill ghost mint" data-stats>Open</button></div></div>
+  <div class="glabel">Rex</div><div class="group">
+    <div class="row"><div><div class="lab">Rex's spot</div><div class="hint">Where he hangs out.</div></div>${seg('place', [['meadow','Meadow'],['bedroom','Bedroom']])}</div>
+    <div class="row"><div><div class="lab">Chattiness</div><div class="hint">How often Rex talks and reacts.</div></div>${seg('chat', [['often','Often'],['sometimes','Some'],['quiet','Quiet']])}</div>
+    <div class="row"><div><div class="lab">Suggests what's next</div><div class="hint">Rex's pick at the top of Today.</div></div>${seg('suggest', [[true,'On'],[false,'Off']])}</div>
+    <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>
+  <div class="glabel">Rex's habits</div><div class="group">
+    ${hrow('water','Water','He drinks a glass in the morning and asks if you want one.')}
+    <div class="row"><div><div class="lab">Lunch</div><div class="hint">He asks you to eat with him.</div></div><div class="rowr"><input type="time" id="lunchAt" value="${H.lunchAt||'12:30'}" aria-label="Lunch time">${seg('habits.lunch', [[true,'On'],[false,'Off']])}</div></div>
+    ${hrow('stretch','Stretch','After a focus session.')}
+    ${hrow('plants','Plants','He waters his plant in the afternoon.')}
+    ${hrow('walk','Walk','He invites you out in the late afternoon.')}
+    ${hrow('winddown','Wind-down','At 9 PM he gets sleepy and helps you wrap up.')}</div>
+  <div class="glabel">Features</div><div class="group">
+    <div class="row"><div><div class="lab">My habits</div><div class="hint">A simple weekly check-off grid on Today.</div></div>${seg('habitsOn', [[true,'On'],[false,'Off']])}</div>
+    <div class="row"><div><div class="lab">Your day timeline</div><div class="hint">Timed tasks and habits from 7 AM to 11 PM.</div></div>${seg('timeline', [[true,'On'],[false,'Off']])}</div>
+    <div class="row"><div><div class="lab">Sounds</div><div class="hint">Soft chimes when you add and finish things.</div></div>${seg('sound', [[true,'On'],[false,'Off']])}</div>
+    <div class="row"><div><div class="lab">Time of day</div><div class="hint">Follow your clock, or keep it sunny.</div></div>${seg('lockDay', [[false,'My clock'],[true,'Always day']])}</div></div>
+  <div class="glabel">Focus</div><div class="group">
+    <div class="row"><div><div class="lab">Session length</div><div class="hint">How long "Start with Rex" runs.</div></div>${seg('sessionMin', [[5,'5 min'],[15,'15'],[25,'25']])}</div>
+    <div class="row"><div><div class="lab">Background sound</div><div class="hint">Plays during focus sessions. More unlock as you spend time together.</div></div><select class="swsel" id="ambSel" aria-label="Background sound">${AMBIENTS.map(([k, l]) => { const ok = k === 'off' || unlocked('amb_'+k); return `<option value="${k}" ${S.ambient===k?'selected':''} ${ok?'':'disabled'}>${l}${ok?'':' (locked)'}</option>`; }).join('')}</select></div>
+    <div class="row"><div><div class="lab">Smarter steps</div><div class="hint">Make it smaller asks Claude to break the task down. The task's text is sent to Claude and uses your Claude usage. Off uses Rex's built-in steps.</div></div>${seg('aiSteps', [[true,'On'],[false,'Off']])}</div></div>
+  <div class="glabel">Time with Rex</div><div class="group unl">${(() => { const g = together(); return `<div class="hint pad">You've spent ${g.days} ${g.days===1?'day':'days'} together, done ${g.sessions} focus ${g.sessions===1?'session':'sessions'}, and played ${g.plays} ${g.plays===1?'time':'times'}. New things come from time together, not from tasks finished.</div>` + UNLOCKS.map(u => { const ok = unlocked(u.id); return `<div class="row"><div><div class="lab">${ok ? '' : '🔒 '}${esc(u.name)}</div><div class="hint">${u.kind} · ${ok ? 'Unlocked' : NEED_TXT(u.need)}</div></div></div>`; }).join(''); })()}</div>
+  <div class="glabel">Swipe on a task</div><div class="group">
+    <div class="row"><div><div class="lab">Swipe right</div><div class="hint">Pull a task to the right.</div></div><select class="swsel" id="swR" aria-label="Swipe right action">${SWIPE_OPTS.map(([v, l]) => `<option value="${v}" ${S.swipeR===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="row"><div><div class="lab">Swipe left</div><div class="hint">Pull a task to the left.</div></div><select class="swsel" id="swL" aria-label="Swipe left action">${SWIPE_OPTS.map(([v, l]) => `<option value="${v}" ${S.swipeL===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
+  <div class="glabel">Tasks</div><div class="group">
+    <div class="row"><div><div class="lab">Sort today's list</div><div class="hint">Tag effort and pick today's frog.</div></div><button class="pill ghost mint" data-sort>Sort</button></div>
+    <div class="row"><div><div class="lab">Import tasks</div><div class="hint">Paste a list from anywhere.</div></div><button class="pill ghost mint" data-import>Paste</button></div>
+    <div class="row"><div><div class="lab">Format for AI</div><div class="hint">Copy instructions so any AI writes a list Rex can read.</div></div><button class="pill ghost mint" data-copyfmt>Copy</button></div></div>
+  <div class="glabel">Data</div><div class="group">
+    <div class="row"><div><div class="lab">Backup</div><div class="hint">Copies everything as text you can keep.</div></div><div class="rowr"><button class="pill ghost mint" data-backup>Copy</button><button class="pill ghost mint" data-restore>Restore</button></div></div>
+    <div class="row"><button class="danger" id="resetBtn">${S._confirmReset ? 'Tap again to replace everything with the examples' : 'Start over with example tasks'}</button></div></div>
+  <div class="glabel">Prototype tools</div><div class="group">
+    <div class="row"><div><div class="lab">Try it now</div><div class="hint">Skip ahead to see how Rex behaves.</div></div><div class="rowr wrapb"><button class="pill ghost mint" data-sim="stall">A stall</button><button class="pill ghost mint" data-sim="wrap">Evening</button><button class="pill ghost mint" data-sim="day">Next day</button><button class="pill ghost mint" data-sim="onb">Intro</button></div></div></div>`; }
+function statsHTML(){ const log = S.log || {}, wk = weekKeys(); const week = wk.reduce((a, k) => a + (log[k]||0), 0);
+  const tile = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
+  return `<div class="hello"><div><h1>Your stats</h1><div class="date">Just for you. Rex doesn't keep score.</div></div><button class="pill ghost mint" data-tab="settings">Back</button></div>
+  <div class="stats">${tile(log[today()]||0, 'done today')}${tile(week, 'done this week')}${tile((S.days||[]).length, (S.days||[]).length === 1 ? 'day with Rex' : 'days with Rex')}${tile(S.sessions||0, 'focus sessions')}</div>
+  <div class="glabel">This week</div><div class="group weekbars">${wk.map((k, i) => { const n = log[k]||0, mx = Math.max(1, ...wk.map(x => log[x]||0)); return `<div class="wb ${k===today()?'td':''}"><i style="height:${n/mx*100}%"></i><span>${'MTWTFSS'[i]}</span><em>${n||''}</em></div>`; }).join('')}</div>
+  <div class="glabel">Keepsakes</div><div class="group keeps">${(S.keeps||[]).length ? S.keeps.map(x => `<div class="keep"><span>${KEEP_ICONS[x.k % KEEP_ICONS.length]}</span>${esc(KEEP_NAMES[x.k % KEEP_NAMES.length])}<em>${new Date(x.day+'T12:00').toLocaleDateString([], { month:'short', day:'numeric' })}</em></div>`).join('') : '<div class="hint pad">Finish everything on a day and Rex makes you something overnight.</div>'}</div>
+  ${(S.myHabits||[]).length ? `<div class="glabel">My habits</div><div class="group">${S.myHabits.map(h => `<div class="row"><div class="lab">${esc(h.n)}</div><div class="hint">${wk.filter(k => h.log[k]).length} of 7 this week · ${streakOf(h)} ${streakOf(h) === 1 ? 'day' : 'days'} running</div></div>`).join('')}</div>` : ''}`; }
+const KEEP_ICONS = ['🌰','🍓','⭐','🐦','🌲','🌱','🪨','🍂','🖍️','🧣','⛵','🕯️','🐚','🏠','☕','💐'];
+
+/* ---------- events ---------- */
+$('#scroll').addEventListener('click', e => {
+  const q = s => e.target.closest(s), g = (s, k) => { const el = q(s); return el ? el.dataset[k] : null; };
+  closeMenu();
+  let el;
+  if ((el = q('[data-check]'))){ toggle(byId(+el.dataset.check)); return; }
+  if ((el = q('[data-more]'))){ openMenu(+el.dataset.more, el); return; }
+  if ((el = q('[data-del]'))){ removeTask(byId(+el.dataset.del)); return; }
+  if ((el = q('[data-bring]'))){ const t = byId(+el.dataset.bring); t.when = 'today'; t.carry = 0; save(); render(); toast('Moved to Today'); bus.emit('task_today', t); return; }
+  if ((el = q('[data-park]'))){ const t = byId(+el.dataset.park); t.when = 'someday'; t.carry = 0; save(); render(); bus.emit('task_someday', t); return; }
+  if ((el = q('[data-keep]'))){ const t = byId(+el.dataset.keep); t.parkDay = today(); save(); render(); return; }
+  if ((el = q('[data-cat]'))){ cat = el.dataset.cat; render(); $('#addInput').focus(); return; }
+  if ((el = q('[data-addwhen]'))){ addWhen = el.dataset.addwhen; render(); $('#addInput').focus(); return; }
+  if ((el = q('[data-step]'))){ const [f] = focused(); stepDone(f, +el.dataset.step); return; }
+  if ((el = q('[data-pick]'))){ const t = byId(+el.dataset.pick); focusTask(t, 'You picked'); rex.hop = 1; rex.say('Good choice.', 1400); return; }
+  if (q('[data-cancelpick]')){ picking = false; render(); return; }
+  if (q('[data-pickone]')){ pickOne(); return; }
+  if ((el = q('[data-act]'))){ const [f] = focused(); const a = el.dataset.act; if (!f) return;
+    if (a === 'start') startSession(f);
+    else if (a === 'done'){ endSession(true); toggle(f); }
+    else if (a === 'step'){ const i = f.steps.findIndex(s => !s.done); if (i >= 0) stepDone(f, i); }
+    else if (a === 'stop'){ endSession(false); rex.say('That counts. You started.', 2200); }
+    else if (a === 'more5'){ session.end = Date.now() + session.len*60e3; session.over = false; render(); rex.say(`${session.len} more. Let\'s go.`, 1600); }
+    else if (a === 'break'){ endSession(true); rex.say('Good idea. I\'ll be here.', 2000); }
+    else if (a === 'est'){ panel = panel === 'est' ? null : 'est'; render(); }
+    else if (a === 'smaller'){ panel = panel === 'smaller' ? null : 'smaller'; render(); }
+    else if (a === 'when'){ panel = panel === 'when' ? null : 'when'; render(); }
+    else if (a === 'closepanel'){ panel = null; render(); }
+    else if (a === 'another'){ const three = pickThree().filter(t => t.id !== f.id); if (three.length){ focusTask(three[0], 'Rex suggested'); rex.say(pick(['How about this one?','Or maybe this?','This one looks quick.']), 1500); } else toast('That\'s the only one left'); }
+    touch(); return; }
+  if ((el = q('[data-when]'))){ const [f] = focused(); if (el.dataset.when === 'clear'){ f.startAt = null; save(); render(); } else setWhen(f, +el.dataset.when); return; }
+  if ((el = q('[data-place]'))){ const [f] = focused(); f.startAt = f.startAt || { at:null, label:'', day:today(), place:null }; f.startAt.place = f.startAt.place === el.dataset.place ? null : el.dataset.place; save(); render(); return; }
+  if ((el = q('[data-small]'))){ const [f] = focused(); smaller(f, +el.dataset.small); return; }
+  if (q('[data-smallgo]')){ const [f] = focused(); smallerAI(f, S.spice || 3); return; }
+  if ((el = q('[data-est]'))){ const [f] = focused(); f.est = +el.dataset.est || null; panel = null; save(); render(); return; }
+  if ((el = q('[data-len]'))){ const [f] = focused(); S.sessionMin = +el.dataset.len; save(); render(); return; }
+  if ((el = q('[data-amb]'))){ S.ambient = el.dataset.amb; save(); ambient.start(S.ambient); render(); return; }
+  if (q('[data-fcopen]')){ fcOpen = true; render(); return; }
+  if (q('[data-fcclose]')){ fcOpen = false; panel = null; render(); return; }
+  if (q('[data-tlopen]')){ S.tlOpen = true; save(); render(); return; }
+  if (q('[data-tlclose]')){ S.tlOpen = false; save(); render(); return; }
+  if ((el = q('[data-tl]'))){ focusTask(byId(+el.dataset.tl), 'You picked'); return; }
+  if ((el = q('[data-nb]'))){ const k = el.closest('[data-nk]').dataset.nk, n = nudges.find(x => x.k === k), fn = n && n.buttons[+el.dataset.nb][1]; dropNudge(k); fn && fn(); return; }
+  if ((el = q('[data-wrap]'))){ wrapChoice.set(+el.dataset.wrap, el.dataset.v); render(); return; }
+  if (q('[data-gn]')){ goToBed(); return; }
+  if (q('[data-notyet]')){ dropNudge('wrap'); return; }
+  if (q('[data-showdone]')){ S.showDone = !S.showDone; save(); render(); return; }
+  if (q('[data-import]')){ openImport(); return; }
+  if (q('[data-copyfmt]')){ copyFormat(); return; }
+  if (q('[data-sort]')){ if (openToday().length < 2){ toast('Add a couple of tasks first'); return; } openToday().forEach(t => { if (!t.repeat) delete t.eff; }); S.frogDay = null; S.triageDay = null; save(); triageStart(); return; }
+  if (q('[data-backup]')){ backup(); return; }
+  if (q('[data-restore]')){ restore(); return; }
+  if (q('[data-stats]')){ tab = 'stats'; render(); $('#scroll').scrollTop = 0; return; }
+  if ((el = q('.hello [data-tab], .tophead [data-tab]'))){ tab = el.dataset.tab; render(); return; }
+  if (q('[data-daybtn]')){ if (S.asleep) wake(); else if (openToday().length){ tab = 'today'; wrapUp(true); } else goToBed(); render(); return; }
+  if ((el = q('[data-sim]'))){ const s = el.dataset.sim;
+    if (s === 'stall'){ lastTaskAct = 0; lastStall = 0; checkStall(true); }
+    if (s === 'wrap'){ tab = 'today'; wrapUp(false); }
+    if (s === 'day'){ S.lastDay = '2000-01-01'; S.morningDay = null; rollover(); if (S.asleep) wake(); else morning(); tab = 'today'; render(); toast('It\'s a new day'); }
+    if (s === 'onb'){ S.onboarded = false; onboard(); }
+    return; }
+  if ((el = q('[data-hk]'))){ const h = S.myHabits.find(x => x.id === +el.dataset.hk); const k = el.dataset.day; if (h.log[k]) delete h.log[k]; else { h.log[k] = true; SFX.tick(); if (k === today() && talk(.7)){ rex.hop = 1; rex.say(pick(['Nice one!','That\'s a good habit.','Yay!']), 1400); } } save(); render(); return; }
+  if ((el = q('[data-hdel]'))){ const i = S.myHabits.findIndex(x => x.id === +el.dataset.hdel), h = S.myHabits[i]; S.myHabits.splice(i, 1); save(); render(); snack(`Removed "${h.n}"`, () => S.myHabits.splice(i, 0, h)); return; }
+  const st = q('[data-set]');
+  if (st){ let v = st.dataset.val; if (v === 'true') v = true; else if (v === 'false') v = false; else if (/^\d+$/.test(v)) v = +v; const key = st.dataset.set;
+    if (key.includes('.')){ const [a, b] = key.split('.'); S[a][b] = v; } else S[key] = v;
+    if (key === 'lockDay'){ preview = null; drawScene(); }
+    if (key === 'place'){ clearAllProps(); drawScene(); rex.x = rex.tx = .5; }
+    SFX.pop(); save(); render(); return; }
+  if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
+  const r = q('[data-row]'); if (r && !q('button')){ focusTask(byId(+r.dataset.row), 'You picked'); }
+});
+$('#scroll').addEventListener('input', e => {
+  if (e.target.id === 'spice'){ S.spice = +e.target.value; save(); const sv = document.querySelector('.spv'); if (sv) sv.textContent = SPICE[S.spice-1][0]; return; }
+  if (e.target.id === 'setName'){ S.name = e.target.value.trim() || 'friend'; save(); }
+  if (e.target.id === 'addInput'){ paintQuick(); }
+  if (e.target.id === 'lunchAt'){ S.habits.lunchAt = e.target.value; save(); }
+});
+$('#scroll').addEventListener('change', e => { if (e.target.id === 'ambSel'){ S.ambient = e.target.value; save(); SFX.pop(); return; } if (e.target.id === 'swR' || e.target.id === 'swL'){ S[e.target.id === 'swR' ? 'swipeR' : 'swipeL'] = e.target.value; save(); SFX.pop(); return; } if (e.target.id === 'repeatSel'){ addRepeat = e.target.value; return; } if (e.target.id === 'setName') rex.say(`Nice to meet you, ${S.name}!`, 1800); });
+$('#scroll').addEventListener('focusin', e => { if (e.target.id === 'addInput' && !addOpen){ addOpen = true; $('#addOpts').classList.add('on'); } });
+document.addEventListener('pointerdown', e => { if (addOpen && !e.target.closest('#addForm,#addOpts')){ const v = $('#addInput'); if (!v || !v.value.trim()){ addOpen = false; $('#addOpts') && $('#addOpts').classList.remove('on'); } } });
+$('#scroll').addEventListener('submit', e => { e.preventDefault();
+  if (e.target.id === 'mhForm'){ const v = $('#mhIn').value.trim(); if (!v) return; S.myHabits = S.myHabits || []; S.myHabits.push({ id:Date.now(), n:v.slice(0,40), log:{} }); save(); render(); setTimeout(() => $('#mhIn') && $('#mhIn').focus(), 0); return; }
+  const inp = $('#addInput'), v = inp.value.trim(); if (!v) return; const q = parseQuick(v); if (!q.text){ toast('Add a few words for the task'); return; }
+  const w0 = q.when || (addWhen === 'tomorrow' ? tomorrow() : addWhen), rp = q.repeat || addRepeat;
+  const t = addTask({ t:q.text.slice(0,90), est:q.est, when:w0, repeat:rp, dow: q.dow ?? (rp === 'weekly' ? new Date().getDay() : undefined), high:q.high, startAt: startAtFor(w0 === 'someday' ? 'today' : w0, q.at) });
+  if (t.repeat && !isDue(t) && t.when === 'today') t.when = 'rest';
+  addRepeat = ''; save(); render(); SFX.add(); touch(); const ni = $('#addInput'); ni.focus();
+  if (t.when !== 'today') toast(t.when === 'someday' ? 'Saved to Someday' : t.when === 'rest' ? `Repeats ${REPEAT_LABEL[t.repeat].toLowerCase()}` : `Saved for ${labelDay(t.when)}`);
+  bus.emit('task_added', t); });
+function paintQuick(){ const inp = $('#addInput'), pv = $('#qPrev'); if (!inp || !pv) return; const v = inp.value; if (!v.trim()){ pv.innerHTML = ''; pv.classList.remove('on'); return; }
+  const q = parseQuick(v); if (!q.bits.length && !q.high){ pv.innerHTML = ''; pv.classList.remove('on'); return; }
+  const chips = []; if (q.when && q.when !== 'today') chips.push(q.when === 'someday' ? 'Someday' : labelDay(q.when)); if (q.at != null) chips.push(fmtMin(q.at)); if (q.repeat) chips.push(REPEAT_LABEL[q.repeat]); if (q.est) chips.push(fmtDur(q.est)); if (q.high) chips.push('Important');
+  pv.innerHTML = chips.map(c => `<span class="qchip">${esc(c)}</span>`).join('') + `<span class="qtext">"${esc(q.text)}"</span>`; pv.classList.add('on'); }
+function openMenu(id, btn){ const t = byId(id); const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu';
+  m.innerHTML = `<button data-m="focus">Work on this</button><button data-m="high">${t.high ? 'Not important' : 'Mark important'}</button><button data-m="smaller">${t.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><button data-m="tomorrow">Move to tomorrow</button><button data-m="someday">Move to Someday</button><button data-m="delete" class="dz">Delete</button>`;
+  const r = btn.getBoundingClientRect(), s = $('#sheet').getBoundingClientRect(); const top = r.bottom - s.top + 4; m.style.top = Math.min(top, s.height - 290) + 'px'; $('#sheet').appendChild(m);
+  m.onclick = ev => { const a = ev.target.dataset.m; if (!a) return; closeMenu();
+    if (a === 'focus') focusTask(t, 'You picked');
+    if (a === 'high'){ t.high = !t.high; save(); render(); }
+    if (a === 'smaller'){ focusTask(t, 'You picked'); panel = 'smaller'; render(); }
+    if (a === 'tomorrow'){ t.when = tomorrow(); if (focusId === t.id) focusId = null; save(); render(); snack(`Moved "${t.t}" to tomorrow`, () => { t.when = 'today'; }); }
+    if (a === 'someday'){ t.when = 'someday'; t.carry = 0; if (focusId === t.id) focusId = null; save(); render(); bus.emit('task_someday', t); snack(`Saved "${t.t}" for later`, () => { t.when = 'today'; }); }
+    if (a === 'delete') removeTask(t); };
+  setTimeout(() => addEventListener('click', closeMenuOutside, { once:true }), 0); }
+function closeMenu(){ $('#menu')?.remove(); }
+function closeMenuOutside(e){ if (!e.target.closest('#menu')) closeMenu(); }
+$('#tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (!b) return; if (b.dataset.tab === 'rex'){ setExpanded(true); return; } tab = b.dataset.tab; panel = null; render(); $('#scroll').scrollTop = 0; };
+$('#snack button').onclick = doUndo;
+
+/* swipe to complete or delete, long-press to reorder */
+(function gestures(){
+  let g = null;
+  $('#scroll').addEventListener('pointerdown', e => { const row = e.target.closest('.task'); if (!row || e.target.closest('button') || !row.closest('#list')) return;
+    const wrap = row.parentNode; g = { row, wrap, x:e.clientX, y:e.clientY, dx:0, mode:null, id:+row.dataset.row, pid:e.pointerId };
+    g.lp = setTimeout(() => { if (!g || g.mode) return; g.mode = 'drag'; row.classList.add('lift'); buzz(8); try { row.setPointerCapture(g.pid); } catch(_){} }, 340); });
+  addEventListener('pointermove', e => { if (!g) return; const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    if (!g.mode){ if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)){ g.mode = 'swipe'; clearTimeout(g.lp); try { g.row.setPointerCapture(g.pid); } catch(_){} } else if (Math.abs(dy) > 10){ clearTimeout(g.lp); g = null; return; } }
+    if (g.mode === 'swipe'){ const side = dx > 0 ? S.swipeR : S.swipeL; if (side === 'none'){ g.dx = 0; return; } g.dx = Math.max(-150, Math.min(150, dx)); g.row.style.transform = `translateX(${g.dx}px)`;
+      g.wrap.dataset.sw = side; g.wrap.classList.toggle('swr', g.dx > 80); g.wrap.classList.toggle('swl', g.dx < -80); g.wrap.classList.toggle('swing', g.dx !== 0); g.wrap.dataset.dir = g.dx > 0 ? 'r' : 'l'; }
+    if (g.mode === 'drag'){ e.preventDefault(); g.row.style.transform = `translateY(${dy}px) scale(1.02)`; const rows = [...$('#list').querySelectorAll('.trow')];
+      const midY = g.row.getBoundingClientRect().top + g.row.offsetHeight/2; rows.forEach(r => r.classList.remove('dropa','dropb'));
+      const target = rows.find(r => r !== g.wrap && midY < r.getBoundingClientRect().top + r.offsetHeight/2); g.before = target ? +target.dataset.id : null; if (target) target.classList.add('dropa'); } }, { passive:false });
+  addEventListener('pointerup', () => { if (!g) return; clearTimeout(g.lp); const { row, wrap, mode, dx, id } = g; g = null; wrap.classList.remove('swing');
+    if (mode === 'swipe'){ wrap.classList.remove('swr','swl'); const act = dx > 80 ? S.swipeR : dx < -80 ? S.swipeL : null;
+      if (act){ row.style.transform = `translateX(${dx > 0 ? 110 : -110}%)`; setTimeout(() => swipeDo(act, byId(id)), 160); } else row.style.transform = ''; }
+    if (mode === 'drag'){ row.classList.remove('lift'); row.style.transform = ''; const before = dragBefore(); const list = openToday().filter(t => t.id !== id); let idx = before == null ? list.length : list.findIndex(t => t.id === before); if (idx < 0) idx = list.length; list.splice(idx, 0, byId(id)); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); save(); render(); SFX.pop(); }
+  });
+  function dragBefore(){ const el = $('#list .dropa'); return el ? +el.dataset.id : null; }
+})();
+
+/* keyboard */
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase(), typing = tag === 'input' || tag === 'textarea';
+  if (e.key === 'Escape'){ closeOverlay(); closeMenu(); if (app.classList.contains('expanded')) setExpanded(false); panel = null; picking = false; return; }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !typing){ e.preventDefault(); doUndo(); return; }
+  if (typing){ if (e.key === 'ArrowDown' && e.target.id === 'addInput'){ e.preventDefault(); kbIndex = 0; focusRow(); } return; }
+  if (app.querySelector('.ov')) return;
+  const rows = [...document.querySelectorAll('#list .task')];
+  if (e.key === 'n' || e.key === '/'){ e.preventDefault(); tab = 'today'; render(); $('#addInput').focus(); return; }
+  if (e.key === 'r'){ roar(); return; }
+  if (e.key === 'z'){ setExpanded(!app.classList.contains('expanded')); return; }
+  const cur = document.activeElement && document.activeElement.closest && document.activeElement.closest('#list .task'); if (cur) kbIndex = rows.indexOf(cur);
+  if (e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); kbIndex = Math.min(rows.length - 1, kbIndex + 1); focusRow(); }
+  else if (e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); if (kbIndex <= 0){ $('#addInput') && $('#addInput').focus(); kbIndex = -1; } else { kbIndex--; focusRow(); } }
+  else if (cur){ const t = byId(+cur.dataset.row);
+    if (e.key === ' '){ e.preventDefault(); toggle(t); setTimeout(focusRow, 50); }
+    else if (e.key === 'Enter'){ focusTask(t, 'You picked'); }
+    else if (e.key === 's'){ startSession(t); }
+    else if (e.key === 'Delete' || e.key === 'Backspace'){ removeTask(t); setTimeout(focusRow, 50); } }
+});
+function focusRow(){ const rows = [...document.querySelectorAll('#list .task')]; if (!rows.length) return; kbIndex = Math.max(0, Math.min(rows.length - 1, kbIndex)); rows[kbIndex].focus(); }
+
+/* ---------- Rex keeps an eye on the day ---------- */
+function checkStall(force){
+  if (!force && (S.asleep || session || document.hidden || Date.now() - lastTaskAct < 3*60e3 || Date.now() - lastStall < 10*60e3)) return;
+  const p = pickThree()[0]; if (!p) return; lastStall = Date.now();
+  rex.hop = 1; rex.say(`Maybe this one? "${p.t}"`, 7000, [['Let\'s do it', () => { focusTask(p, 'Rex suggested'); startSession(p); }], ['Show me', () => focusTask(p, 'Rex suggested')], ['Not now', () => { lastStall = Date.now(); }, true]]); }
+setInterval(() => checkStall(false), 30000);
+setInterval(() => { if (S.asleep) return;
+  for (const t of openToday()){ if (t.startAt && t.startAt.at && !t.nudged && Date.now() >= t.startAt.at){ if (Date.now() - t.startAt.at > 60*60e3){ t.nudged = true; continue; } t.nudged = true; save();
+    rex.hop = 1; rex.say(`It's ${t.startAt.label}. Time for "${t.t}"${t.startAt.place ? ', ' + t.startAt.place.toLowerCase() : ''}.`, 9000, [['Start with Rex', () => startSession(t)], ['Later', () => { t.startAt.at = Date.now() + 30*60e3; t.startAt.label = 'in a bit'; t.nudged = false; save(); render(); }, true]]); render(); break; } } }, 20000);
+function hm(str){ const [h, m] = str.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d.getTime(); }
+setInterval(() => { if (S.asleep || session) return; const now = Date.now(), h = new Date().getHours(), H = S.habits;
+  if (H.lunch && S.lunchDay !== today() && now >= hm(H.lunchAt||'12:30') && h < 16 && !(S.lunchSnooze > now)){ S.lunchDay = today(); save(); feed();
+    setTimeout(() => rex.say('Lunch time. Eat with me?', 6000, [['Okay', () => { rex.hop = 1; }], ['Later', () => { S.lunchDay = null; S.lunchSnooze = Date.now() + 30*60e3; save(); }, true]]), 3200); return; }
+  if (H.plants && S.plantDay !== today() && h >= 10 && h < 18){ S.plantDay = today(); save(); rex.say('Watered my plant. Got any of your own?', 5000, [['Watered mine', () => { rex.hop = 1; }], ['Not now', null, true]]); return; }
+  if (H.walk && S.walkDay !== today() && h >= 15 && h < 19){ S.walkDay = today(); save(); rex.goTo(rex.x < .5 ? .85 : .15); rex.say('Going for a little walk. Come with me?', 5000, [['Let\'s go', () => { rex.hop = 1; rex.say('Fresh air!', 1500); }], ['Not now', null, true]]); return; }
+  if (H.winddown && S.windDay !== today() && h >= 21){ S.windDay = today(); save(); rex.say('Getting sleepy. Wrap up soon?', 6000, [['Wrap up', () => wrapUp(true)], ['Not yet', null, true]]); return; }
+  if (S.wrapDay !== today() && h >= 19 && openToday().length && !nudges.some(n => n.k === 'wrap')) wrapUp(false);
+}, 30000);
+setInterval(() => { if (!document.hidden){ S.lastOpen = Date.now(); if (rollover()){ render(); morning(); } save(); } }, 60000);
+
+/* ---------- Rex listens to the day (sometimes, never every time) ---------- */
+bus.on('task_added', t => { if (S.asleep) return; if (isBig(t) && !t.steps.length){ rex.say('That one sounds big. Want to make it smaller?', 6000, [['Make it smaller', () => { focusTask(t, 'You picked'); panel = 'smaller'; render(); }], ['It\'s fine', null, true]]); return; }
+  if (talk(.5)){ rex.hop = 1; rex.say(pick(['Got it.','On the list!','Okay!','Noted!']), 1300); } });
+bus.on('task_done', t => { if (S.asleep) return;
+  const frog = S.frogDay === today() && S.frogId === t.id;
+  if (frog){ snow = 0; setTimeout(() => { rex.hop = 1; rex.say('That was the frog. The rest of today is downhill.', 3000); }, 500); return; }
+  if (t.eff === 'e'){ snow++; if (snow === 2){ setTimeout(() => rex.say('Two easy ones down. It\'s rolling now.', 2400), 500); return; } if (snow === 3){ setTimeout(() => rex.say('Three in a row. Keep the snowball going.', 2400), 500); return; } } else snow = 0;
+  if (isBig(t) || t.steps.length >= 3){ rex.shake = 1; rex.sq = .12; rex.say(pick(['RAWR! That was a big one!','That was a big one!']), 2200); return; }
+  if (talk(.6)){ rex.hop = 1; const b = rexBox(); heart(b.x, b.y + 10); rex.say(pick(['Nice!','You did it.','One less thing!','Yay!']), 1400); } });
+bus.on('task_someday', () => { rex.say('Saved it for later.', 1500); });
+bus.on('task_deleted', () => { if (talk(.35)) rex.say('Bye-bye, task.', 1200); });
+
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 1900); }
+function setExpandedIf(on){ if (app.classList.contains('expanded') !== on) setExpanded(on); }
+
+/* ================= living world: light, dust, bugs, grass, tappable things ================= */
+const FX = (() => {
+  const zoom = $('#zoom');
+  const light = document.createElement('canvas'); light.className = 'fxc light'; zoom.insertBefore(light, $('#props'));
+  const dark = document.createElement('canvas'); dark.className = 'fxc dark'; zoom.insertBefore(dark, light);
+  const front = document.createElement('canvas'); front.className = 'fxc front'; zoom.insertBefore(front, $('#bubble'));
+  const lc = light.getContext('2d'), dc = dark.getContext('2d'), fc = front.getContext('2d');
+  let W = 0, H = 0, dpr = 1, M = { s:1, tx:0, ty:0, vx:0, vy:0, vw:1672, vh:941 };
+  let dust = [], bugs = [], bits = [], rings = [], tufts = [], gust = 0, ptr = null, ptrV = { x:0, y:0 }, lastPtr = null, flick = 0;
+
+  // places: hotspots in art pixels (1672 x 941); sunset bedroom art sits ~25px to the right
+  const HOT = {
+    bedroom: [
+      { id:'lamp', x:500, y:340, r:70, label:'the lamp' },
+      { id:'lantern', x:1495, y:185, r:45, label:'the lantern' },
+      { id:'window', box:[745, 55, 1185, 430], label:'the window' },
+      { id:'toybox', box:[1115, 470, 1400, 625], label:'the toy box' },
+      { id:'bed', box:[0, 300, 470, 690], label:'the bed' },
+      { id:'plant', x:1460, y:545, r:70, label:'the plant' },
+      { id:'pothos', x:795, y:420, r:55, label:'the little plant' },
+      { id:'moonlamp', x:110, y:112, r:45, label:'the moon lamp' },
+      { id:'poster', box:[275, 60, 485, 300], label:'the poster' },
+      { id:'bunting', box:[60, 0, 360, 70], label:'the flags' },
+    ],
+    meadow: [
+      { id:'house', box:[1045, 350, 1275, 530], label:'the house' },
+      { id:'lake', box:[540, 495, 880, 545], label:'the lake' },
+      { id:'treeL', box:[0, 60, 330, 470], label:'the big tree' },
+      { id:'treeR', box:[1460, 200, 1672, 520], label:'the tree' },
+      { id:'flowersL', x:160, y:648, r:70, label:'the flowers' },
+      { id:'flowersR', x:1490, y:668, r:70, label:'the flowers' },
+      { id:'sky', box:[380, 0, 1672, 330], label:'the sky' },
+    ],
+  };
+  const LIGHTS = { // key lights per place/art: [x, y, color, size]
+    bedroom: { day:[[965, 240, '255,214,150', 1]], golden:[[1000, 290, '255,170,90', 1], [520, 345, '255,196,110', .7]], dusk:[[1000, 290, '255,160,90', .8], [520, 345, '255,196,110', .8]], night:[[500, 340, '255,196,110', 1], [1495, 185, '255,180,90', .55], [110, 112, '255,230,180', .35], [1070, 130, '170,190,255', .45]] },
+    meadow: { day:[[1335, 145, '255,245,200', 1]], golden:[[720, 385, '255,170,80', 1.2]], dusk:[[755, 430, '255,140,90', .7]], night:[[1295, 155, '210,220,255', .7], [1225, 480, '255,200,120', .35]] },
+  };
+  const artPh = () => { const ph = phase(); return ph === 'morning' ? 'day' : ph; };
+  const dxArt = () => place() === 'bedroom' && ['golden','dusk'].includes(phase()) ? 25 : 0;
+  const lampOn = () => S.lamp !== false;
+
+  function resize(){ dpr = Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;
+    [light, dark, front].forEach(c => { c.width = Math.round(W*dpr); c.height = Math.round(H*dpr); }); seed(); }
+  function mapping(){ const vb = (scene.getAttribute('viewBox') || '0 0 1672 941').split(' ').map(Number); const s = Math.max(W/vb[2], H/vb[3]);
+    const par = -(rex.x - .5)*70; M = { s, tx:(W - vb[2]*s)/2 - vb[0]*s + par*s, ty:(H - vb[3]*s) - vb[1]*s }; }
+  const sx = x => M.tx + x*M.s, sy = y => M.ty + y*M.s;
+  const ax = px => (px - M.tx)/M.s, ay = py => (py - M.ty)/M.s;
+
+  function seed(){
+    const pl = place(), ph = artPh(), n = Math.round((W*H)/9000);
+    dust = Array.from({ length: pl === 'bedroom' ? n : Math.round(n*.6) }, () => ({ x:Math.random()*W, y:Math.random()*H, vx:0, vy:0, r:1 + Math.random()*2.2, p:Math.random()*6.28, z:.4 + Math.random()*.8 }));
+    bugs = [];
+    if (pl === 'meadow'){
+      if (ph === 'day'){ for (let i = 0; i < 2; i++) bugs.push(bug('fly', i)); bugs.push(bug('bee', 0)); }
+      if (ph === 'golden'){ for (let i = 0; i < 8; i++) bugs.push(bug('gnat', i)); bugs.push(bug('fly', 0)); }
+      if (ph === 'dusk' || ph === 'night'){ for (let i = 0; i < (ph === 'night' ? 16 : 10); i++) bugs.push(bug('firefly', i)); }
+    } else {
+      if (ph === 'night' && lampOn()) for (let i = 0; i < 2; i++) bugs.push(bug('moth', i));
+      if (ph === 'day') bugs.push(bug('ladybug', 0));
+    }
+    tufts = pl === 'meadow' ? Array.from({ length: 26 }, (_, i) => ({ x: (i + Math.random()*.6)/26, h: 16 + Math.random()*16, b:0, bv:0, k: Math.random() })) : [];
+  }
+  function bug(kind, i){ const b = { kind, i, x: Math.random()*W, y: H*(.35 + Math.random()*.4), vx:0, vy:0, t:Math.random()*100, scared:0, home:null };
+    if (kind === 'moth'){ b.home = [500, 330]; }
+    if (kind === 'ladybug'){ b.x = sx(760 + Math.random()*400); b.y = sy(438); b.dir = 1; }
+    return b; }
+
+  /* ---------- input ---------- */
+  world.addEventListener('pointermove', e => { const r = zoom.getBoundingClientRect(); const p = { x:e.clientX - r.left, y:e.clientY - r.top };
+    if (lastPtr){ ptrV = { x:p.x - lastPtr.x, y:p.y - lastPtr.y }; } lastPtr = p; ptr = p; });
+  world.addEventListener('pointerleave', () => { ptr = null; lastPtr = null; });
+  let downAt = null;
+  world.addEventListener('pointerdown', e => { if (e.target.closest('.rex,button,.playbar,.bubble')) { downAt = null; return; } downAt = { x:e.clientX, y:e.clientY, t:performance.now() }; });
+  world.addEventListener('pointerup', e => { if (!downAt) return; const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y), dt = performance.now() - downAt.t; downAt = null;
+    const r = zoom.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (moved > 30 && dt < 600 && Math.abs(e.clientX - (e.clientX - 0)) >= 0){ swoosh(px, py, (e.clientX - (px + r.left)) ); }
+    if (moved < 12) tap(px, py); });
+
+  function swoosh(){ gust = 1; }
+  function hitAt(px, py){ const x = ax(px) - dxArt(), y = ay(py);
+    // bugs first
+    for (const b of bugs){ if (b.kind !== 'gnat' && Math.hypot(b.x - px, b.y - py) < 22){ return { bug:b }; } }
+    for (const h of HOT[place()]){ if (h.box ? (x >= h.box[0] && x <= h.box[2] && y >= h.box[1] && y <= h.box[3]) : Math.hypot(x - h.x, y - h.y) < h.r) return { hot:h }; }
+    return null; }
+  function tap(px, py){ if (S.asleep){ rex.say('Zzz…', 1200); return; } const hit = hitAt(px, py);
+    burst(px, py, 10, 'sparkle');
+    if (!hit) return;
+    if (hit.bug){ const b = hit.bug; b.scared = 1.4; b.vx += (Math.random()*2 - 1)*6; b.vy -= 5;
+      rex.say(pick({ fly:['Butterfly!','Come back!'], bee:['Bzzz! Careful!'], gnat:['Tiny bugs!'], firefly:['A firefly!','So glowy.'], moth:['Hi, moth.','Moths love the lamp.'], ladybug:['A ladybug! Lucky.'] }[b.kind] || ['Bug!']), 1500);
+      if (b.kind === 'fly') rex.goTo(Math.max(.1, Math.min(.9, px/W)));
+      played(); return; }
+    const h = hit.hot; const x = sx((h.x || (h.box[0] + h.box[2])/2) + dxArt()), y = sy(h.y || (h.box[1] + h.box[3])/2);
+    act(h.id, x, y); played(); }
+
+  function act(id, x, y){ const ph = artPh();
+    switch (id){
+      case 'lamp': S.lamp = !lampOn(); save(); SFX.pop(); flick = 1; burst(x, y, 14, 'glow'); rex.say(lampOn() ? pick(['Cozy.','Light on!']) : ph === 'night' ? 'Ooh, spooky. I can see the moon better.' : 'Lamp off.', 1800); seed(); break;
+      case 'lantern': flick = 1.5; burst(x, y, 18, 'ember'); rex.say(pick(['The lantern flickered!','Warm little light.']), 1500); break;
+      case 'moonlamp': burst(x, y, 16, 'glow'); rex.say('My moon lamp. It\'s a tiny moon!', 1800); break;
+      case 'window': rex.goTo(.55, () => { rex.face = 1; rex.say(ph === 'night' ? pick(['So many stars…','The town is sleeping.']) : ph === 'golden' || ph === 'dusk' ? 'The sky\'s on fire!' : pick(['Nice day out.','I can see the river.']), 2200); });
+        if (ph === 'night') for (let i = 0; i < 2; i++) setTimeout(() => shootingStar(sx(780 + Math.random()*300), sy(80 + Math.random()*100)), 400 + i*900); break;
+      case 'toybox': burst(x, y - 20, 12, 'confetti'); rex.say('Toys!', 1200); setTimeout(ballDrop, 300); break;
+      case 'bed': rex.say('Bounce!', 1200); rex.goTo(PLACES.bedroom.bed, () => { rex.hop = 1; setTimeout(() => rex.hop = 1, 450); setTimeout(() => rex.hop = 1, 900); }); break;
+      case 'plant': case 'pothos': leaves(x, y, 7); rex.say(pick(['Hi, plant.','Does it need water?','Leafy!']), 1500); break;
+      case 'poster': rex.face = -1; rex.shake = 1; rex.sq = .1; rex.say('RAWR! …he roared back. Probably.', 2200); break;
+      case 'bunting': for (let i = 0; i < 6; i++) setTimeout(() => burst(x - 120 + i*50, y, 3, 'confetti'), i*60); rex.say('Party flags!', 1300); break;
+      case 'house': smoke(sx(1185), sy(358)); rex.say(pick(['That\'s home.','Someone\'s making dinner.']), 1800); break;
+      case 'lake': ripple(x, y); setTimeout(() => ripple(x + 30, y + 4), 300); rex.say(pick(['Plop!','I want to skip a stone.']), 1500); break;
+      case 'treeL': case 'treeR': leaves(x, y, 10); if (ph !== 'night') bird(x, y); rex.say(pick(['Leaves!','A bird lives up there.']), 1500); break;
+      case 'flowersL': case 'flowersR': burst(x, y, 12, 'petal'); if (ph === 'day') bugs.push(Object.assign(bug('fly', 9), { x, y })); rex.say(pick(['Smells nice.','Flowers!']), 1400); break;
+      case 'sky': if (ph === 'night') shootingStar(x, y); else { gust = 1; rex.say('Whoosh, wind!', 1200); } break;
+    } }
+
+  /* ---------- particle helpers ---------- */
+  function burst(x, y, n, kind){ for (let i = 0; i < n; i++){ const a = Math.random()*6.28, sp = 1 + Math.random()*3;
+    bits.push({ kind, x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - (kind === 'ember' || kind === 'glow' ? 1.5 : 1), life:1, decay: .012 + Math.random()*.02, r:2 + Math.random()*3, rot:Math.random()*6, c: kind === 'confetti' ? ['#E8775A','#F2B84B','#8DB07A','#7FA6C9'][i%4] : kind === 'petal' ? ['#FFF4EC','#F7C6C9'][i%2] : null }); } }
+  function leaves(x, y, n){ for (let i = 0; i < n; i++) bits.push({ kind:'leaf', x: x + (Math.random()*80 - 40), y: y + (Math.random()*40 - 20), vx:(Math.random()*2 - 1), vy:.4 + Math.random(), life:1, decay:.006, r:4 + Math.random()*3, rot:Math.random()*6, c: ['#5E7A45','#7FA35A','#4B6B3A'][i%3] }); }
+  function smoke(x, y){ for (let i = 0; i < 8; i++) setTimeout(() => bits.push({ kind:'smoke', x: x + Math.random()*6, y, vx:.2 + Math.random()*.3, vy:-.6 - Math.random()*.4, life:1, decay:.008, r:6 + Math.random()*4 }), i*160); }
+  function ripple(x, y){ rings.push({ x, y, r:4, life:1 }); }
+  function shootingStar(x, y){ bits.push({ kind:'star', x, y, vx:7, vy:2.5, life:1, decay:.025, r:2 }); }
+  function bird(x, y){ bits.push({ kind:'bird', x, y, vx: x < W/2 ? 3 : -3, vy:-1.6, life:1, decay:.006, r:6, t:0 }); }
+
+  /* ---------- per-frame ---------- */
+  function step(dt, t){
+    if (!W) resize(); mapping();
+    const pl = place(), ph = artPh(), night = ph === 'night', K = (LIGHTS[pl][ph] || []).filter(l => !(pl === 'bedroom' && night && l[0] === 500 && !lampOn()));
+    const rx = rex.x*W, ry = H - parseFloat(getComputedStyle(zoom).getPropertyValue('--ground') || 60);
+    gust = Math.max(0, gust - dt*.6); flick = Math.max(0, flick - dt);
+    if (ptr){ ptrV.x *= .85; ptrV.y *= .85; }
+
+    /* dark layer: lamp off at night, gentle vignette */
+    dc.setTransform(dpr, 0, 0, dpr, 0, 0); dc.clearRect(0, 0, W, H);
+    if (pl === 'bedroom' && night && !lampOn()){ dc.fillStyle = 'rgba(40,52,110,.55)'; dc.fillRect(0, 0, W, H); }
+    const vg = dc.createRadialGradient(W/2, H*.55, Math.min(W, H)*.35, W/2, H*.55, Math.max(W, H)*.8); vg.addColorStop(0, 'rgba(255,255,255,0)'); vg.addColorStop(1, night ? 'rgba(20,24,60,.35)' : 'rgba(80,50,40,.18)');
+    dc.fillStyle = vg; dc.fillRect(0, 0, W, H);
+
+    /* light layer: god rays + glows (screen) */
+    lc.setTransform(dpr, 0, 0, dpr, 0, 0); lc.clearRect(0, 0, W, H);
+    rays(lc, pl, ph, t);
+    for (const [x, y, c, s] of K){ const px = sx(x + dxArt()), py = sy(y); const fl = 1 + Math.sin(t*9 + x)*.04 + (flick ? Math.sin(t*40)*.15*flick : 0);
+      const R = 140*M.s*s*fl*(night ? 1.25 : 1); const g = lc.createRadialGradient(px, py, 0, px, py, R); g.addColorStop(0, `rgba(${c},${.38*s})`); g.addColorStop(1, `rgba(${c},0)`); lc.fillStyle = g; lc.fillRect(px - R, py - R, R*2, R*2); }
+
+    /* front layer: dust, bugs, bits, grass */
+    fc.setTransform(dpr, 0, 0, dpr, 0, 0); fc.clearRect(0, 0, W, H);
+    const beam = beamTest(pl, ph);
+    for (const d of dust){
+      d.p += dt*(.6 + d.z*.4); d.vx += Math.sin(d.p*.7)*.004 + gust*.05; d.vy += Math.cos(d.p*.5)*.003 - .0006;
+      if (ptr){ const dx = d.x - ptr.x, dy = d.y - ptr.y, dd = dx*dx + dy*dy; if (dd < 6400){ const f = (1 - dd/6400); d.vx += (dx*.002 + ptrV.x*.04)*f; d.vy += (dy*.002 + ptrV.y*.04)*f; } }
+      if (rex.state === 'walk' || rex.hop > 0){ const dx = d.x - rx, dy = d.y - (ry - 30); if (dx*dx + dy*dy < 9000){ d.vx += Math.sign(dx)*.05; d.vy -= .05; } }
+      d.vx *= .96; d.vy *= .96; d.x += d.vx; d.y += d.vy;
+      if (d.x < -5) d.x = W + 5; if (d.x > W + 5) d.x = -5; if (d.y < -5) d.y = H + 5; if (d.y > H + 5) d.y = -5;
+      const lit = beam(d.x, d.y); const a = (pl === 'meadow' ? .32 : .22) + lit*.85; if (a < .05) continue;
+      const tw = .6 + .4*Math.sin(d.p*3);
+      fc.fillStyle = night ? `rgba(220,230,255,${a*tw*.6})` : ph === 'golden' || ph === 'dusk' ? `rgba(255,214,150,${a*tw})` : `rgba(255,248,225,${a*tw})`;
+      fc.beginPath(); fc.arc(d.x, d.y, d.r*d.z, 0, 6.28); fc.fill(); }
+    for (const b of bugs) drawBug(b, dt, t, rx, ry);
+    if (bugs[0] && bugs[0].kind === 'fly'){ bfly.x = ax(bugs[0].x); bfly.y = ay(bugs[0].y); }
+    for (let i = bits.length - 1; i >= 0; i--){ const b = bits[i]; b.life -= b.decay; if (b.life <= 0){ bits.splice(i, 1); continue; } drawBit(b, dt); }
+    for (let i = rings.length - 1; i >= 0; i--){ const r = rings[i]; r.r += 40*dt; r.life -= dt*.8; if (r.life <= 0){ rings.splice(i, 1); continue; }
+      fc.strokeStyle = `rgba(255,255,255,${r.life*.7})`; fc.lineWidth = 2; fc.beginPath(); fc.ellipse(r.x, r.y, r.r*1.8, r.r*.45, 0, 0, 6.28); fc.stroke(); }
+    grass(dt, t, rx, ry);
+    edgeLight(K, rx, ry);
+  }
+
+  function beamTest(pl, ph){ // how much a point sits inside a light beam (0..1)
+    if (pl === 'bedroom'){ if (ph === 'night' && lampOn()){ const lx = sx(500), ly = sy(340), R = 260*M.s; return (x, y) => Math.max(0, 1 - Math.hypot(x - lx, y - ly)/R); }
+      const wx0 = sx(745 + dxArt()), wx1 = sx(1185 + dxArt()), wy = sy(60), slope = .55; return (x, y) => { if (y < wy) return 0; const sh = (y - wy)*slope; return (x > wx0 - sh && x < wx1 - sh) ? (ph === 'night' ? .25 : .9) : 0; }; }
+    const L = (LIGHTS.meadow[ph] || [])[0]; if (!L) return () => 0; const lx = sx(L[0]), ly = sy(L[1]); return (x, y) => Math.max(0, 1 - Math.hypot(x - lx, y - ly)/(700*M.s)) * (ph === 'night' ? .4 : 1); }
+
+  function rays(c, pl, ph, t){
+    c.save();
+    if (pl === 'bedroom'){ const night = ph === 'night'; const col = night ? '190,205,255' : ph === 'day' ? '255,232,180' : '255,176,96'; const strength = night ? (lampOn() ? .10 : .22) : ph === 'day' ? .22 : .26;
+      const x0 = 745 + dxArt(), x1 = 1185 + dxArt(), y0 = 60, y1 = 430, n = 5;
+      for (let i = 0; i < n; i++){ const a = x0 + (x1 - x0)*(i/n), b = x0 + (x1 - x0)*((i + .7)/n); const drift = Math.sin(t*.4 + i*1.7)*.35 + .65;
+        const g = c.createLinearGradient(sx(a), sy(y0), sx(a - 380), sy(941)); g.addColorStop(0, `rgba(${col},${strength*drift})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g;
+        c.beginPath(); c.moveTo(sx(a), sy(y0)); c.lineTo(sx(b), sy(y0)); c.lineTo(sx(b - 520), sy(941)); c.lineTo(sx(a - 520), sy(941)); c.closePath(); c.fill(); }
+    } else { const L = (LIGHTS.meadow[ph] || [])[0]; if (L && ph !== 'night'){ const lx = sx(L[0]), ly = sy(L[1]), col = L[2], n = ph === 'golden' ? 9 : 6, len = Math.max(W, H)*1.4;
+      for (let i = 0; i < n; i++){ const ang = (ph === 'day' ? 1.9 : 1.15) + (i/n)*(ph === 'day' ? 1.2 : 2.6) + Math.sin(t*.15 + i)*.03, w = .05 + (i%3)*.025, drift = .55 + .45*Math.sin(t*.35 + i*2.1);
+        const g = c.createRadialGradient(lx, ly, 0, lx, ly, len); g.addColorStop(0, `rgba(${col},${(ph === 'golden' ? .28 : .15)*drift})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g;
+        c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + Math.cos(ang - w)*len, ly + Math.sin(ang - w)*len); c.lineTo(lx + Math.cos(ang + w)*len, ly + Math.sin(ang + w)*len); c.closePath(); c.fill(); } } }
+    c.restore(); }
+
+  function drawBug(b, dt, t, rx, ry){ b.t += dt; b.scared = Math.max(0, b.scared - dt);
+    const flee = (fx, fy, rad, k) => { const dx = b.x - fx, dy = b.y - fy, d = Math.hypot(dx, dy); if (d < rad){ b.vx += dx/d*k; b.vy += dy/d*k; } };
+    if (ptr) flee(ptr.x, ptr.y, 90, .35); flee(rx, ry - 40, 70, .15);
+    if (b.kind === 'fly' || b.kind === 'bee'){ const tx = W*(.5 + Math.sin(b.t*.23 + b.i*2)*.4), ty = H*(.45 + Math.sin(b.t*.61 + b.i)*.18);
+      b.vx += (tx - b.x)*.0015 + Math.sin(b.t*5)*.15; b.vy += (ty - b.y)*.0015 + Math.cos(b.t*6)*.15; b.vx *= .94; b.vy *= .94; b.x += b.vx; b.y += b.vy;
+      const s = b.kind === 'bee' ? 7 : 12, fl = Math.abs(Math.sin(b.t*(b.scared ? 40 : 18)));
+      fc.save(); fc.translate(b.x, b.y);
+      if (b.kind === 'fly'){ fc.fillStyle = '#F2A65A'; fc.beginPath(); fc.ellipse(-s*.6, 0, s*fl, s*.8, -.3, 0, 6.28); fc.fill(); fc.fillStyle = '#F7C46A'; fc.beginPath(); fc.ellipse(s*.6, 0, s*fl, s*.8, .3, 0, 6.28); fc.fill(); fc.fillStyle = '#4A3A2A'; fc.fillRect(-1, -s*.6, 2, s*1.2); }
+      else { fc.fillStyle = 'rgba(255,255,255,.75)'; fc.beginPath(); fc.ellipse(-2, -4, 3, 5*fl + 1, -.4, 0, 6.28); fc.ellipse(2, -4, 3, 5*fl + 1, .4, 0, 6.28); fc.fill(); fc.fillStyle = '#F2B84B'; fc.beginPath(); fc.ellipse(0, 0, s, s*.7, 0, 0, 6.28); fc.fill(); fc.fillStyle = '#3A2E22'; fc.fillRect(-1, -4, 2, 8); fc.fillRect(3, -3.5, 2, 7); }
+      fc.restore(); return; }
+    if (b.kind === 'gnat'){ const cx = sx(720), cy = sy(560); b.vx += (cx + Math.sin(b.t*1.3 + b.i)*120 - b.x)*.002 + (Math.random() - .5)*.4; b.vy += (cy + Math.cos(b.t*1.1 + b.i*2)*60 - b.y)*.002 + (Math.random() - .5)*.4; b.vx *= .9; b.vy *= .9; b.x += b.vx; b.y += b.vy;
+      fc.fillStyle = `rgba(255,220,150,${.5 + .5*Math.sin(b.t*9 + b.i)})`; fc.beginPath(); fc.arc(b.x, b.y, 1.6, 0, 6.28); fc.fill(); return; }
+    if (b.kind === 'firefly'){ const tx = b.home ? b.home[0] : W*(.1 + (b.i*.0617 % 1)*.8), ty = H*(.48 + (b.i*.137 % 1)*.4);
+      if (!rex.state || rex.state !== 'walk'){ /* drift toward Rex when he's still */ }
+      b.vx += (tx + Math.sin(b.t*.7 + b.i)*50 - b.x)*.001 + (rex.sleeping || rex.sitting ? (rx - b.x)*.0004 : 0); b.vy += (ty + Math.cos(b.t*.9 + b.i*2)*30 - b.y)*.001 + (rex.sleeping || rex.sitting ? (ry - 120 - b.y)*.0004 : 0);
+      b.vx *= .96; b.vy *= .96; b.x += b.vx; b.y += b.vy; const g = Math.max(0, Math.sin(b.t*1.6 + b.i*1.3))**2;
+      const R = 14; const gr = fc.createRadialGradient(b.x, b.y, 0, b.x, b.y, R); gr.addColorStop(0, `rgba(255,236,150,${.9*g})`); gr.addColorStop(1, 'rgba(255,236,150,0)'); fc.fillStyle = gr; fc.fillRect(b.x - R, b.y - R, R*2, R*2);
+      fc.fillStyle = `rgba(255,250,210,${.4 + .6*g})`; fc.beginPath(); fc.arc(b.x, b.y, 2, 0, 6.28); fc.fill(); return; }
+    if (b.kind === 'moth'){ const hx = sx(500), hy = sy(330); const a = b.t*(1.8 + b.i*.5) + b.i*3; b.vx += (hx + Math.cos(a)*55*M.s*2 - b.x)*.02; b.vy += (hy + Math.sin(a*1.3)*35*M.s*2 - b.y)*.02; b.vx *= .82; b.vy *= .82; b.x += b.vx; b.y += b.vy;
+      const fl = Math.abs(Math.sin(b.t*30)); fc.fillStyle = 'rgba(235,220,200,.85)'; fc.beginPath(); fc.ellipse(b.x - 3, b.y, 4*fl + 1, 3, 0, 0, 6.28); fc.ellipse(b.x + 3, b.y, 4*fl + 1, 3, 0, 0, 6.28); fc.fill(); return; }
+    if (b.kind === 'ladybug'){ const y = sy(438); b.x += b.dir*12*dt*M.s*2; if (b.x > sx(1170) || b.x < sx(760)) b.dir *= -1; if (b.scared){ b.y -= 40*dt; } else b.y += (y - b.y)*.1;
+      fc.save(); fc.translate(b.x, b.y); fc.scale(b.dir, 1); fc.fillStyle = '#D9483B'; fc.beginPath(); fc.arc(0, 0, 4, Math.PI, 0); fc.fill(); fc.fillStyle = '#2A2220'; fc.beginPath(); fc.arc(4, -1, 2, 0, 6.28); fc.fill(); fc.fillRect(-.5, -4, 1, 4); fc.restore(); return; }
+  }
+  function drawBit(b, dt){ const a = Math.max(0, b.life);
+    if (b.kind === 'leaf' || b.kind === 'petal' || b.kind === 'confetti'){ b.vy = Math.min(b.vy + .04, 1.4); b.vx += Math.sin(b.life*12)*.06 + gust*.1; b.x += b.vx; b.y += b.vy; b.rot += .08;
+      fc.save(); fc.translate(b.x, b.y); fc.rotate(b.rot); fc.globalAlpha = a; fc.fillStyle = b.c || '#fff'; fc.beginPath(); fc.ellipse(0, 0, b.r, b.r*.5, 0, 0, 6.28); fc.fill(); fc.restore(); return; }
+    if (b.kind === 'sparkle' || b.kind === 'glow' || b.kind === 'ember'){ b.x += b.vx*.6; b.y += b.vy*.6; b.vx *= .94; b.vy *= .94;
+      fc.fillStyle = b.kind === 'ember' ? `rgba(255,170,80,${a})` : b.kind === 'glow' ? `rgba(255,226,160,${a*.8})` : `rgba(255,255,240,${a*.9})`; fc.beginPath(); fc.arc(b.x, b.y, b.r*a + .5, 0, 6.28); fc.fill(); return; }
+    if (b.kind === 'smoke'){ b.x += b.vx; b.y += b.vy; b.r += .12; fc.fillStyle = `rgba(235,235,240,${a*.35})`; fc.beginPath(); fc.arc(b.x, b.y, b.r, 0, 6.28); fc.fill(); return; }
+    if (b.kind === 'star'){ b.x += b.vx; b.y += b.vy; const g = fc.createLinearGradient(b.x - b.vx*10, b.y - b.vy*10, b.x, b.y); g.addColorStop(0, 'rgba(255,250,220,0)'); g.addColorStop(1, `rgba(255,250,220,${a})`); fc.strokeStyle = g; fc.lineWidth = 2; fc.beginPath(); fc.moveTo(b.x - b.vx*10, b.y - b.vy*10); fc.lineTo(b.x, b.y); fc.stroke(); return; }
+    if (b.kind === 'bird'){ b.t += dt; b.x += b.vx; b.y += b.vy; b.vy *= .99; const f = Math.sin(b.t*14)*5; fc.strokeStyle = `rgba(50,45,50,${a})`; fc.lineWidth = 2; fc.beginPath(); fc.moveTo(b.x - 7, b.y - f); fc.quadraticCurveTo(b.x - 3, b.y - 2, b.x, b.y); fc.quadraticCurveTo(b.x + 3, b.y - 2, b.x + 7, b.y - f); fc.stroke(); return; }
+  }
+  function grass(dt, t, rx, ry){ if (!tufts.length) return; const ph = artPh(); const col = { day:['#6E8A3A','#88A24A'], golden:['#5C4A1C','#7A6226'], dusk:['#3A3A26','#4A4630'], night:['#17323A','#21424A'] }[ph] || ['#6E8A3A','#88A24A'];
+    const baseY = H - 2;
+    for (const g of tufts){ const x = g.x*W; let force = Math.sin(t*1.3 + g.x*9)*.06 + gust*.5;
+      if (ptr && Math.abs(ptr.x - x) < 40 && ptr.y > baseY - 80) force += ptrV.x*.04;
+      if (Math.abs(rx - x) < 30 && (rex.state === 'walk')) force += Math.sign(x - rx)*.5;
+      g.bv += (force - g.b)*.2 - g.bv*.15; g.b += g.bv*dt*10;
+      for (let k = -1; k <= 1; k++){ const h = g.h*(k ? .75 : 1)*Math.max(.7, M.s*1.6), bx = x + k*5; fc.fillStyle = col[(k + 1)%2];
+        fc.beginPath(); fc.moveTo(bx - 3, baseY); fc.quadraticCurveTo(bx + g.b*h*.5 + k*2, baseY - h*.55, bx + g.b*h + k*4, baseY - h); fc.quadraticCurveTo(bx + g.b*h*.3 + 1, baseY - h*.4, bx + 3, baseY); fc.fill(); } } }
+  function edgeLight(K, rx, ry){ // move Rex's rim light toward the strongest nearby light
+    if (!K.length) return; let best = null, bw = 0; for (const [x, y, c, s] of K){ const px = sx(x + dxArt()), py = sy(y), d = Math.hypot(px - rx, py - (ry - 60)); const w = s/(1 + d/(300*M.s*2)); if (w > bw){ bw = w; best = [px, py, c]; } }
+    if (!best) return; const dir = (best[0] - rx)*rex.face; const xPct = dir < -20 ? '-8%' : dir > 20 ? '108%' : '50%', yPct = best[1] < ry - 200 ? '-10%' : '30%';
+    rexEl.style.setProperty('--rimX', xPct); rexEl.style.setProperty('--rimY', yPct); rexEl.style.setProperty('--rim', `rgb(${best[2]})`);
+    const base = +rexEl.style.getPropertyValue('--rimBase') || .3; rexEl.style.setProperty('--rimA', Math.min(.7, base*(.6 + bw*1.2)).toFixed(3)); }
+
+  addEventListener('resize', () => setTimeout(resize, 50));
+  new ResizeObserver(() => resize()).observe(zoom);
+  function where(id){ mapping(); const h = HOT[place()].find(x => x.id === id); if (!h) return null; const x = h.x || (h.box[0] + h.box[2])/2, y = h.y || (h.box[1] + h.box[3])/2; return { x: sx(x + dxArt()), y: sy(y) }; }
+  return { step, seed, resize, tap, where, hitAt:(x, y) => { const h = hitAt(x, y); return h ? (h.hot ? h.hot.id : 'bug:' + h.bug.kind) : null; } };
+})();
+
+/* boot */
+rollover(); S.lastOpen = Date.now(); save(); checkUnlocks(); paintPlaybar();
+drawScene(); render(); paintWake(); if (S.asleep){ rex.sleeping = true; rex.sitting = 1; }
+requestAnimationFrame(frame);
+if (!S.onboarded) setTimeout(onboard, 500);
+else { setTimeout(morning, 600); setTimeout(() => { if (!bubble.classList.contains('on') && !S.asleep) rex.say(phase()==='night' ? 'Hi… it\'s late.' : `${greet()}!`, 1800); }, 900); }
+setInterval(()=>{ if (!preview && !S.lockDay) drawScene(); }, 60000);
+</script>
+</body>
+</html>
