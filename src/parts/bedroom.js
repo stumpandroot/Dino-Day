@@ -52,7 +52,10 @@ function bedroomAct(id, x, y, H){ const ph = phase(), L = B2.layout, it = L.back
         if (BR.chestOpen){ squeak(); H.burst(x, y - 30, 14, 'confetti'); rig()?.face('excited', 1600); rex.hop = 1; rex.say(pick(['Toys!','Look who\'s in here!']), 1400); }
         else rex.say('All tidied up.', 1200); }); return true;
     case 'bed': if (BR.bedMessy && !rex.sleeping){ H.goDo(cx + 250, -1, () => { BR.bedMessy = false; b2Redraw(); wiggle('bed'); rig()?.face('proud', 1500); rex.say('Bed\'s made!', 1400); }); return true; }
-      H.goDo(cx + 250, -1, () => { BR.bedMessy = true; b2Redraw(); wiggle('bed'); rex.say('Just a little nap…', 1300); setTimeout(() => rest(), 700); }); return true;
+      H.goDo(cx + 250, -1, () => { BR.bedMessy = true; b2Redraw(); wiggle('bed'); rex.say('Just a little nap…', 1300);
+        setTimeout(() => { const [bx, by, bw, bh] = b2Box(it, 'bedm'), zw = document.getElementById('zoom').clientWidth;   // climb in: onto the mattress, lying toward the pillow
+          rex.x = rex.tx = Math.max(.09, H.sx(bx + bw*.6)/zw); rex.face = 1; rex.state = 'idle'; rex.hop = 1; rex.sleeping = true; rex.sitting = 1; rex.napUntil = Date.now() + 30000; rex.inBed = B2.layout.feetY - (by + bh*.5);
+          setTimeout(() => rex.say('Zzz…', 2200), 400); }, 700); }); return true;
     case 'lamp': S.lamp = !(S.lamp !== false); save(); SFX.pop(); wiggle('lamp'); H.flick(); H.seed(); rex.say(S.lamp ? pick(['Cozy.','Light on!']) : 'Lamp off.', 1300); return true;
     case 'moonshelf': if (x < H.sx(b2Box(it)[0] + b2Box(it)[2]*.62) && x > H.sx(b2Box(it)[0] + b2Box(it)[2]*.32)){ BR.moon = !BR.moon; SFX.pop(); b2Redraw(); rex.say(BR.moon ? 'My moon lamp. A tiny moon!' : 'Moon off.', 1500); return true; }
       swayKick('[data-obj="moonshelf"] [data-sway]', 26); H.leaves(x, y, 5); H.goDo(cx + 140, -1, () => rex.say(pick(['Watering the plants.','Grow, little vines!']), 1500)); return true;

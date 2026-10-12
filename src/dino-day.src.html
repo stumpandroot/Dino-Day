@@ -665,6 +665,13 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .dkempty{display:flex;align-items:center;gap:14px;padding:10px var(--in) 14px;color:var(--muted);font-size:14px}
 .dkempty .pose{flex:none}
 .dknudge{padding:12px 12px 4px}.dknudge .nudge{margin:0 0 8px}
+.fcpose{display:none}
+.app.desk .fcard.mini{position:relative}
+.app.desk .fcpose{display:block;flex:none;margin:-6px 6px -10px auto;align-self:flex-start;transform:rotate(-4deg);filter:drop-shadow(0 4px 6px rgba(40,30,20,.12))}
+.app.desk .tlmini .tlic{width:28px;height:28px;margin-left:-14px;top:-2px;box-shadow:0 0 0 1.5px var(--line),0 2px 6px rgba(40,30,20,.08)}
+.app.desk .tlmini .tlic svg{width:16px;height:16px}
+.app.desk .tlmini i{width:9px;height:9px;margin-left:-4.5px;top:8px}
+.app.desk .tlmini .nowm{width:3px;top:2px;bottom:2px}
 .dkeod{flex:none;display:flex;align-items:center;gap:14px;margin-top:12px;padding:10px 12px 10px var(--in);background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dkeod .pose{flex:none;margin:-6px 0}
 .dkeod b{display:block;font:700 16px var(--display);color:var(--ink)}
@@ -1141,7 +1148,7 @@ function autonomous(){
   if (place() === 'meadow' && !S.asleep && Math.random() < .22 && typeof FX !== 'undefined' && FX.visit){ FX.visit(); return; }
   const night = phase()==='night';
   if (night && Math.random()<.5){ if (!rex.sleeping){ rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2000); } return; }
-  if (rex.sleeping){ if (Math.random()<.3){ rex.sleeping=false; rex.sitting=0; rex.say('*yawn*', 1200); } return; }
+  if (rex.sleeping){ if ((rex.napUntil || 0) > Date.now()) return; if (Math.random()<.3){ rex.sleeping=false; rex.sitting=0; rex.say('*yawn*', 1200); } return; }
   const r = Math.random();
   if (r < .45) rex.goTo(.12 + Math.random()*.76);
   else if (r < .6){ rex.sitting = 1; }
@@ -1159,7 +1166,10 @@ function frame(now){
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
   const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0); z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
+  // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
+  if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; }
+  const liftPx = rex.inBed ? Math.round(rex.inBed*sc) - panelLift : 0; rexEl.style.bottom = liftPx ? `calc(var(--ground,14%) + ${liftPx}px)` : '';
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
   // walking
   if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
@@ -1188,7 +1198,7 @@ function frame(now){
   carryStep(dt); rigSync(); rexRim();
   rexEl.style.zIndex = 3;
   if (!rex.away){ const still = bubble.classList.contains('btns'), bw = bubble.offsetWidth || 120, rh = size*1.286; let bx = rex.x*w; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, bx)));
-    let by = Math.round(groundPx + rh + 10 + (still ? 0 : bob + hopY)); const bh = bubble.offsetHeight || 40;
+    let by = Math.round(groundPx + liftPx + rh + 10 + (still ? 0 : bob + hopY)); const bh = bubble.offsetHeight || 40;
     if (by + bh > h - 8){ by = Math.max(8, h - bh - 8); const side = rex.x < .5 ? 1 : -1; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, rex.x*w + side*(size*.45 + bw/2)))); }   // no room above him (the desktop card): beside him instead
     if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
   // parallax follows Rex
@@ -1652,7 +1662,7 @@ function focusCard(){
   const sub = [f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label ? f.startAt.label + (f.startAt.place ? ', ' + f.startAt.place.toLowerCase() : '') : '', f.steps.length && next ? 'Next: ' + next.t : ''].filter(Boolean).join(' · ');
   const open = fcOpen || inS || panel;
   const fc = CAT[f.cat], L0 = sessLen(f);
-  if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div><span class="chev">${IC.chev}</span></button>
+  if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div>${isDesk() ? pose('wave', 44, 'fcpose') : ''}<span class="chev">${IC.chev}</span></button>
     <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
   return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
     ${f.steps.length ? `<div class="steps">${f.steps.map((s, i) => `<button class="step ${s.done?'done':''} ${s === next ? 'next' : ''}" data-step="${i}"><span class="sb">${s.done ? IC.check : ''}</span>${esc(s.t)}</button>`).join('')}</div>` : ''}
