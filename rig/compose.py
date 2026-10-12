@@ -42,6 +42,7 @@ rig = f'''
     <g id="mouth">{els[40]}</g>
   </g></g>
   <g id="lie_legF"><g id="legF"><g id="legFl">{E(37,39)}<path id="mLeg" fill="#4d8b7f" style="display:none"/><path id="mSpot" fill="#305c53" style="display:none"/></g><g id="footF">{els[38]}<path id="mFoot" fill="#305c53" style="display:none"/></g></g></g>
+  <g visibility="hidden" id="turnSrc"><g id="turnSrcH">{P["head_front"]["svg"]}</g><g id="turnSrcB">{P["body_front"]["svg"]}</g></g>
   <g visibility="hidden"><g id="seatSrcB">{SR(0,1,2,3)}</g><g id="seatSrcF">{SR(37,38,39)}</g></g>
   <g id="walkSrc" visibility="hidden"><g id="legFwl" transform="translate(192 486)">{P["front_walking_leg"]["svg"]}</g></g>
   <g id="seatMF" style="display:none"><path id="sFbody" fill="#4d8b7f"/><path id="sFsole" fill="#305c53"/><path id="sFspot" fill="#305c53"/></g>
