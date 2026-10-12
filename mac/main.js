@@ -19,7 +19,7 @@ const PRELOAD = path.join(__dirname, 'preload.js');
 
 function createMain(){
   main = new BrowserWindow({
-    width: 500, height: 900, minWidth: 380, minHeight: 640,   // the app is a phone-shaped card; a tall narrow window fits it show: false,
+    width: 1280, height: 820, minWidth: 380, minHeight: 600,   // wide windows get the desktop layout; narrow ones get the phone layout show: false,
     title: 'Dino Day', backgroundColor: '#f6efe2',
     webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true, spellcheck: false },
   });

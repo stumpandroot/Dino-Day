@@ -574,6 +574,33 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .scroll{padding-top:6px}
 .fmeta>span{flex:none}.fmeta>span.one{flex:0 1 auto;min-width:0}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* ---------- desktop: Rex's world fills the window, the day sits in a panel on the right (any window 900 px wide or more).
+   In Rex's Space the play panel takes the same spot on the right. ---------- */
+.app.desk{--panelW:clamp(380px,31vw,460px);inset:0;top:0;bottom:0;width:auto;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none}
+.app.desk .world{inset:0;height:auto}
+.app.desk .world .zoom,.app.desk.expanded .world .zoom{right:var(--panelW);bottom:0}
+.app.desk.expanded .world .zoom{transform:none}
+.app.desk .sheet{left:auto;right:0;top:0;width:var(--panelW);border-radius:0;box-shadow:-10px 0 34px rgba(40,30,20,.1);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.app.desk.expanded .sheet{transform:translateX(105%)}
+.app.desk .grab{display:none}
+.app.desk .scroll{padding:18px 22px 110px}
+.app.desk .tabs{left:auto;width:var(--panelW)}
+.app.desk.expanded .tabs{transform:translateX(105%)}
+.app.desk .playbar{left:auto;right:0;top:0;bottom:0;width:var(--panelW);margin:0;border-radius:0;padding:max(env(safe-area-inset-top,0px),24px) 22px 24px;overflow-y:auto;transform:translateX(105%);box-shadow:-10px 0 34px rgba(40,30,20,.1);z-index:9}
+.app.desk.expanded .playbar{transform:none}
+.app.desk .mood{padding:4px 2px 18px}
+.app.desk .tiles{grid-auto-flow:row;grid-template-columns:1fr 1fr;grid-auto-columns:auto;overflow:visible;scroll-snap-type:none}
+.app.desk .playbar .tiles button{height:112px}
+.app.desk .expandbtn{left:16px}
+.app.desk .chips-r,.app.desk .spacepill{right:calc(var(--panelW) + 16px)}
+.app.desk.expanded .chips-r{top:auto;bottom:16px;right:calc(var(--panelW) + 16px)}
+.app.desk .wakechip{left:calc((100% - var(--panelW))/2)}
+.app.desk .toast{left:calc(100% - var(--panelW)/2)}
+.app.desk .snack{left:auto;right:14px;width:calc(var(--panelW) - 28px)}
+.app.desk.expanded .toast{left:calc((100% - var(--panelW))/2);bottom:24px}
+.app.desk.expanded .snack{right:calc(var(--panelW) + 14px);bottom:24px}
+.app.desk .ov.obov{padding:24px;background:var(--page)}
+.app.desk .ov.obov .card{height:auto;max-height:min(900px,100%);border-radius:28px;box-shadow:0 30px 80px rgba(40,30,20,.16)}
 </style>
 </head>
 <body>
@@ -619,6 +646,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 const REX_SRC = "__REX__";
 const $ = s => document.querySelector(s);
 const app = $('#app'), world = $('#world'), scene = $('#scene'), rexEl = $('#rex'), rexBody = $('#rexBody'), bubble = $('#bubble');
+const DESKQ = matchMedia('(min-width:900px) and (min-height:560px)'); app.classList.toggle('desk', DESKQ.matches);
+const isDesk = () => app.classList.contains('desk');
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -744,7 +773,7 @@ $('#timeChip').onclick = () => {
 };
 
 /* ---------- Rex ---------- */
-const W = () => world.clientWidth, Hh = () => world.clientHeight;
+const W = () => $('#zoom').clientWidth, Hh = () => world.clientHeight;
 const rex = {
   x: 0.5, tx: 0.5, face: 1, state:'idle', until:0, sq:0, sqv:0, hop:0, shake:0, busy:0, sitting:0, sleeping:false, reading:false,
   say(t, ms=1800, buttons){ bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
@@ -756,7 +785,8 @@ const rex = {
   poke(k=1){ if (!RM) this.sqv -= 6*k; },
   goTo(x, then){ this.tx = Math.max(.08, Math.min(.92, x)); this.state = 'walk'; this.after = then; this.sitting = 0; },
 };
-function rexSize(){ const h = $('#zoom').clientHeight; const w = Math.min(app.classList.contains('expanded') ? 140 : 96, Math.max(68, h*0.29)); return w; }
+function rexSize(){ const h = $('#zoom').clientHeight; if (isDesk()) return rex.away ? 96 : Math.round(Math.min(app.classList.contains('expanded') ? 170 : 150, Math.max(110, h*0.17)));
+  const w = Math.min(app.classList.contains('expanded') ? 140 : 96, Math.max(68, h*0.29)); return w; }
 function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); fxHost().appendChild(e); setTimeout(()=>e.remove(), 1300); }
 function fxHost(){ return rex.away ? document.getElementById('rexLayer') : $('#zoom'); }
 function rig(){ return window.RexRig; }
@@ -832,7 +862,7 @@ function startFall(x, y, w, h){ rex.perch = null; fall = { x, y, w, h, vx:0, vy:
 function surfaceBelow(f){ const a = AR(), cx = f.x + f.w/2, feet = f.y + f.h;
   const zr = $('#zoom').getBoundingClientRect(), gpx = parseFloat(getComputedStyle($('#zoom')).getPropertyValue('--ground')) || 0, wg = zr.bottom - a.top - gpx;
   const sheetTop = $('#sheet').getBoundingClientRect().top - a.top;
-  if (app.classList.contains('expanded') || feet <= wg + 4) return { y:wg, world:true };
+  if (app.classList.contains('expanded') || (isDesk() ? cx < zr.right - a.left : feet <= wg + 4)) return { y:wg, world:true };   // desktop: anywhere over the world drops him to the grass
   if (feet <= sheetTop + 10) return { y:sheetTop, el:$('#sheet') };
   rexEl.style.pointerEvents = 'none'; let hit = null;
   for (let y = Math.max(0, feet - 30); y < a.height && !hit; y += 6){ const el = document.elementFromPoint(a.left + cx, a.top + y); if (!el || !app.contains(el)) continue;
@@ -944,7 +974,7 @@ let last = performance.now(), t = 0; const bfly = { x:836, y:690 };
 function frame(now){
   const dt = Math.min(.05, (now-last)/1000); last = now; t += dt;
   const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
-  const tall = app.classList.contains('expanded') && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
+  const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
   const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc); z.style.setProperty('--ground', groundPx+'px');
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
@@ -995,6 +1025,8 @@ function frame(now){
 function setExpanded(on){ if (on) sendHome(); app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
   if (on){ rex.say(pick(['Yay, playtime!','Hi! Wanna play?','You came to visit!']), 1600); } }
 $('#expandBtn').onclick = () => setExpanded(!app.classList.contains('expanded'));
+// switching between the phone and desktop layouts (resizing the window): Rex goes home first so he isn't left floating
+DESKQ.addEventListener('change', () => { if (rex.away) sendHome(); app.classList.toggle('desk', DESKQ.matches); setTimeout(() => { try { drawScene(); } catch(_){} }, 600); });
 let dragY = null; world.addEventListener('pointerdown', e => { if (e.target.closest('.rex,.playbar,button')) return; dragY = e.clientY; });
 addEventListener('pointerup', e => { if (dragY===null) return; const d = e.clientY - dragY; dragY = null;
   if (d > 50 && !app.classList.contains('expanded')) setExpanded(true); else if (d < -50 && app.classList.contains('expanded')) setExpanded(false); });
