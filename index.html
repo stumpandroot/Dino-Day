@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791837942; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791838222; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -437,7 +437,7 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .trow{border-radius:0}
 .trow+.trow{border-top:1px solid var(--line)}
 .trow .swbg{border-radius:0}
-.task{border-radius:0;box-shadow:none;padding:12px 6px 12px 12px;gap:12px;background:var(--card)}
+.task{border-radius:0;box-shadow:none;padding:14px 8px 14px 14px;gap:12px;background:var(--card)}
 .task.lift{border-radius:16px}
 .task.sel{box-shadow:inset 3px 0 0 var(--coral)}
 .task .title{font:600 15.5px/1.3 var(--body);color:var(--text)}
@@ -616,13 +616,13 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .dscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .dkleft .dscroll{background:var(--card);border-radius:22px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dkleft .dscroll .list{box-shadow:none;border-radius:0}
-.app.desk .task{min-height:56px;padding:8px 10px 8px var(--in);gap:14px}
+.app.desk .task{min-height:64px;padding:16px 14px 16px var(--in);gap:14px}
 .app.desk .task .check{width:24px;height:24px;margin:0;padding:0;background:none;box-shadow:none}
 .app.desk .task .title{font-size:16px;line-height:1.3}
-.app.desk .task .tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:3px}
+.app.desk .task .tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;padding-right:8px}
 .app.desk .task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
 .app.desk .task .tag{font-size:12px;padding:3px 9px 3px 6px}
-.app.desk .task .bar{flex-basis:100%;margin-top:4px}
+.app.desk .task .bar{flex-basis:100%;margin-top:6px}
 .dkcard{flex:0 1 62.5cqw;width:100%;min-height:260px;max-height:75cqw;border-radius:24px;margin-bottom:12px}
 .dklater{flex:1 1 0;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:16px 0 6px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dklater .list{box-shadow:none;border-radius:0;background:none}
@@ -821,6 +821,7 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .app.desk .task{transition:transform .3s var(--spring),box-shadow .25s,background-color .2s}
 .app.desk .trow:hover .task{background:color-mix(in srgb,var(--card) 92%,var(--olive))}
+.app.desk .trow.open .task,.app.desk .trow.open:hover .task{background:var(--upnext)}
 .bubble.on{transition:opacity .2s,transform .45s var(--spring)}
 /* drag handle */
 .grip{display:grid;grid-template-columns:repeat(2,3px);gap:3px;padding:6px 3px;margin:0 -6px 0 -8px;cursor:grab;opacity:0;transition:opacity .2s,transform .3s var(--spring);touch-action:none;align-self:center}
@@ -834,7 +835,7 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 /* the task detail panel */
 .trow.open .task{background:var(--upnext)}
 .trow.open .swbg{display:none}.tdet{position:relative;z-index:1}
-.tdet{background:var(--upnext);padding:4px 16px 14px 48px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.tdet{background:var(--upnext);padding:12px 20px 20px 48px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)}
 .app.desk .tdet{padding-left:calc(var(--in) + 36px)}
 .drow{display:grid;grid-template-columns:76px 1fr;align-items:start;gap:10px}
 .dl{font:600 12px var(--display);color:var(--muted);padding-top:7px}
@@ -858,7 +859,7 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .dsel{position:relative;display:inline-flex;align-items:center}
 .dsel select{appearance:none;-webkit-appearance:none;padding:6px 28px 6px 11px;border-radius:999px;background:var(--card);border:0;box-shadow:0 0 0 1px var(--line);font:600 12.5px var(--display);color:var(--ink);cursor:pointer;max-width:200px}
 .dsel svg{position:absolute;right:8px;width:13px;height:13px;pointer-events:none;color:var(--muted)}
-.dacts{display:flex;align-items:center;gap:8px;padding-top:2px}.dacts > span{flex:1}
+.dacts{display:flex;align-items:center;gap:8px;padding-top:8px}.dacts > span{flex:1}
 .dacts .pill svg{width:13px;height:13px;margin-right:4px}
 .link.danger{color:#B4533A}
 @media (max-width:520px){.tdet{padding-left:14px}.drow{grid-template-columns:1fr;gap:4px}.dl{padding-top:0}.drow.two .dchips{gap:8px}}
