@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('desk', {
   pet: {
     ready: () => ipcRenderer.send('pet:ready'),
     open: () => ipcRenderer.send('pet:open'),
+    menu: () => ipcRenderer.send('pet:menu'),
     dragStart: () => ipcRenderer.send('pet:dragStart'),
     dragEnd: () => ipcRenderer.send('pet:dragEnd'),
     toggle: (id) => ipcRenderer.send('pet:toggle', id),

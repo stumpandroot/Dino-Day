@@ -31,7 +31,7 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-us
 </div>
 <!--RIG_ENGINE-->
 <script>
-const D = window.desk ? window.desk.pet : { ready(){}, open(){}, dragStart(){}, dragEnd(){}, toggle(){}, onState(){}, onSay(){}, onMode(){} };
+const D = window.desk ? window.desk.pet : { menu(){}, ready(){}, open(){}, dragStart(){}, dragEnd(){}, toggle(){}, onState(){}, onSay(){}, onMode(){} };
 const R = window.RexRig, pet = document.getElementById('pet'), stage = document.getElementById("petStage");
 const bub = document.getElementById('bub'), bubT = document.getElementById('bubT'), bubL = document.getElementById('bubL'), bubR = document.getElementById('bubR');
 let state = { next:null, asleep:false }, dragging = false, quiet = 0, bubTimer = 0;
@@ -68,5 +68,8 @@ D.onSay((text, opts) => { bubL.textContent = opts.label || 'Rex'; bubT.textConte
   if (opts.taskId){ btn('Done', true, () => { D.toggle(opts.taskId); cheer(); }); btn('Open', false, () => D.open()); } else btn('Okay', false, () => bub.classList.remove('on'));
   showBub(opts.ms || 20000); if (!dragging && !state.asleep) R.action('Wave'); });
 setTimeout(() => { R.hop(480); D.ready(); }, 300);
+
+// right-click (or Control-click) Rex for Open, Hide Rex, and Quit
+addEventListener('contextmenu', e => { e.preventDefault(); D.menu && D.menu(); });
 </script>
 </body></html>

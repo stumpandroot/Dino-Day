@@ -14,12 +14,12 @@ function serve(){
   });
 }
 
-let main = null, pet = null, quitting = false, tray = null;
+let main = null, pet = null, quitting = false, tray = null, toldPet = false;
 const PRELOAD = path.join(__dirname, 'preload.js');
 
 function createMain(){
   main = new BrowserWindow({
-    width: 1280, height: 820, minWidth: 380, minHeight: 600,   // wide windows get the desktop layout; narrow ones get the phone layout show: false,
+    width: 1280, height: 820, minWidth: 380, minHeight: 600, show: false,   // wide windows get the desktop layout; narrow ones get the phone layout
     title: 'Dino Day', backgroundColor: '#f6efe2',
     webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true, spellcheck: false },
   });
@@ -28,7 +28,8 @@ function createMain(){
   main.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
   main.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) { e.preventDefault(); shell.openExternal(url); } });
   // closing the window shrinks Rex to the desk instead of quitting, so reminders keep coming
-  main.on('close', (e) => { if (quitting) return; e.preventDefault(); shrink(); });
+  main.on('close', (e) => { if (quitting) return; e.preventDefault(); shrink();
+    if (!toldPet && Notification.isSupported()){ toldPet = true; new Notification({ title: 'Rex is on your desk', body: 'Right-click him to open the app, hide him, or quit. Command-Q also quits.' }).show(); } });
 }
 
 // ---- the floating Rex ----
@@ -56,6 +57,11 @@ ipcMain.on('pet:dragStart', () => { if (!pet) return; const c = screen.getCursor
   clearInterval(dragTimer); dragTimer = setInterval(() => { const p = screen.getCursorScreenPoint(); pet.setPosition(Math.round(p.x - dragOff.x), Math.round(p.y - dragOff.y)); }, 16); });
 ipcMain.on('pet:dragEnd', () => { clearInterval(dragTimer); dragTimer = null; });
 ipcMain.on('pet:open', () => expand());
+// right-click Rex on the desk: the way out even when the menu bar icon is hidden (for example behind the notch)
+function quitAll(){ quitting = true; app.quit(); }
+function hidePet(){ if (pet && !pet.isDestroyed()) pet.hide(); }
+const petMenu = () => Menu.buildFromTemplate([{ label: 'Open Dino Day', click: expand }, { label: 'Hide Rex', click: hidePet }, { type: 'separator' }, { label: 'Quit Dino Day', click: quitAll }]);
+ipcMain.on('pet:menu', () => { if (pet && !pet.isDestroyed()) petMenu().popup({ window: pet }); });
 ipcMain.on('desk:shrink', () => shrink());
 ipcMain.on('desk:expand', () => expand());
 // the app page keeps the pet informed: what's next, whether Rex is asleep
@@ -76,10 +82,14 @@ app.whenReady().then(() => {
     { label: 'View', submenu: [{ role: 'reload' }, { role: 'togglefullscreen' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
     { label: 'Window', submenu: [{ role: 'minimize' }, { role: 'zoom' }, { role: 'close' }] },
   ]));
-  try { const ic = nativeImage.createFromPath(path.join(__dirname, 'trayTemplate.png')); if (!ic.isEmpty()){ tray = new Tray(ic); tray.setToolTip('Dino Day');
-    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open Dino Day', click: expand }, { label: 'Shrink to desk', click: shrink }, { type: 'separator' }, { label: 'Quit', click: () => { quitting = true; app.quit(); } }])); tray.on('click', expand); } } catch(_){}
+  // menu bar icon: a template image, so macOS tints it for light and dark menu bars
+  try { const ic = nativeImage.createFromPath(path.join(__dirname, 'trayTemplate.png')); ic.setTemplateImage(true);
+    tray = new Tray(ic.isEmpty() ? nativeImage.createEmpty() : ic); if (ic.isEmpty()) tray.setTitle('Rex'); tray.setToolTip('Dino Day');
+    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open Dino Day', click: expand }, { label: 'Shrink to desk', click: shrink }, { label: 'Hide Rex', click: hidePet }, { type: 'separator' }, { label: 'Quit Dino Day', click: quitAll }])); } catch(_){}
+  // the Dock icon always stays, with the same choices on right-click
+  if (app.dock){ app.dock.show(); app.dock.setMenu(Menu.buildFromTemplate([{ label: 'Open Dino Day', click: expand }, { label: 'Shrink to desk', click: shrink }, { label: 'Hide Rex', click: hidePet }])); }
   createMain(); createPet();
   app.on('activate', () => expand());
 });
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { quitting = true; if (pet && !pet.isDestroyed()) pet.destroy(); if (tray) { tray.destroy(); tray = null; } });
 app.on('window-all-closed', () => { /* stay alive for the pet and reminders */ });
