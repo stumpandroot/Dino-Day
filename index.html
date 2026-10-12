@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791831681; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791837942; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -672,7 +672,7 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk .tlmini .tlic svg{width:16px;height:16px}
 .app.desk .tlmini i{width:9px;height:9px;margin-left:-4.5px;top:8px}
 .app.desk .tlmini .nowm{width:3px;top:2px;bottom:2px}
-.app.desk .snack{transform:translate(-50%,-10px)}.app.desk .snack.on{transform:translate(-50%,0)}
+.app.desk .snack{transform:translate(-50%,12px)}.app.desk .snack.on{transform:translate(-50%,0)}
 .dkdonerow{display:flex;align-items:center;gap:10px;width:100%;padding:14px var(--in);border-top:1px solid var(--line);font:600 14px var(--display);color:var(--muted);text-align:left}
 .dkdonerow svg{width:16px;height:16px}.dkdonerow .chev{margin-left:auto;display:grid}
 .app.desk .fcard:not(.mini){gap:12px}
@@ -769,8 +769,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .pjrow{display:grid;grid-template-columns:1fr 170px;gap:10px}
 .dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
 .dkback svg{width:16px;height:16px;transform:rotate(90deg)}
-.app.desk .toast{top:8px;bottom:auto;left:calc(32px + (100% - 88px)*.29);transform:translate(-50%,-10px)}.app.desk .toast.on{transform:translate(-50%,0)}
-.app.desk .snack{left:calc(32px + (100% - 88px)*.29);right:auto;width:min(440px,calc((100% - 88px)*.58 - 24px));transform:translateX(-50%);margin-left:0;top:8px;bottom:auto;z-index:31}
+.app.desk .toast{top:auto;bottom:88px;left:calc(32px + (100% - 88px)*.29);transform:translate(-50%,12px)}.app.desk .toast.on{transform:translate(-50%,0)}
+.app.desk .snack{left:calc(32px + (100% - 88px)*.29);right:auto;width:min(440px,calc((100% - 88px)*.58 - 24px));transform:translateX(-50%);margin-left:0;top:auto;bottom:88px;z-index:31}
 .app.desk .ov.obov{padding:24px;background:var(--page)}
 .app.desk .ov.obov .card{height:auto;max-height:min(900px,100%);border-radius:28px;box-shadow:0 30px 80px rgba(40,30,20,.16)}
 
@@ -797,6 +797,72 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .tlmini .tle{position:absolute;top:22px;font:600 10px var(--body,inherit);color:var(--muted);pointer-events:none}
 .tlmini .tle.l{left:0}.tlmini .tle.r{right:0}
 .app.desk .tline.mini{padding-bottom:20px}
+
+/* ===== motion system: springy, quick, and calm when reduced motion is on ===== */
+:root{--spring:cubic-bezier(.34,1.56,.64,1);--spring-s:cubic-bezier(.3,1.35,.5,1);--out:cubic-bezier(.2,.8,.2,1)}
+button,.pill,.chip,.dchip,.seg button,.dkseg button,.rexhabs button,.tiles button,.dktiles button{transition:transform .35s var(--spring),background-color .2s,color .2s,box-shadow .25s,opacity .2s}
+button:active:not(:disabled),.dchip:active{transform:scale(.92)}
+.app.desk .pill:hover:not(:disabled),.app.desk .dchip:hover,.app.desk .tiles button:hover,.app.desk .dktiles button:hover{transform:translateY(-2px)}
+.app.desk .pill:active:not(:disabled),.app.desk .tiles button:active,.app.desk .dktiles button:active{transform:translateY(0) scale(.92)}
+@keyframes pressPop{0%{transform:scale(.9)}60%{transform:scale(1.06)}100%{transform:none}}
+.task .check i{transition:background .2s,border-color .2s,transform .35s var(--spring)}
+.task .check:hover i{transform:scale(1.12)}
+.trow.popping .check i{background:var(--olive);border-color:var(--olive);animation:checkPop .38s var(--spring) both}
+.trow.popping .check i svg{animation:checkDraw .3s .05s var(--out) both}
+.trow.popping .task{animation:rowDone .38s .12s var(--out) both}
+.trow.popping .title{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted);transition:color .2s}
+@keyframes checkPop{0%{transform:scale(.6)}55%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes checkDraw{from{opacity:0;transform:scale(.3) rotate(-30deg)}to{opacity:1;transform:none}}
+@keyframes rowDone{0%{transform:none}35%{transform:translateX(6px)}100%{transform:translateX(0);opacity:.75}}
+.menu{transform-origin:top right;animation:popIn .32s var(--spring) both}
+@keyframes popIn{from{opacity:0;transform:scale(.85) translateY(-6px)}to{opacity:1;transform:none}}
+.toast,.snack{transition:transform .45s var(--spring),opacity .25s !important}
+.fcard{transition:background-color .3s,box-shadow .3s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.app.desk .task{transition:transform .3s var(--spring),box-shadow .25s,background-color .2s}
+.app.desk .trow:hover .task{background:color-mix(in srgb,var(--card) 92%,var(--olive))}
+.bubble.on{transition:opacity .2s,transform .45s var(--spring)}
+/* drag handle */
+.grip{display:grid;grid-template-columns:repeat(2,3px);gap:3px;padding:6px 3px;margin:0 -6px 0 -8px;cursor:grab;opacity:0;transition:opacity .2s,transform .3s var(--spring);touch-action:none;align-self:center}
+.grip i{width:3px;height:3px;border-radius:50%;background:var(--muted)}
+.trow:hover .grip,.trow.dragging .grip,.task:focus-visible .grip{opacity:.8}
+.grip:hover{transform:scale(1.2)}
+@media (hover:none){.grip{display:none}}
+.trow.dragging{z-index:6;position:relative}
+.trow.dragging .task{box-shadow:0 16px 36px rgba(60,50,20,.2);border-radius:16px;cursor:grabbing}
+.trow.dragging .grip{cursor:grabbing}
+/* the task detail panel */
+.trow.open .task{background:var(--upnext)}
+.trow.open .swbg{display:none}.tdet{position:relative;z-index:1}
+.tdet{background:var(--upnext);padding:4px 16px 14px 48px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.app.desk .tdet{padding-left:calc(var(--in) + 36px)}
+.drow{display:grid;grid-template-columns:76px 1fr;align-items:start;gap:10px}
+.dl{font:600 12px var(--display);color:var(--muted);padding-top:7px}
+.dl.in{padding:0 0 0 8px;align-self:center}
+.dchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dchip{position:relative;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;background:var(--card);color:var(--ink);font:600 12.5px var(--display);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.dchip svg{width:13px;height:13px}
+.dchip.on{background:var(--olive-ink);color:#fff;box-shadow:none}
+[data-dcat].dchip{background:var(--cb)}
+[data-dcat].dchip.on{background:var(--olive-ink)}
+.dchip.hi .imp{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--coral);color:#fff;font-size:10px}
+.dchip.hi.on{background:var(--coral)}.dchip.hi.on .imp{background:#fff;color:var(--coral)}
+.dchip input[type=date],.dchip input[type=time]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.dchip .dx{font-style:normal;margin:-2px -4px 0 2px;width:16px;height:16px;border-radius:50%;display:inline-grid;place-items:center;opacity:.55;font-size:13px}
+.dchip .dx:hover{opacity:1;background:rgba(0,0,0,.12)}
+.dnew{display:inline-flex;align-items:center;gap:6px}
+.dnew input{width:110px;padding:6px 10px;border-radius:999px;border:1.5px solid var(--olive);background:var(--card);font:600 12.5px var(--display);color:var(--ink)}
+.dsw{display:inline-flex;gap:4px}.dsw button{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px currentColor}
+.dsw button.on{box-shadow:inset 0 0 0 1.5px currentColor,0 0 0 2px var(--card),0 0 0 3.5px var(--olive-ink)}
+.dchip.go{background:var(--olive);color:#fff;box-shadow:none}
+.dsel{position:relative;display:inline-flex;align-items:center}
+.dsel select{appearance:none;-webkit-appearance:none;padding:6px 28px 6px 11px;border-radius:999px;background:var(--card);border:0;box-shadow:0 0 0 1px var(--line);font:600 12.5px var(--display);color:var(--ink);cursor:pointer;max-width:200px}
+.dsel svg{position:absolute;right:8px;width:13px;height:13px;pointer-events:none;color:var(--muted)}
+.dacts{display:flex;align-items:center;gap:8px;padding-top:2px}.dacts > span{flex:1}
+.dacts .pill svg{width:13px;height:13px;margin-right:4px}
+.link.danger{color:#B4533A}
+@media (max-width:520px){.tdet{padding-left:14px}.drow{grid-template-columns:1fr;gap:4px}.dl{padding-top:0}.drow.two .dchips{gap:8px}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 </style>
 </head>
 <body>
@@ -2600,16 +2666,16 @@ function meta(t){ const c = CAT[t.cat]; const bits = []; const frog = S.frogDay 
   if (t.repeat) bits.push(REPEAT_LABEL[t.repeat]);
   if (t.eff && !frog) bits.push(EFF[t.eff]);
   if (t.steps.length) bits.push(`${t.steps.filter(s => s.done).length} of ${t.steps.length} steps`);
-  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}">${c.icon}${c.label}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : ''); }
+  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}" ${c.style || ''}>${c.icon}${esc(c.label)}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : ''); }
 function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.steps.length ? t.steps.filter(s => s.done).length / t.steps.length : 0;
-  return `<div class="trow" data-id="${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
-  <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0">
-    ${opts.bring ? '' : `<button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}"><i>${IC.check}</i></button>`}
+  return `<div class="trow ${openId === t.id ? 'open' : ''}" data-id="${t.id}" data-flip="t${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
+  <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0" aria-expanded="${openId === t.id}">
+    ${!opts.bring && !t.done ? `<span class="grip" aria-hidden="true" title="Drag to reorder"><i></i><i></i><i></i><i></i><i></i><i></i></span>` : ''}${opts.bring ? '' : `<button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}"><i>${IC.check}</i></button>`}
     <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar"><i style="width:${prog*100}%"></i></div>` : ''}</div>
     ${opts.bring ? `<button class="pill ghost mint" data-bring="${t.id}">Today</button>` : `<button class="more" aria-label="More options for ${esc(t.t)}" data-more="${t.id}">${IC.more}</button>`}
-  </div>${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
+  </div>${openId === t.id && !opts.bring ? detailHTML(t) : ''}${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
 function focusCard(){
-  if (picking){ const three = pickThree(); return `<div class="fcard pickc"><div class="k">Rex is holding up three. Which one first?</div><div class="stickies">${three.map((t, i) => `<button class="sticky s${i}" data-pick="${t.id}">${esc(t.t)}</button>`).join('')}</div><button class="link" data-cancelpick>Never mind</button></div>`; }
+  if (picking){ const three = pickThree(); return `<div class="fcard pickc" data-flip="pick"><div class="k">Rex is holding up three. Which one first?</div><div class="stickies">${three.map((t, i) => `<button class="sticky s${i}" data-pick="${t.id}">${esc(t.t)}</button>`).join('')}</div><button class="link" data-cancelpick>Never mind</button></div>`; }
   const [f, why] = focused(); if (!f) return '';
   const next = f.steps.find(s => !s.done), inS = session && session.id === f.id;
   let body = '';
@@ -2648,9 +2714,9 @@ function timeline(){ if (S.timeline === false) return '';
     ${items.sort((a, b) => a.m - b.m).map((it, i, arr) => { it.lo = i > 0 && (it.m - arr[i-1].m) < 100 && !arr[i-1].lo; return it; }).map(it => `<button class="tlitem ${it.hab?'thab':''} ${it.done?'done':''} ${it.lo?'lo':''} ${it.ic?'hasic':''}" style="left:${pos(it.m)}%" ${it.id ? `data-tl="${it.id}"` : ''} title="${esc(it.l)} · ${fmtMin(it.m)}">${it.ic ? `<b class="tic">${it.ic}</b>` : '<i></i>'}<span>${esc(it.l)}</span></button>${it.est ? `<span class="tlspan" style="left:${pos(it.m)}%;width:${pos(it.m + it.est) - pos(it.m)}%"></span>` : ''}`).join('')}
     ${nm >= T0 && nm <= T1 ? `<div class="tlnow" style="left:${pos(nm)}%"></div>` : ''}</div></div>`; }
 function nudgeCards(){ return nudges.map(n => {
-  if (n.wrap){ const open = openToday(); return `<div class="nudge wrap"><div class="nt">Ready to call it a day? Where should these go?</div>${open.map(t => `<div class="wrow"><span>${esc(t.t)}</span><span class="seg">${[['Tomorrow','tomorrow'],['Someday','someday'],['Keep','keep']].map(([l, v]) => `<button data-wrap="${t.id}" data-v="${v}" aria-pressed="${(wrapChoice.get(t.id)||'tomorrow') === v}">${l}</button>`).join('')}</span></div>`).join('')}
+  if (n.wrap){ const open = openToday(); return `<div class="nudge wrap" data-flip="nwrap"><div class="nt">Ready to call it a day? Where should these go?</div>${open.map(t => `<div class="wrow"><span>${esc(t.t)}</span><span class="seg">${[['Tomorrow','tomorrow'],['Someday','someday'],['Keep','keep']].map(([l, v]) => `<button data-wrap="${t.id}" data-v="${v}" aria-pressed="${(wrapChoice.get(t.id)||'tomorrow') === v}">${l}</button>`).join('')}</span></div>`).join('')}
     <div class="acts"><button class="pill coral" data-gn>Good night, Rex</button><button class="link" data-notyet>Not yet</button></div></div>`; }
-  return `<div class="nudge" data-nk="${n.k}"><span class="nt">${esc(n.text)}</span>${n.buttons.map(([l, , g], i) => `<button class="pill ${g ? 'ghost' : 'coral'} sm" data-nb="${i}">${esc(l)}</button>`).join('')}</div>`; }).join(''); }
+  return `<div class="nudge" data-nk="${n.k}" data-flip="n${n.k}"><span class="nt">${esc(n.text)}</span>${n.buttons.map(([l, , g], i) => `<button class="pill ${g ? 'ghost' : 'coral'} sm" data-nb="${i}">${esc(l)}</button>`).join('')}</div>`; }).join(''); }
 function myHabits(){ if (!S.habitsOn) return '';
   const wk = weekKeys(), L = ['M','T','W','T','F','S','S'];
   return `<div class="section"><span>My habits</span></div><div class="habs">${(S.myHabits||[]).map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
@@ -2801,6 +2867,132 @@ document.addEventListener('submit', e => { const f = e.target; if (!f.matches('[
   else { const p = projOf(f.dataset.pjphadd); if (!p) return; const ph = { id:pjid(), name:v, tasks:[] }; p.phases.push(ph); pjOpenPh[ph.id] = true; }
   save(); render(); SFX.add(); const again = document.querySelector(f.dataset.pjadd ? `[data-pjadd="${f.dataset.pjadd}"] input` : `[data-pjphadd="${f.dataset.pjphadd}"] input`); if (again) again.focus(); }, true);
 
+/* ================= task details, custom categories, drag to reorder, motion =================
+   Clicking a task opens its details in place: category (with your own), when, time, size, importance, project, repeat.
+   Every list change animates: rows slide to their new spots (FLIP), new rows pop in, views slide. */
+
+/* ---------- your own categories ---------- */
+const CAT_COLORS = [['#F6DCE6','#9A4467'],['#E7E0F3','#5D4C8A'],['#D7EEEA','#2F6F66'],['#FBEFC5','#86651B'],['#F9DDD3','#9A4A35'],['#E3E9D9','#4D5E3B']];
+const CAT_DOT = '<svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>';
+if (!Array.isArray(S.cats)) S.cats = [];
+function syncCats(){ for (const k of Object.keys(CAT)) if (CAT[k].custom) delete CAT[k];
+  S.cats.forEach(c => { const [bg, fg] = CAT_COLORS[c.color % CAT_COLORS.length]; CAT[c.id] = { label:c.label, bg, icon:CAT_DOT, k:'c', custom:true, style:`style="background:${bg};color:${fg}"` }; }); }
+syncCats();
+function addCat(label, color){ label = label.trim().slice(0, 18); if (!label) return null; const hit = Object.entries(CAT).find(([, c]) => c.label.toLowerCase() === label.toLowerCase()); if (hit) return hit[0];
+  const id = 'c' + Date.now().toString(36); S.cats.push({ id, label, color }); syncCats(); return id; }
+function removeCat(id){ S.cats = S.cats.filter(c => c.id !== id); S.tasks.forEach(t => { if (t.cat === id) t.cat = 'self'; }); if (cat === id) cat = 'self'; syncCats(); }
+
+/* ---------- the detail panel ---------- */
+let openId = null, newCatOpen = false, newCatColor = 0, detEnter = false, dragEnded = 0;
+const SIZES = [[5,'5 min'],[15,'15 min'],[30,'30 min'],[60,'1 hr'],[120,'2 hr+']];
+const TIMES = [['morning','Morning',9,0],['afternoon','Afternoon',14,30],['evening','Evening',19,0]];
+const dayOf = t => /^\d{4}/.test(t.when) ? t.when : t.when === 'today' ? today() : null;
+function timeAt(t, h, m){ const day = dayOf(t) || today(), d = new Date(day + 'T00:00'); d.setHours(h, m, 0, 0);
+  const label = (day === today() ? '' : day === tomorrow() ? 'tomorrow, ' : '') + fmtMin(h*60 + m).toLowerCase().replace(' ', ' ');
+  t.startAt = { at:d.getTime(), label, day, place: t.startAt && t.startAt.place || null }; t.nudged = false; }
+function timeKey(t){ if (!t.startAt || !t.startAt.at) return ''; const d = new Date(t.startAt.at), m = d.getHours()*60 + d.getMinutes(); const hit = TIMES.find(x => x[2]*60 + x[3] === m); return hit ? hit[0] : 'custom'; }
+function linkedProj(t){ if (!t.proj) return null; const p = projOf(t.proj); return p || null; }
+function detailHTML(t){ const chip = (attr, on, label, extra = '') => `<button type="button" class="dchip ${on ? 'on' : ''}" ${attr} aria-pressed="${on}" ${extra}>${label}</button>`;
+  const wk = t.when === 'today' ? 'today' : t.when === tomorrow() ? 'tomorrow' : t.when === 'someday' ? 'someday' : /^\d{4}/.test(t.when) ? 'date' : '';
+  const tk = timeKey(t), tm = t.startAt && t.startAt.at ? new Date(t.startAt.at) : null, p = linkedProj(t);
+  return `<div class="tdet ${detEnter ? 'enter' : ''}" data-det="${t.id}">
+    <div class="drow"><span class="dl">Category</span><div class="dchips">${Object.entries(CAT).map(([k, c]) => chip(`data-dcat="${k}"`, t.cat === k, `${c.icon}${esc(c.label)}${c.custom ? `<i class="dx" data-dcatdel="${k}" role="button" aria-label="Remove ${esc(c.label)}">×</i>` : ''}`, `style="--cb:${c.bg}"`)).join('')}
+      ${newCatOpen ? `<span class="dnew"><input id="dCatIn" maxlength="18" placeholder="Name" aria-label="New category name"><span class="dsw">${CAT_COLORS.map(([bg, fg], i) => `<button type="button" class="${i === newCatColor ? 'on' : ''}" data-dcolor="${i}" style="background:${bg};color:${fg}" aria-label="Color ${i + 1}"></button>`).join('')}</span><button type="button" class="dchip go" data-dcatadd>Add</button></span>`
+        : chip('data-dcatnew', false, `${IC.plus}New`)}</div></div>
+    <div class="drow"><span class="dl">When</span><div class="dchips">${chip('data-dwhen="today"', wk === 'today', 'Today')}${chip('data-dwhen="tomorrow"', wk === 'tomorrow', 'Tomorrow')}<label class="dchip ${wk === 'date' ? 'on' : ''}">${wk === 'date' ? labelDay(t.when) : 'Pick a date'}<input type="date" data-ddate min="${today()}" value="${wk === 'date' ? t.when : ''}"></label>${chip('data-dwhen="someday"', wk === 'someday', 'Someday')}</div></div>
+    ${t.when === 'someday' ? '' : `<div class="drow"><span class="dl">Time</span><div class="dchips">${chip('data-dtime="none"', !tk, 'Any time')}${TIMES.map(([k, l]) => chip(`data-dtime="${k}"`, tk === k, l)).join('')}<label class="dchip ${tk === 'custom' ? 'on' : ''}">${tk === 'custom' ? fmtMin(tm.getHours()*60 + tm.getMinutes()) : 'Set a time'}<input type="time" data-dclock value="${tm ? pad(tm.getHours()) + ':' + pad(tm.getMinutes()) : ''}"></label></div></div>`}
+    <div class="drow"><span class="dl">Size</span><div class="dchips">${SIZES.map(([m, l]) => chip(`data-dsize="${m}"`, t.est === m, l)).join('')}${chip('data-dhigh', !!t.high, '<b class="imp">!</b>Important', 'class="dchip hi"')}</div></div>
+    <div class="drow two"><span class="dl">Project</span><div class="dchips"><span class="dsel"><select data-dproj aria-label="Project"><option value="">None</option>${S.projects.filter(q => !projDone(q) || q.id === t.proj).map(q => `<option value="${q.id}" ${p && p.id === q.id ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select>${IC.chev}</span>
+      <span class="dl in">Repeat</span><span class="dsel"><select data-drep aria-label="Repeat"><option value="">Never</option>${Object.entries(REPEAT_LABEL).map(([k, l]) => `<option value="${k}" ${t.repeat === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${IC.chev}</span></div></div>
+    <div class="dacts"><button type="button" class="pill coral sm" data-dfocus>${IC.play}Work on this</button><button type="button" class="pill ghost sm" data-dsteps>${t.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><span></span><button type="button" class="link danger" data-ddel>Delete</button><button type="button" class="link" data-dclose>Done</button></div>
+  </div>`; }
+
+function openDetail(id){ if (openId === id){ closeDetail(); return; } const prev = openId; openId = id; newCatOpen = false; detEnter = true; SFX.pop && SFX.pop();
+  render(); detEnter = false; const el = document.querySelector(`.tdet[data-det="${id}"]`); if (!el) return;
+  growIn(el); setTimeout(() => { const r = el.getBoundingClientRect(), sc = el.closest('.dscroll') || $('#scroll'), sr = sc.getBoundingClientRect(); if (r.bottom > sr.bottom - (isDesk() ? 8 : 88)) sc.scrollBy({ top: r.bottom - sr.bottom + (isDesk() ? 16 : 96), behavior:'smooth' }); }, 260); }
+function closeDetail(){ const el = document.querySelector('.tdet'); if (!el){ openId = null; render(); return; }
+  const h = el.offsetHeight; el.animate([{ height:h + 'px', opacity:1 }, { height:'0px', opacity:0, paddingTop:'0px', paddingBottom:'0px' }], { duration:220, easing:'cubic-bezier(.4,0,.2,1)' }).onfinish = () => { openId = null; render(); }; el.style.overflow = 'hidden'; }
+function growIn(el){ const h = el.scrollHeight; el.style.overflow = 'hidden';
+  el.animate([{ height:'0px', opacity:0, transform:'translateY(-6px)' }, { height:(h + 6) + 'px', opacity:1, transform:'translateY(0)', offset:.7 }, { height:h + 'px', opacity:1, transform:'none' }], { duration:420, easing:'cubic-bezier(.2,.8,.2,1)' }).onfinish = () => { el.style.overflow = ''; }; }
+
+// link a Today task to a project: it joins the project's first phase, and finishing either finishes both
+function linkProj(t, pid){ const old = linkedProj(t);
+  if (old && t.ptask){ old.phases.forEach(ph => { ph.tasks = ph.tasks.filter(x => !(x.id === t.ptask && !x.done)); }); }
+  t.proj = null; t.ptask = null; if (!pid) return; const p = projOf(pid); if (!p) return;
+  if (!p.phases.length) p.phases.push({ id:pjid(), name:'Tasks', tasks:[] });
+  const pt = { id:pjid(), t:t.t, done:!!t.done, due:'', high:!!t.high }; p.phases[0].tasks.push(pt); t.proj = p.id; t.ptask = pt.id; }
+
+$('#scroll').addEventListener('click', e => { const q = s => e.target.closest(s); let el;
+  if (!q('.tdet')) return; e.stopImmediatePropagation(); const t = byId(+q('.tdet').dataset.det); if (!t) return;
+  const done = (msg) => { touch(); save(); render(); if (msg) toast(msg); };
+  if ((el = q('[data-dcatdel]'))){ const c = CAT[el.dataset.dcatdel]; removeCat(el.dataset.dcatdel); done(`Removed ${c ? c.label : 'category'}`); return; }
+  if ((el = q('[data-dcat]'))){ t.cat = el.dataset.dcat; S.lastCat = t.cat; SFX.tick(); done(); return; }
+  if (q('[data-dcatnew]')){ newCatOpen = true; render(); setTimeout(() => $('#dCatIn')?.focus(), 30); return; }
+  if ((el = q('[data-dcolor]'))){ const v = $('#dCatIn')?.value || ''; newCatColor = +el.dataset.dcolor; render(); const i = $('#dCatIn'); if (i){ i.value = v; i.focus(); } return; }
+  if (q('[data-dcatadd]')){ const id = addCat($('#dCatIn')?.value || '', newCatColor); newCatOpen = false; if (id){ t.cat = id; newCatColor = (newCatColor + 1) % CAT_COLORS.length; done(); } else render(); return; }
+  if ((el = q('[data-dwhen]'))){ const w = el.dataset.dwhen, label = { today:'Today', tomorrow:'tomorrow', someday:'Someday' }[w];
+    t.when = w === 'tomorrow' ? tomorrow() : w; if (w === 'someday'){ t.startAt = null; t.carry = 0; } else if (t.startAt) { const d = new Date(t.startAt.at); timeAt(t, d.getHours(), d.getMinutes()); }
+    if (w !== 'today'){ if (focusId === t.id) focusId = null; openId = null; } done(w === 'today' ? null : `Moved "${t.t}" to ${label}`); return; }
+  if ((el = q('[data-dtime]'))){ const k = el.dataset.dtime; if (k === 'none') t.startAt = null; else { const [, , h, m] = TIMES.find(x => x[0] === k); timeAt(t, h, m); } SFX.tick(); done(); return; }
+  if ((el = q('[data-dsize]'))){ const m = +el.dataset.dsize; t.est = t.est === m ? null : m; SFX.tick(); done(); return; }
+  if (q('[data-dhigh]')){ t.high = !t.high; if (t.high) { rex.hop = 1; } SFX.tick(); done(); return; }
+  if (q('[data-dfocus]')){ openId = null; focusTask(t, 'You picked'); return; }
+  if (q('[data-dsteps]')){ openId = null; focusTask(t, 'You picked'); panel = 'smaller'; render(); return; }
+  if (q('[data-ddel]')){ openId = null; removeTask(t); return; }
+  if (q('[data-dclose]')){ closeDetail(); return; }
+}, true);
+$('#scroll').addEventListener('change', e => { const det = e.target.closest('.tdet'); if (!det) return; const t = byId(+det.dataset.det); if (!t) return; const el = e.target;
+  if (el.matches('[data-ddate]') && el.value){ t.when = el.value === today() ? 'today' : el.value; if (t.startAt){ const d = new Date(t.startAt.at); timeAt(t, d.getHours(), d.getMinutes()); } if (t.when !== 'today'){ if (focusId === t.id) focusId = null; openId = null; } touch(); save(); render(); if (t.when !== 'today') toast(`Moved "${t.t}" to ${labelDay(t.when)}`); }
+  if (el.matches('[data-dclock]') && el.value){ const [h, m] = el.value.split(':').map(Number); timeAt(t, h, m); touch(); save(); render(); toast(`Rex will remind you at ${fmtMin(h*60 + m)}`); }
+  if (el.matches('[data-dproj]')){ linkProj(t, el.value); touch(); save(); render(); if (el.value) toast(`Linked to ${projOf(el.value).name}`); }
+  if (el.matches('[data-drep]')){ t.repeat = el.value; if (t.repeat === 'weekly') t.dow = new Date().getDay(); touch(); save(); render(); }
+});
+$('#scroll').addEventListener('keydown', e => { if (e.target.id === 'dCatIn' && e.key === 'Enter'){ e.preventDefault(); document.querySelector('[data-dcatadd]')?.click(); } if (e.target.id === 'dCatIn' && e.key === 'Escape'){ newCatOpen = false; render(); } });
+
+/* ---------- motion: rows glide to their new places, new rows pop in, views slide ---------- */
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let lastView = '';
+function viewKey(){ return [tab, typeof dkMode !== 'undefined' ? dkMode : '', typeof projOpen !== 'undefined' ? projOpen : '', typeof dkTab !== 'undefined' ? dkTab : ''].join('|'); }
+const VIEW_ORDER = ['today||', 'projects', 'someday', 'settings', 'stats'];
+function snapRows(){ const m = new Map(); document.querySelectorAll('#scroll [data-flip]').forEach(el => m.set(el.dataset.flip, el.getBoundingClientRect())); return m; }
+// the button you pressed springs back after the list redraws
+let pressKey = null, pressAt = 0;
+document.addEventListener('pointerdown', e => { const b = e.target.closest('button,.dchip'); if (!b) { pressKey = null; return; } const a = [...b.attributes].find(x => x.name.startsWith('data-') && x.name !== 'data-flip');
+  pressKey = a ? `[${a.name}="${CSS.escape(a.value)}"]` : null; pressAt = Date.now(); }, true);
+function springPressed(){ if (!pressKey || Date.now() - pressAt > 1500) return; const el = document.querySelector('#scroll ' + pressKey + ',#scroll .dchip:has(' + pressKey + ')'); pressKey = null;
+  el?.animate([{ transform:'scale(.9)' }, { transform:'scale(1.08)', offset:.55 }, { transform:'none' }], { duration:380, easing:'cubic-bezier(.2,.8,.2,1)' }); }
+const _render = render;
+render = function(){ if (reduceMotion.matches){ _render(); return; }
+  const first = snapRows(), vk = viewKey(), prevView = lastView; _render(); lastView = vk; springPressed();
+  if (prevView && prevView !== vk){ const [a, b] = [prevView, vk].map(k => k.split('|')), sameTab = a[0] === b[0];
+    const dir = sameTab ? (a[1] !== b[1] ? (b[1] === 'projects' ? 1 : -1) : a[2] !== b[2] ? (b[2] ? 1 : -1) : (b[3] === 'habits' ? 1 : -1)) : (b[0] === 'today' ? -1 : 1);
+    const target = sameTab && a[1] === b[1] && a[2] === b[2] ? document.querySelector('#scroll .dklater .dscroll') : sameTab ? document.querySelector('#scroll .dkleft') : $('#scroll');
+    target?.animate([{ transform:`translateX(${dir*28}px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:380, easing:'cubic-bezier(.2,1.2,.4,1)' });
+    if (sameTab && a[1] !== b[1]) document.querySelector('#scroll .dklater')?.animate([{ transform:`translateY(10px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:420, delay:60, easing:'cubic-bezier(.2,1.2,.4,1)', fill:'backwards' });
+    return; }
+  let n = 0; document.querySelectorAll('#scroll [data-flip]').forEach(el => { const f = first.get(el.dataset.flip), l = el.getBoundingClientRect();
+    if (!f){ if (first.size) el.animate([{ transform:'scale(.92) translateY(-6px)', opacity:0 }, { transform:'scale(1.02)', opacity:1, offset:.6 }, { transform:'none', opacity:1 }], { duration:420, delay:Math.min(n++, 4)*30, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' }); return; }
+    const dy = f.top - l.top; if (Math.abs(dy) < 1) return; el.animate([{ transform:`translateY(${dy}px)` }, { transform:'none' }], { duration:460, easing:'cubic-bezier(.3,1.35,.5,1)' }); }); };
+
+/* ---------- drag to reorder: grab the handle (or long-press on a phone); other rows make room ---------- */
+(function reorder(){ let d = null;
+  $('#scroll').addEventListener('pointerdown', e => { const grip = e.target.closest('.grip'); if (!grip) return; const wrap = grip.closest('.trow'); if (!wrap || !wrap.closest('#list')) return;
+    e.preventDefault(); e.stopPropagation(); if (openId) { openId = null; render(); return; }
+    const rows = [...$('#list').querySelectorAll(':scope > .trow')], i0 = rows.indexOf(wrap), r0 = wrap.getBoundingClientRect(), gap = rows[1] ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom : 0;
+    d = { wrap, rows, i0, n:i0, y:e.clientY, h:r0.height + gap, mids:rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height/2; }), pid:e.pointerId };
+    wrap.classList.add('dragging'); rows.forEach(r => { if (r !== wrap) r.style.transition = 'transform .32s cubic-bezier(.3,1.35,.5,1)'; });
+    try { grip.setPointerCapture(e.pointerId); } catch(_){} buzz(8); SFX.pop && SFX.pop(); }, true);
+  addEventListener('pointermove', e => { if (!d) return; const dy = e.clientY - d.y; d.wrap.style.transform = `translateY(${dy}px) scale(1.03) rotate(${Math.max(-1.5, Math.min(1.5, dy/60))}deg)`;
+    const mid = d.mids[d.i0] + dy, n = d.mids.filter((m, j) => j !== d.i0 && m < mid).length;
+    if (n !== d.n){ d.n = n; buzz(4); }
+    d.rows.forEach((r, j) => { if (r === d.wrap) return; const s = d.i0 < j && j <= n ? -d.h : n <= j && j < d.i0 ? d.h : 0; r.style.transform = s ? `translateY(${s}px)` : ''; }); });
+  addEventListener('pointerup', () => { if (!d) return; const { wrap, rows, i0, n, h } = d; d = null; dragEnded = Date.now();
+    wrap.style.transition = 'transform .3s cubic-bezier(.3,1.35,.5,1)'; wrap.style.transform = `translateY(${(n - i0)*h}px)`;
+    setTimeout(() => { rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; }); wrap.classList.remove('dragging');
+      if (n !== i0){ const list = openToday(), [m] = list.splice(i0, 1); list.splice(n, 0, m); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); touch(); save(); }
+      _render(); SFX.pop && SFX.pop(); }, 300); });
+})();
+
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
@@ -2831,7 +3023,7 @@ function render(){
         <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
           <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
           <select id="repeatSel" aria-label="Repeat"><option value="">Once</option>${Object.entries(REPEAT_LABEL).map(([v, l]) => `<option value="${v}" ${addRepeat===v?'selected':''}>${l}</option>`).join('')}</select>
-          <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${c.label}</button>`).join('')}</div>
+          <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${esc(c.label)}</button>`).join('')}</div>
         </div>
         <div class="section"><span>Today</span><button type="button" class="link" data-import>Paste a list</button></div>
         <div class="dscroll" id="dToday">
@@ -2859,7 +3051,7 @@ function render(){
       <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
         <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
         <select id="repeatSel" aria-label="Repeat"><option value="">Once</option>${Object.entries(REPEAT_LABEL).map(([v, l]) => `<option value="${v}" ${addRepeat===v?'selected':''}>${l}</option>`).join('')}</select>
-        <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${c.label}</button>`).join('')}</div>
+        <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${esc(c.label)}</button>`).join('')}</div>
       </div>
       ${timeline()}
       <div class="section"><span>Today</span><button type="button" class="link" data-import>Paste a list</button></div>
@@ -2933,7 +3125,8 @@ $('#scroll').addEventListener('click', e => {
   const q = s => e.target.closest(s), g = (s, k) => { const el = q(s); return el ? el.dataset[k] : null; };
   closeMenu();
   let el;
-  if ((el = q('[data-check]'))){ toggle(byId(+el.dataset.check)); return; }
+  if ((el = q('[data-check]'))){ const t = byId(+el.dataset.check), row = el.closest('.trow');
+    if (t && !t.done && row && !matchMedia('(prefers-reduced-motion: reduce)').matches){ row.classList.add('popping'); el.disabled = true; setTimeout(() => toggle(t), 380); } else toggle(t); return; }
   if ((el = q('[data-more]'))){ openMenu(+el.dataset.more, el); return; }
   if ((el = q('[data-del]'))){ removeTask(byId(+el.dataset.del)); return; }
   if ((el = q('[data-bring]'))){ const t = byId(+el.dataset.bring); t.when = 'today'; t.carry = 0; save(); render(); toast('Moved to Today'); bus.emit('task_today', t); return; }
@@ -2999,7 +3192,7 @@ $('#scroll').addEventListener('click', e => {
     if (key === 'place'){ clearAllProps(); drawScene(); rex.x = rex.tx = .5; }
     SFX.pop(); save(); render(); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
-  const r = q('[data-row]'); if (r && !q('button')){ focusTask(byId(+r.dataset.row), 'You picked'); }
+  const r = q('[data-row]'); if (r && !q('button') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
 });
 $('#scroll').addEventListener('input', e => {
   if (e.target.id === 'spice'){ S.spice = +e.target.value; save(); const sv = document.querySelector('.spv'); if (sv) sv.textContent = SPICE[S.spice-1][0]; return; }
@@ -3076,7 +3269,7 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); if (kbIndex <= 0){ $('#addInput') && $('#addInput').focus(); kbIndex = -1; } else { kbIndex--; focusRow(); } }
   else if (cur){ const t = byId(+cur.dataset.row);
     if (e.key === ' '){ e.preventDefault(); toggle(t); setTimeout(focusRow, 50); }
-    else if (e.key === 'Enter'){ focusTask(t, 'You picked'); }
+    else if (e.key === 'Enter'){ openDetail(t.id); }
     else if (e.key === 's'){ startSession(t); }
     else if (e.key === 'Delete' || e.key === 'Backspace'){ removeTask(t); setTimeout(focusRow, 50); } }
 });
