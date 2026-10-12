@@ -1,0 +1,5 @@
+node_modules/
+dist/
+www/
+icon.icns
+package-lock.json
