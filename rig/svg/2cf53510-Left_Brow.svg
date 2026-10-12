@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.49 27.15">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #2d574f;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 11px;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <path id="Left_Brow" data-name="Left Brow" class="cls-1" d="M5.5,21.65S17.08,4.42,35.99,5.55"/>
+  </g>
+</svg>

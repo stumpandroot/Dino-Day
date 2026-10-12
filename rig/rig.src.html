@@ -1,0 +1,687 @@
+<title>Rex Rig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: a lit stage for Rex beside a tray of expression and action controls; stacks on phones */
+:root{
+  --bg:#F7EEE3; --stage:#FFF8EF; --ground:#E3EDD3; --card:#FFFFFF; --line:#EADFCF;
+  --ink:#24453A; --text:#3A4A42; --muted:#7D867C; --accent:#EE7F62; --accent-ink:#fff; --chip:#F3EBDF; --on:#24453A; --on-ink:#FFF8EF;
+  --shadow:rgba(36,69,58,.16);
+  --display:"Fredoka",ui-rounded,system-ui,sans-serif; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171C29; --stage:#20273A; --ground:#2B3A3A; --card:#2A3248; --line:#363F57;
+  --ink:#F1EADF; --text:#E3DCD2; --muted:#9AA2B6; --accent:#F08D70; --accent-ink:#2A1A14; --chip:#323B53; --on:#E9F0DE; --on-ink:#1C2233;
+  --shadow:rgba(0,0,0,.35); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#171C29; --stage:#20273A; --ground:#2B3A3A; --card:#2A3248; --line:#363F57;
+  --ink:#F1EADF; --text:#E3DCD2; --muted:#9AA2B6; --accent:#F08D70; --accent-ink:#2A1A14; --chip:#323B53; --on:#E9F0DE; --on-ink:#1C2233;
+  --shadow:rgba(0,0,0,.35); color-scheme:dark }
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 var(--body);padding-inline:16px;padding-block:20px 32px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}}
+header{max-width:1100px;margin:0 auto 14px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font:600 26px/1.1 var(--display);color:var(--ink);margin:0}
+.sub{color:var(--muted);font-size:13.5px}
+.stage{position:relative;background:radial-gradient(120% 70% at 50% 100%,var(--ground) 0 38%,transparent 38.2%),var(--stage);border-radius:28px;box-shadow:0 1px 0 var(--line),0 10px 30px var(--shadow);overflow:hidden;aspect-ratio:1/1;max-width:100%;touch-action:none;user-select:none}
+@media (min-width:821px){.stage{position:sticky;top:20px}}
+.stage svg{position:absolute;left:8%;top:6%;width:84%;height:82%;overflow:visible}
+#rexHit{cursor:grab}
+.now{position:absolute;left:16px;top:14px;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:7px 14px;font:600 14px var(--display);color:var(--ink);box-shadow:0 2px 10px var(--shadow)}
+.now i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.hint{position:absolute;left:16px;right:16px;bottom:14px;text-align:center;font-size:12.5px;color:var(--muted)}
+.tray{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{background:var(--card);border-radius:22px;padding:16px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.panel h2{font:600 16px var(--display);color:var(--ink);margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.panel h2 span{font:600 12px var(--body);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.chip{padding:9px 10px;border-radius:14px;background:var(--chip);font:600 13.5px var(--display);color:var(--text);text-align:center;transition:transform .15s}
+.chip:hover{transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:var(--on);color:var(--on-ink)}
+.chip.act{background:var(--accent);color:var(--accent-ink)}
+.chip.act[aria-pressed="true"]{background:var(--on);color:var(--on-ink)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.note{font-size:13px;color:var(--muted);margin:0}
+.note b{color:var(--text)}
+@media (prefers-reduced-motion:reduce){.chip{transition:none}}
+</style>
+
+<header><h1>Rex rig</h1><span class="sub">3/4 view · built from your Illustrator parts</span></header>
+<div class="wrap">
+  <section class="stage" id="stage" aria-label="Rex">
+    <svg id="svg" viewBox="-30 -130 640 830" role="img" aria-label="Rex, animated">
+      <g id="flip"><g id="rexHit">__RIG__</g></g>
+    </svg>
+    <div class="now" aria-live="polite"><i></i><span id="nowTxt">Neutral</span></div>
+    <div class="hint">Tap Rex to poke him. Hold to pet. He watches your pointer.</div>
+  </section>
+  <div class="tray">
+    <div class="panel"><h2>Expressions <span>from your sheets</span></h2><div class="grid" id="exGrid"></div></div>
+    <div class="panel"><h2>Actions</h2><div class="grid" id="acGrid"></div></div>
+    <div class="panel"><h2>Options</h2>
+      <div class="opts">
+        <button class="chip" id="optLook" aria-pressed="true">Eyes follow pointer</button>
+        <button class="chip" id="optFlip" aria-pressed="false">Face left</button>
+        <button class="chip" id="optIdle" aria-pressed="true">Idle moods</button>
+      </div>
+      <p class="note" style="margin-top:12px">Arms are rebuilt as two-part limbs in your stroke style, so each action poses them (straight, bent, raised). Blinks pass through your closed-eye art. With idle moods on, Rex takes a slow deep breath every so often. The <b>Tired</b> mouth is a placeholder line until you draw one.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const PARTS = __PARTS__;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const svg = $('#svg'), RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const g = id => document.getElementById(id);
+
+/* ---------- part placement ---------- */
+const box = el => el.getBBox();
+const ctr = b => [b.x + b.width/2, b.y + b.height/2];
+const eyeLC = ctr(box(g('eyeL').firstElementChild)), eyeRC = ctr(box(g('eyeR').firstElementChild));
+const irisLC = ctr(box(g('irisL').firstElementChild)), irisRC = ctr(box(g('irisR').firstElementChild));
+function frag(key){ const t = document.createElementNS(NS, 'g'); t.innerHTML = PARTS[key].svg; t.setAttribute('visibility', 'hidden'); g('head').appendChild(t);
+  const els = [...t.querySelectorAll('path,line,ellipse,rect,polyline')]; return { t, els }; }
+// eye sets: [left refs, right refs] by element index
+const EYESETS = { happy:['Happy_eyes',[0],[1]], laugh:['laughing_eyes',[0],[1]], closed:['closed_eyes',[0],[1]], sad:['sad_eyes',[0,2],[1,3]], tired:['tired_-_annoyed_eyes',[0,1,2],[3,4,5]] };
+const EYE = {};
+for (const [k, [file, L, R]] of Object.entries(EYESETS)){
+  const { t, els } = frag(file); const cL = ctr(box(els[L[0]])), cR = ctr(box(els[R[0]]));
+  const dx = ((eyeLC[0]-cL[0]) + (eyeRC[0]-cR[0]))/2, dy = ((eyeLC[1]-cL[1]) + (eyeRC[1]-cR[1]))/2;
+  const mk = ix => ix.map(i => els[i].outerHTML).join('');
+  EYE[k] = { L:`<g transform="translate(${dx} ${dy})">${mk(L)}</g>`, R:`<g transform="translate(${dx} ${dy})">${mk(R)}</g>` }; t.remove(); }
+// mouths: anchor point and alignment
+const M0 = box(g('mouth').firstElementChild), mouthC = ctr(M0);
+const MOUTHS = { smile:['Mouth','c',0,0], frown:['Frown','c',-2,4], wavy:['Worried','c',0,2], o:['surprised_-_curious','c',-18,14], open:['open_mouth','t',-16,-2],
+  grin:['excited_-_happy_-_laughing','t',-4,-6], yawn:['sleepy_-_tired','t',-16,-4], grit:['frustrated','c',-22,10], hungry:['hungry_mouth','t',-14,-8] };
+const MOUTH = {};
+for (const [k, [file, mode, ox, oy]] of Object.entries(MOUTHS)){
+  const { t } = frag(file); const b = t.getBBox(); const tx = mouthC[0] - (b.x + b.width/2) + ox, ty = (mode === 'c' ? mouthC[1] - (b.y + b.height/2) : M0.y - b.y) + oy;
+  MOUTH[k] = { svg:PARTS[file].svg, tx, ty, cx:b.x + b.width/2 + tx, cy:b.y + b.height/2 + ty }; t.remove(); }
+MOUTH.flat = { svg:`<path d="M${mouthC[0]-24},${mouthC[1]+6} q24,-6 46,2" fill="none" stroke="#2d574f" stroke-width="11" stroke-linecap="round"/>`, tx:0, ty:0, cx:mouthC[0], cy:mouthC[1] };
+// glisten sparkles ride on the irises
+{ const { t } = frag('eye_glisten'); const b = t.getBBox(); t.remove();
+  const put = (id, c, s, ox, oy) => g(id).innerHTML = `<g transform="translate(${c[0]+ox} ${c[1]+oy}) scale(${s}) translate(${-b.x-b.width/2} ${-b.y-b.height/2})">${PARTS.eye_glisten.svg}</g>`;
+  put('glL', irisLC, 1, -4, -8); put('glR', irisRC, .7, -3, -7); }
+
+/* ---------- expressions ---------- */
+// L/R: 'open' or an eye set; brows [dy, rot]; look fixes the irises; head: tilt degrees; pose: arm pose
+const EX = {
+  neutral:{ L:'open', R:'open', m:'smile' },
+  happy:{ L:'happy', R:'happy', m:'smile', bL:[-6,0], bR:[-6,0], blush:1.1 },
+  excited:{ L:'open', R:'open', gl:1, m:'grin', bL:[-12,-4], bR:[-12,4], eyeS:1.06, mark:'pop', head:-2, pose:'up' },
+  laughing:{ L:'laugh', R:'laugh', m:'grin', bL:[-8,0], bR:[-8,0], mark:'pop', head:-3, bounce:1, pose:'relaxed' },
+  curious:{ L:'open', R:'open', m:'o', bL:[-4,-6], bR:[-12,10], look:[.6,-.5], head:3, pose:'relaxed' },
+  surprised:{ L:'open', R:'open', m:'open', bL:[-16,0], bR:[-16,0], eyeS:1.1, mark:'pop', pose:'startle' },
+  confused:{ L:'open', R:'open', m:'frown', bL:[-8,-14], bR:[4,10], look:[.2,-.3], mark:'question', head:5 },
+  worried:{ L:'open', R:'open', m:'wavy', bL:[-6,-16], bR:[-6,16], look:[-.2,.2], pose:'clasp' },
+  sad:{ L:'sad', R:'sad', m:'frown', bL:[-2,-16], bR:[-2,16], head:4, pose:'relaxed' },
+  tired:{ L:'tired', R:'tired', m:'flat', bL:[6,0], bR:[6,0], head:3, pose:'relaxed' },
+  sleepy:{ L:'closed', R:'closed', m:'yawn', bL:[2,0], bR:[2,0], mark:'bubble', head:5, pose:'relaxed' },
+  sleeping:{ L:'closed', R:'closed', m:'smile', mS:.85, bL:[4,0], bR:[4,0], sleep:1, pose:'relaxed', lie:1 },
+  frustrated:{ L:'laugh', R:'laugh', m:'grit', bL:[8,18], bR:[8,-18], mark:'anger', pose:'fists' },
+  proud:{ L:'happy', R:'happy', m:'smile', bL:[-6,0], bR:[-6,0], mark:'sparkle', head:-5 },
+  confident:{ L:'open', R:'laugh', m:'smile', bL:[-2,0], bR:[4,-6], head:-2 },
+  determined:{ L:'open', R:'open', m:'smile', mS:.8, bL:[10,18], bR:[10,-18], look:[.3,0], pose:'fists' },
+  thinking:{ L:'open', R:'open', m:'frown', mS:.7, bL:[-10,-8], bR:[-4,8], look:[.5,-.8], pose:'chin', head:4 },
+  roaring:{ L:'laugh', R:'laugh', m:'grin', mS:1.22, bL:[10,16], bR:[10,-16], hide:1 },
+  gape:{ L:'open', R:'open', m:'open', mS:1.15, bL:[-12,-4], bR:[-12,4], look:[.35,-.9], eyeS:1.06, hide:1 },
+  munchA:{ L:'happy', R:'happy', m:'flat', mS:.6, bL:[-4,0], bR:[-4,0], blush:1.3, hide:1 },
+  munchB:{ L:'happy', R:'happy', m:'smile', mS:.55, bL:[-6,0], bR:[-6,0], blush:1.3, hide:1 },
+  reading:{ L:'open', R:'open', m:'smile', mS:.8, bL:[2,0], bR:[4,0], look:[.35,.75], head:8, hide:1 },
+  hungry:{ L:'open', R:'open', gl:1, m:'hungry', bL:[-10,-4], bR:[-10,4], eyeS:1.05, hide:1 },
+  // deep-breath stages (not in the grid)
+  inhale:{ L:'closed', R:'closed', m:'o', mS:.65, bL:[-4,0], bR:[-4,0], hide:1 },
+  hold:{ L:'closed', R:'closed', m:'flat', mS:.55, bL:[-5,0], bR:[-5,0], hide:1 },
+  exhale:{ L:'closed', R:'closed', m:'open', mS:.5, bL:[0,0], bR:[0,0], hide:1 },
+};
+const LABEL = k => k[0].toUpperCase() + k.slice(1);
+
+/* ---------- arms: two-part limbs in Tim's stroke style ---------- */
+// angles in degrees, 0 = pointing right (toward the snout), 90 = straight down
+const ARM = { F:{ s:[243.19,411.15], L1:87.4, L2:73.0, f0:50.6, w0:[216.09,515.06] }, B:{ s:[365.95,391.24], L1:111.3, L2:69.3, f0:116.0, w0:[433.66,506.05] } };
+const POSES = { rest:{F:[147,51],B:[28,116]}, relaxed:{F:[100,82],B:[82,96]}, wave:{F:[190,-110],B:[82,96]}, chin:{F:[45,-95],B:[28,116]},
+  up:{F:[215,245],B:[-40,-70]}, roar:{F:[20,-20],B:[0,-30]}, pet:{F:[108,76],B:[78,98]}, startle:{F:[190,220],B:[-20,-50]},
+  clasp:{F:[75,-10],B:[60,150]}, sleep:{F:[35,170],B:[10,0]}, fists:{F:[110,20],B:[70,165]} };
+const rad = d => d*Math.PI/180;
+const WR = {};
+// two-bone reach: angles that put the wrist on a target, elbow bending to the chosen side
+function ik(k, [tx, ty], side){ const A = ARM[k], dx = tx - A.s[0], dy = ty - A.s[1], d = Math.min(Math.hypot(dx, dy), A.L1 + A.L2 - .5);
+  const base = Math.atan2(dy, dx), cosA = (A.L1*A.L1 + d*d - A.L2*A.L2)/(2*A.L1*d), a = Math.acos(Math.max(-1, Math.min(1, cosA)));
+  const u = base + side*a, ex = A.s[0] + A.L1*Math.cos(u), ey = A.s[1] + A.L1*Math.sin(u);
+  return [u*180/Math.PI, Math.atan2(ty - ey, tx - ex)*180/Math.PI]; }
+function drawArm(k, [u, f], dy){ const A = ARM[k], s = [A.s[0], A.s[1] + dy], e = [s[0] + A.L1*Math.cos(rad(u)), s[1] + A.L1*Math.sin(rad(u))], w = [e[0] + A.L2*Math.cos(rad(f)), e[1] + A.L2*Math.sin(rad(f))];
+  WR[k] = w; g('arm'+k+'p').setAttribute('d', `M${s[0]},${s[1]} L${e[0]},${e[1]} L${w[0]},${w[1]}`);
+  g('hand'+k).setAttribute('transform', `translate(${w[0]} ${w[1]}) rotate(${f - A.f0}) translate(${-A.w0[0]} ${-A.w0[1]})`); }
+
+let base = 'neutral', cur = 'neutral', untilT = 0, curMouth = '', curEyes = '', eyeT = -1e9, pendingEyes = null;
+function setFace(k, ms){ const e = EX[k]; cur = k; if (!e.hide){ const n = $('#nowTxt'); if (n) n.textContent = LABEL(k); HOOK.face(k); }
+  const eyeKey = e.L + '|' + e.R, applyEyes = () => { for (const s of ['L','R']){ const open = e[s] === 'open'; g('eye'+s).style.display = open ? '' : 'none'; g('alt'+s).innerHTML = open ? '' : EYE[e[s]][s]; } };
+  if (eyeKey !== curEyes){ if (curEyes && !RM){ eyeT = performance.now(); pendingEyes = applyEyes; } else applyEyes(); curEyes = eyeKey; }
+  g('glL').style.display = g('glR').style.display = e.gl ? '' : 'none';
+  const M = MOUTH[e.m], ms2 = e.mS || 1;
+  const mhtml = `<g transform="translate(${M.cx} ${M.cy}) scale(${ms2}) translate(${-M.cx} ${-M.cy}) translate(${M.tx} ${M.ty})">${M.svg}</g>`;
+  if (mhtml !== curMouth){ curMouth = mhtml; const now = performance.now();
+    for (const c of g('mouth').children) if (!c._die) c._die = now;
+    const n = document.createElementNS(NS, 'g'); n._born = now; n._cx = M.cx; n._cy = M.cy; n.innerHTML = mhtml; g('mouth').appendChild(n); }
+  T.bL = e.bL || [0,0]; T.bR = e.bR || [0,0]; T.eyeS = e.eyeS || 1; T.head = e.head || 0; T.blush = e.blush || 1; T.pose = e.pose || 'rest';
+  if (!e.hide){ mark(e.mark); S.pop = 1; }
+  untilT = ms ? performance.now() + ms : 0; blinkShown = false;
+  document.querySelectorAll('#exGrid .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === base));
+}
+
+/* ---------- marks ---------- */
+function mark(kind){ const m = g('marks'); m.innerHTML = ''; if (!kind) return; let h = '';
+  if (kind === 'pop') h = `<g stroke="#F2B84B" stroke-width="12" stroke-linecap="round"><path d="M468 34 l14 -34"/><path d="M492 52 l30 -20"/><path d="M500 84 l34 2"/></g>`;
+  if (kind === 'question') h = `<text x="478" y="66" font-family="Fredoka, sans-serif" font-weight="700" font-size="92" fill="#2C4A42">?</text>`;
+  if (kind === 'anger') h = `<g fill="none" stroke="#EE6A55" stroke-width="10" stroke-linecap="round"><path d="M470 30 q14 4 18 18"/><path d="M500 22 q-4 14 8 22"/><path d="M478 70 q4 -14 18 -14"/><path d="M510 60 q-14 -2 -16 14"/></g>`;
+  if (kind === 'roar') h = `<g id="roarw" fill="none" stroke="#F2B84B" stroke-width="10" stroke-linecap="round"><path d="M560 210 q22 42 0 84"/><path d="M590 190 q34 62 0 124"/><path d="M620 172 q46 80 0 160"/></g>`;
+  if (kind === 'sparkle') h = `<path d="M492 0 q6 26 30 32 q-24 6 -30 32 q-6 -26 -30 -32 q24 -6 30 -32z" fill="#F2B84B"/>`;
+  if (kind === 'bubble') h = `<g id="bub"><circle cx="540" cy="180" r="22" fill="#BFE0F7" opacity=".85"/><circle cx="560" cy="214" r="10" fill="#BFE0F7" opacity=".85"/></g>`;
+  if (kind === 'zzz') h = `<g id="zzz" font-family="Fredoka, sans-serif" font-weight="700" fill="#4B6FB8"><text x="470" y="70" font-size="44">z</text><text x="506" y="34" font-size="56">z</text><text x="548" y="-10" font-size="70">z</text></g>`;
+  m.innerHTML = h; }
+function puff(){ const m = g('marks'), e = document.createElementNS(NS, 'path'); const x = 425, y = 290 + Math.random()*16;
+  e.setAttribute('d', 'M0 0 q18 -6 36 0'); e.setAttribute('fill', 'none'); e.setAttribute('stroke', '#BFE0F7'); e.setAttribute('stroke-width', '8'); e.setAttribute('stroke-linecap', 'round'); m.appendChild(e);
+  const t0 = performance.now(); (function f(t){ const k = (t - t0)/900; if (k >= 1){ e.remove(); return; }
+    e.setAttribute('transform', `translate(${x + 60*k} ${y + 10*k}) scale(${.6 + .6*k})`); e.setAttribute('opacity', 1 - k); requestAnimationFrame(f); })(t0); }
+function heart(){ const m = g('marks'); const e = document.createElementNS(NS, 'path'); const x = 200 + Math.random()*260, y = 180 + Math.random()*60;
+  e.setAttribute('d', 'M0 8 C-10 -4 -26 6 -14 20 L0 32 L14 20 C26 6 10 -4 0 8z'); e.setAttribute('fill', '#EE6F68'); m.appendChild(e);
+  const t0 = performance.now(), dx = Math.random()*40 - 20; (function f(t){ const k = (t - t0)/1200; if (k >= 1){ e.remove(); return; }
+    e.setAttribute('transform', `translate(${x + dx*k} ${y - 120*k}) scale(${1.4*Math.min(1, k*5)})`); e.setAttribute('opacity', 1 - k*k); requestAnimationFrame(f); })(t0); }
+
+/* ---------- motion state ---------- */
+const S = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, y:0, vy:0, sq:0, pop:0, aF:[147,51], aB:[28,116], walk:0, ph:0, hb:0, breath:0 };
+const T = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, pose:'rest' };
+const fired = new Set();
+let act = null, actT0 = 0, lastPtr = 0, ptr = null, nextBlink = 0, blinkT = -1e9, blinkShown = false, nextIdle = performance.now() + 5000, sleeping = false, stage = '';
+const lerp = (a, b, k) => a + (b - a)*k;
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x*x*(3 - 2*x);
+const P = (id, tr) => { if (!tr.includes('NaN')) g(id).setAttribute('transform', tr); };   // skips the first frame, before the springs have values
+const rot = (a, x, y) => `rotate(${a} ${x} ${y})`;
+const OPT = window.REX_OPT || null;   // the app passes its own options; the test page reads its buttons
+const on = id => OPT ? !!OPT[id] : $('#'+id).getAttribute('aria-pressed') === 'true';
+const HOOK = Object.assign({ face(){}, walking(){ return false; } }, window.REX_HOOK || {});
+// Being carried: DG.on while held, DG.swT is the swing from drag speed (degrees), DG.k eases in and out, DG.shakeT starts the shake-off
+const DG = { on:false, k:0, sw:0, swT:0, shakeT:-1e9 };
+function endAct(){ act = null; setFace(base); }
+
+function frame(t){
+  const dt = 1/60;
+  if (untilT && t > untilT && !act){ untilT = 0; setFace(base); }
+  const e = EX[cur], k = act ? (t - actT0)/1000 : 0;
+  let armF = POSES[T.pose].F.slice(), armB = POSES[T.pose].B.slice(), walking = false;
+  // ---- actions ----
+  if (act === 'wave'){ armF = [190 - 6*Math.sin(k*10 - .6), -110 + Math.sin(k*10 - .9)*24]; if (k > 2.6) endAct(); }   // hand trails the forearm
+  if (act === 'walk'){ walking = k < 4; if (k > 4.4) endAct(); }
+  if (HOOK.walking()) walking = true;
+  if (act === 'look'){ T.lx = Math.sin(k*2.2); T.ly = -.2 + Math.sin(k*1.3)*.3; if (k > 3) endAct(); }
+  let K = null, KH = null, KT = null;
+  if (KEYS[act]){ const keys = KEYS[act];
+    for (const key of keys) if (key.face && key.t <= k && !fired.has(key)){ fired.add(key); setFace(key.face); if (key.mark) mark(key.mark); }
+    K = sampleKeys(keys, k); KH = sampleKeys(keys, k - .07); KT = sampleKeys(keys, k - .14);   // head drags 70 ms, tail 140 ms
+    if (K.aF) armF = K.aF.slice(); if (K.aB) armB = K.aB.slice();
+    if (K.done && KT.done){ act = null; clearProps(); setFace(base); } }
+  if (act === 'pet'){ armF = POSES.pet.F; armB = POSES.pet.B; petLean = 1; } else petLean = 0;
+  if (act === 'feed') armsFeed = feedFrame(k, t); else armsFeed = null;
+  if (act === 'feedDrag'){ dragFeedFrame(t); armF = [100 - 40*Math.max(0, food.reach || 0), 70 - 120*Math.max(0, food.reach || 0)]; armB = [70, 60]; }
+  if (act === 'putaway') armsFeed = putawayFrame(k); else if (act === 'read') armsFeed = readFrame(k, t); else if (act !== 'putaway'){ S.seatT = 0; if ((S.seat || 0) > .01) readFrame(0, t, true); }
+  S.seat = lerp(S.seat || 0, S.seatT || 0, .08); seat(S.seat);
+  if (act === 'ball') ballFrame(k);
+  if (armsFeed){ armF = armsFeed[0]; armB = armsFeed[1]; }
+  // carried: arms fly up and flail a little, legs and tail dangle and swing with the drag
+  DG.k = lerp(DG.k, DG.on ? 1 : 0, RM ? 1 : .2); DG.sw = lerp(DG.sw, DG.swT, .15);
+  if (DG.k > .01){ const fl = RM ? 0 : Math.sin(t/1000*11); armF = armF.map((v, i) => lerp(v, [190 + 12*fl, 220 + 14*fl][i], DG.k)); armB = armB.map((v, i) => lerp(v, [-20 - 10*fl, -50 - 12*fl][i], DG.k)); }
+  const shk = t - DG.shakeT, shake = shk > 0 && shk < 600 ? Math.sin(shk/1000*42)*(1 - shk/600) : 0;
+  if (act === 'breath'){ // eyes close, breathe in with a small mouth, hold closed at the top, breathe out with a small open mouth, then smile and blink
+    const st = k < 2.2 ? 'inhale' : k < 3.1 ? 'hold' : k < 5.3 ? 'exhale' : 'done';
+    if (st !== stage){ stage = st; if (st === 'done'){ setFace(base); blinkT = t + 250; nextBlink = t + 3000; } else setFace(st); }
+    S.breath = k < 2.2 ? ease(k/2.2) : k < 3.1 ? 1 + .03*Math.sin((k - 2.2)*7) : ease(1 - (k - 3.1)/2.2);
+    if (st === 'exhale' && Math.random() < .12) puff();
+    if (k > 5.9){ act = null; stage = ''; S.breath = 0; } }
+  else S.breath = lerp(S.breath, 0, .1);
+  // ---- hop physics ----
+  S.vy += 2600*dt; S.y += S.vy*dt; if (S.y > 0){ if (S.vy > 300) S.sq = Math.min(.12, S.vy/9000); S.y = 0; S.vy = 0; }
+  S.sq = lerp(S.sq, 0, .14); S.pop = lerp(S.pop, 0, .18);
+  // ---- look ----
+  if (act === 'read' && RD.eye){ T.lx = RD.eye[0]; T.ly = RD.eye[1]; }
+  else if (act === 'ball' || (act === 'read' && k < 1.9) || act === 'putaway'){ } else if (on('optLook') && ptr && t - lastPtr < 2500 && !e.look && act !== 'look'){ T.lx = ptr[0]; T.ly = ptr[1]; }
+  else if (e.look){ T.lx = e.look[0]; T.ly = e.look[1]; }
+  else if (!act && Math.random() < .006){ T.lx = Math.random()*1.4 - .7; T.ly = Math.random()*.8 - .4; }
+  const kk = RM ? 1 : .16;
+  for (const key of ['eyeS','head','blush','lx','ly']) S[key] = lerp(S[key], T[key], key === 'lx' || key === 'ly' ? .22 : kk);
+  for (const key of ['bL','bR']) S[key] = [lerp(S[key][0], T[key][0], kk), lerp(S[key][1], T[key][1], kk)];
+  // ---- walk cycle: contact, down, pass, up, mirrored; arms swing opposite the legs ----
+  S.walk = lerp(S.walk, walking ? 1 : 0, .08); const W = S.walk;
+  if (W > .01) S.ph += dt*5.2; const sp = Math.sin(S.ph), cp = Math.cos(S.ph);
+  const legA = 16*W, liftF = 6*W*Math.max(0, cp), liftB = 6*W*Math.max(0, -cp);
+  // squash and stretch in the legs: the reaching leg stretches, the swinging leg shortens as it passes (reads as a bent knee),
+  // the planted leg gives a little under his weight
+  const legS = c => 1 + W*(.08*Math.abs(sp) - .16*Math.max(0, c)**2 - .05*Math.max(0, -c)**2);
+  const kls = K && K.ls ? K.ls : 1, syF = legS(cp)*kls, syB = legS(-cp)*kls;
+  const bob = (W > .01 || K) ? plantDrop(-legA*sp + (K ? K.lF : 0), liftF, legA*sp + (K ? K.lB : 0), liftB, syF, syB) - (K ? 0 : 0) : 0;   // hips ride on whichever foot is on the floor, so it stays planted
+  S.hb = bob;
+  if (W > .01){ const sw = 26*W;
+    const wf = [92 + sw*sp, 92 + sw*sp - 14 - 22*Math.max(0, -sp)], wb = [88 - sw*sp, 88 - sw*sp - 14 - 22*Math.max(0, sp)];
+    armF = armF.map((v, i) => lerp(v, wf[i], W)); armB = armB.map((v, i) => lerp(v, wb[i], W)); }
+  // breath lifts the shoulders and arms
+  armF[0] += 14*S.breath; armF[1] += 10*S.breath; armB[0] -= 12*S.breath; armB[1] -= 8*S.breath;   // elbows open out as the chest fills
+  for (const i of [0,1]){ S.aF[i] = lerp(S.aF[i], armF[i], RM ? 1 : .2); S.aB[i] = lerp(S.aB[i], armB[i], RM ? 1 : .2); }
+  // ---- blink: squash, your closed-eye art, open ----
+  if (t > nextBlink && !e.sleep && (e.L === 'open' || e.R === 'open') && !act){ blinkT = t; nextBlink = t + 2200 + Math.random()*3800; }
+  const bt = t - blinkT; let bs = 1, showClosed = false;
+  if (bt >= 0 && bt < 60) bs = 1 - .65*(bt/60); else if (bt >= 60 && bt < 150) showClosed = true; else if (bt >= 150 && bt < 210) bs = .35 + .65*((bt - 150)/60);
+  if (showClosed !== blinkShown){ blinkShown = showClosed;
+    for (const s of ['L','R']) if (e[s] === 'open'){ g('eye'+s).style.display = showClosed ? 'none' : ''; g('alt'+s).innerHTML = showClosed ? EYE.closed[s] : ''; } }
+  S.lie = lerp(S.lie || 0, e.lie ? 1 : 0, RM ? 1 : .06); if (Math.abs(S.lie - (e.lie ? 1 : 0)) < .002) S.lie = e.lie ? 1 : 0; applyLie(S.lie); if (S.lie > .5) sleepAnim(t/1000);
+  // ---- face part transitions ----
+  const ed = t - eyeT; if (pendingEyes && ed >= 70){ pendingEyes(); pendingEyes = null; blinkShown = false; }
+  const esq = ed < 70 ? 1 - .75*ed/70 : ed < 160 ? .25 + .75*ease((ed - 70)/90) : 1;
+  for (const sd of ['L','R']){ const c = sd === 'L' ? eyeLC : eyeRC; g('alt'+sd).setAttribute('transform', `translate(${c[0]} ${c[1]}) scale(1 ${esq}) translate(${-c[0]} ${-c[1]})`); }
+  for (const c of [...g('mouth').children]){ const cx = c._cx || mouthC[0], cy = c._cy || mouthC[1];
+    if (!c._born && !c._die){ c.remove(); continue; }   // anything left from the initial drawing
+    if (c._die){ const d = (t - c._die)/90; if (d >= 1){ c.remove(); continue; } c.setAttribute('transform', `translate(${cx} ${cy}) scale(${1 - .2*d} ${1 - .85*d}) translate(${-cx} ${-cy})`); c.setAttribute('opacity', 1 - d*.6); }
+    else { const d = Math.min(1, Math.max(0, (t - c._born - 50)/110)); const sy = d < 1 ? .15 + .85*ease(d) + Math.sin(d*Math.PI)*.08 : 1;
+      c.setAttribute('transform', `translate(${cx} ${cy}) scale(${.9 + .1*d} ${sy}) translate(${-cx} ${-cy})`); } }
+  // ---- apply ----
+  const s = t/1000, br = RM ? 0 : Math.sin(s*(e.sleep ? 1.4 : 2.4))*(1 - S.breath)*(1 - S.walk);
+  morphLeg(ease(W));   // the front leg melts from the standing shape into the toe-forward walking shape
+  const kick = S.petK > .3 ? Math.max(0, Math.sin(s*15)) : 0;   // happy thumping kick while he's petted
+  leg('F', -legA*sp + (K ? K.lF : 0) - 16*kick*S.petK + DG.k*(DG.sw*.7 + 12*Math.sin(s*9)), liftF + 12*kick*S.petK, syF*(1 - .06*kick*S.petK)*(1 + .05*DG.k)); leg('B', legA*sp + (K ? K.lB : 0) + DG.k*(DG.sw*.7 - 12*Math.sin(s*9 + 1.4)), liftB, syB*(1 + .05*DG.k));
+  P('tail', rot(br*3 + Math.sin(s*1.7)*3*(1 - W) + 6*W*sp + (KT ? KT.tail : 0) + (petLean ? 7*Math.sin(s*13) : 0) + (act === 'feed' && k > 2.1 ? 6*Math.sin(s*14) : 0) + DG.k*(DG.sw*1.2 + 8*Math.sin(s*6)), 318, 520));
+  const dn = W > .01 ? Math.min(1, Math.max(0, bob/8)) : 0;      // the body gives a little each time his weight lands
+  const kb = K ? K.br : 0, tsy = 1 + br*.012 + .11*Math.max(S.breath, kb) - .03*W*dn, tsx = 1 + .06*Math.max(S.breath, kb) + .018*W*dn;
+  P('torso', `translate(300 600) scale(${tsx} ${tsy}) translate(-300 -600)`);
+  const lift = -(tsy - 1)*190;                                   // shoulders ride the chest
+  drawArm('F', S.aF, lift); drawArm('B', S.aB, lift);
+  const headTilt = S.head + S.lx*2.5 + (e.bounce ? Math.sin(s*14)*2 : 0) + (KH ? KH.head + KH.shake*Math.sin(s*55)*1.8 : 0) + RD.head + 9*shake + (petLean ? 15 + 2.5*Math.sin(s*3) : 0) + (act === 'feed' ? feedHead : 0) + (act === 'feedDrag' ? 6*(food.lean || 0) - 8*(food.reach || 0) : 0) - 7*S.breath;
+  S.petK = lerp(S.petK || 0, petLean ? 1 : 0, .12);
+  P('head', `translate(${-14*S.petK} ${br*2.2 + lift + (S.hb - bob)*1.2 + 30*S.petK}) ${rot(headTilt, 300, 360)} translate(300 300) scale(${1 + S.pop*.03}) translate(-300 -300)`);
+  P('browL', `translate(0 ${S.bL[0]}) ${rot(S.bL[1], 241, 108)}`); P('browR', `translate(0 ${S.bR[0]}) ${rot(S.bR[1], 388, 73)}`);
+  P('eyeL', `translate(${eyeLC[0]} ${eyeLC[1]}) scale(${S.eyeS} ${S.eyeS*bs*esq}) translate(${-eyeLC[0]} ${-eyeLC[1]})`);
+  P('eyeR', `translate(${eyeRC[0]} ${eyeRC[1]}) scale(${S.eyeS} ${S.eyeS*bs*esq}) translate(${-eyeRC[0]} ${-eyeRC[1]})`);
+  P('irisL', `translate(${S.lx*18} ${S.ly*16})`); P('irisR', `translate(${S.lx*13} ${S.ly*13})`);
+  P('blush', `translate(226.84 302.5) scale(${S.blush}) translate(-226.84 -302.5)`);
+  const ksq = (K ? K.sq : 0) + (S.lieSq || 0) + (act === 'feed' ? feedSq : 0) + (petLean ? .02*Math.sin(s*6) : 0), ky = K ? K.y : 0, kl = (K ? K.lean + K.shake*Math.sin(s*48)*.6 : 0) + (petLean ? -4 : 0) + (act === 'wave' ? 1.5*Math.sin(s*10) : 0) + RD.lean + 6*shake + (act === 'feedDrag' ? 4*(food.lean || 0) : 0), sq = S.sq + ksq;
+  P('root', `translate(0 ${S.y + bob + ky + 40*ease(S.seat || 0) + (act === 'wave' ? -3*Math.abs(Math.sin(s*10)) : 0) + (act === 'feed' ? feedY : 0)}) ${rot(3*W + kl, 300, 688)} translate(300 688) scale(${1 + sq*.6} ${1 - sq}) translate(-300 -688)`);
+  P('shadow', `translate(300 684) scale(${1 + Math.min(0, S.y + ky)/600}) translate(-300 -684)`);
+  const rw = g('roarw'); if (rw){ const u = ((s*2.2) % 1); rw.setAttribute('transform', `translate(548 252) scale(${.7 + u*.9}) translate(-548 -252)`); rw.setAttribute('opacity', K && K.shake > .1 ? 1 - u : 0); }
+  const zz = g('zzz'); if (zz) zz.setAttribute('transform', `translate(0 ${Math.sin(s*1.5)*6})`);
+  const bb = g('bub'); if (bb) bb.setAttribute('transform', `translate(540 180) scale(${.8 + .3*Math.sin(s*1.6)}) translate(-540 -180)`);
+  // ---- idle: mostly a slow deep breath, sometimes a mood ----
+  if (on('optIdle') && !act && !untilT && !sleeping && base === 'neutral' && t > nextIdle){
+    nextIdle = t + 8000 + Math.random()*6000;
+    if (Math.random() < .55) ACTIONS['Deep breath'](); else setFace(['happy','curious','thinking','proud','confident'][Math.floor(Math.random()*5)], 2400); }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- legs: each leg and its foot move as one piece from the hip ---------- */
+const LEG = { F:{ h:[232,520], a:[213,686] }, B:{ h:[362,515], a:[420,679] } };   // a = where the foot meets the bottom of the leg
+function leg(k, deg, lift, sy = 1){ const L = LEG[k], sx = 1/Math.sqrt(sy);   // keep volume: longer is thinner, shorter is wider
+  P('leg'+k, `translate(0 ${-lift}) ${rot(deg, L.h[0], L.h[1])}`);
+  P('leg'+k+'l', `translate(${L.h[0]} ${L.h[1]}) scale(${sx} ${sy}) translate(${-L.h[0]} ${-L.h[1]})`);
+  const fr = k === 'F' ? -70*ease(S.lie || 0) : 0;   // lying down, the near foot rests flat on the floor
+  P('foot'+k, `translate(${(sx - 1)*(L.a[0] - L.h[0])} ${(sy - 1)*(L.a[1] - L.h[1])}) ${rot(fr, L.a[0], L.a[1] - 34)}`); }
+
+/* ---------- keyframed performances ----------
+   Jump: rise to the toes, deep C-crouch (short legs need a big wind-up), stretch at takeoff, hang at the apex,
+   squash past the landing, rebound, settle. Head and tail sample the same curve late, so they drag and overshoot.
+   Roar: slow wind-up (lean back, chest fills, head tips back), a fast snap forward, a vibrating hold, a slow release. */
+const KEYS = {
+  jump:[
+    { t:0,    y:0,    sq:0,    lean:0,  head:0,   tail:0,   aF:'rest', aB:'rest', lF:0,   lB:0, ls:1 },
+    { t:.12,  ls:1.04, y:-5,   sq:-.03, lean:-2, head:-3,  tail:-4,  aF:[60,10], aB:[-10,-40] },
+    { t:.36,  ls:.84, y:6,    sq:.15,  lean:7,  head:9,   tail:6,   aF:[150,175], aB:[120,150], lF:4, lB:-4, face:'happy' },
+    { t:.46,  ls:1.14, y:-32,  sq:-.13, lean:-3, head:-6,  tail:-10, aF:[230,250], aB:[-60,-80], lF:-6, lB:6, face:'excited' },
+    { t:.62,  ls:.92, y:-100, sq:-.04, lean:-2, head:-4,  tail:-6,  aF:[225,245], aB:[-55,-75], lF:-16, lB:12 },
+    { t:.76,  ls:.9, y:-112, sq:0,    lean:0,  head:-2,  tail:2,   aF:[215,235], aB:[-45,-65], lF:-14, lB:10 },
+    { t:.92,  ls:1.07, y:-86, sq:-.05, lean:2,  head:0,   tail:6,   aF:[170,200], aB:[-10,-30], lF:-6,  lB:4 },
+    { t:1.04, ls:.86, y:0,    sq:.15,  lean:5,  head:6,   tail:4,   aF:[150,120], aB:[40,60],  lF:0,   lB:0, face:'laughing' },
+    { t:1.12, ls:.82, y:4,    sq:.19,  lean:6,  head:10,  tail:-6,  aF:[140,110], aB:[50,80] },
+    { t:1.3,  ls:1.04, y:-4,   sq:-.04, lean:-1, head:-3,  tail:5,   aF:'relaxed', aB:'relaxed' },
+    { t:1.5,  ls:.99, y:0,    sq:.01,  lean:0,  head:1,   tail:-2 },
+    { t:1.75, ls:1, y:0,    sq:0,    lean:0,  head:0,   tail:0,   aF:'rest', aB:'rest', face:'happy' } ],
+  roar:[
+    { t:0,    y:0, sq:0,    lean:0,   head:0,   tail:0,  br:0,  aF:'rest', aB:'rest', ls:1 },
+    { t:.5,   y:2, sq:.04,  lean:-6,  head:-12, tail:6,  br:.9, aF:[200,240], aB:[-30,-70], face:'inhale' },
+    { t:.62,  ls:.93, y:4, sq:.07,  lean:-7,  head:-14, tail:8,  br:1 },
+    { t:.74,  ls:1.05, y:0, sq:-.06, lean:9,   head:11,  tail:-10, br:.3, aF:[25,-25], aB:[5,-35], face:'roaring', mark:'roar' },
+    { t:1.6,  y:0, sq:-.04, lean:8,   head:9,   tail:-8, br:.2, shake:1 },
+    { t:1.95, ls:1, y:0, sq:.02,  lean:2,   head:2,   tail:4,  br:0, aF:'relaxed', aB:'relaxed', face:'proud' },
+    { t:2.5,  y:0, sq:0,    lean:0,   head:0,   tail:0,  br:0, aF:'rest', aB:'rest' } ],
+};
+KEYS.ball = [
+  { t:0,    ls:1, y:0,   sq:0,    lean:0,  head:0,   tail:0,   aF:'relaxed', aB:'relaxed', face:'curious' },
+  { t:.55,  ls:.88, y:4, sq:.12,  lean:4,  head:6,   tail:5 },
+  { t:.8,   ls:1.1, y:-40, sq:-.1, lean:-4, head:-10, tail:-8, aF:[220,240], aB:[-50,-70], face:'excited' },
+  { t:.98,  ls:.98, y:-62, sq:-.03, lean:-6, head:-16, tail:-4 },
+  { t:1.24, ls:.86, y:0,  sq:.14,  lean:3,  head:7,   tail:6,  aF:[150,120], aB:[40,60], face:'laughing' },
+  { t:1.42, ls:1.03, y:-3, sq:-.03, lean:-1, head:-2, tail:-4, aF:'relaxed', aB:'relaxed' },
+  { t:2.2,  ls:1, y:0,    sq:0,    lean:0,  head:0,   tail:0,  aF:'rest', aB:'rest', face:'happy' } ];
+const NUM = ['y','sq','lean','head','tail','br','lF','lB','shake','ls'];
+function sampleKeys(keys, k){ const out = {}; const last = keys[keys.length - 1];
+  for (const p of NUM){ let a = null, b = null; for (const key of keys){ if (key[p] === undefined) continue; if (key.t <= k) a = key; else { b = key; break; } }
+    out[p] = !a ? (b ? b[p] : 0) : !b ? a[p] : lerp(a[p], b[p], ease((k - a.t)/(b.t - a.t))); }
+  for (const p of ['aF','aB']){ let a = null, b = null; for (const key of keys){ if (key[p] === undefined) continue; if (key.t <= k) a = key; else { b = key; break; } }
+    const val = v => typeof v === 'string' ? POSES[v][p === 'aF' ? 'F' : 'B'] : v;
+    if (a && b){ const u = ease((k - a.t)/(b.t - a.t)); out[p] = val(a[p]).map((x, i) => lerp(x, val(b[p])[i], u)); } else if (a) out[p] = val(a[p]); }
+  out.done = k > last.t; return out; }
+
+/* ---------- shape morphing: sample both outlines into matched point rings, align them, blend ---------- */
+const N = 140;
+function ring(el, dx = 0, dy = 0, sy = 1){ const L = el.getTotalLength(), pts = []; for (let i = 0; i < N; i++){ const p = el.getPointAtLength(L*i/N); pts.push([p.x + dx, p.y*sy + dy]); }
+  // run every ring clockwise so the two shapes line up
+  let a = 0; for (let i = 0; i < N; i++){ const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % N]; a += x1*y2 - x2*y1; } return a < 0 ? pts.reverse() : pts; }
+function ringT(el, f){ const L = el.getTotalLength(), pts = []; for (let i = 0; i < N; i++){ const p = el.getPointAtLength(L*i/N); pts.push(f(p.x, p.y)); }
+  let a = 0; for (let i = 0; i < N; i++){ const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % N]; a += x1*y2 - x2*y1; } return a < 0 ? pts.reverse() : pts; }
+function ellRingT(el, f){ const b = el.getBBox(); return Array.from({ length:N }, (_, i) => f(b.x + b.width/2 + b.width/2*Math.cos(i/N*6.2832), b.y + b.height/2 + b.height/2*Math.sin(i/N*6.2832))); }
+const dot = (R) => { const cx = R.reduce((a, p) => a + p[0], 0)/N, cy = R.reduce((a, p) => a + p[1], 0)/N; return R.map(() => [cx, cy]); };
+function ellRing(el, dx = 0, dy = 0, sy = 1){ const b = el.getBBox(), cx = b.x + b.width/2 + dx, cy = (b.y + b.height/2)*sy + dy; return Array.from({ length:N }, (_, i) => [cx + b.width/2*Math.cos(i/N*6.2832), cy + b.height/2*Math.sin(i/N*6.2832)]); }
+function align(A, B){ let best = 0, bd = Infinity; for (let o = 0; o < N; o++){ let d = 0; for (let i = 0; i < N; i += 4){ const p = A[i], q = B[(i + o) % N]; d += (p[0]-q[0])**2 + (p[1]-q[1])**2; } if (d < bd){ bd = d; best = o; } } return B.map((_, i) => B[(i + best) % N]); }
+const ringPath = (A, B, m) => 'M' + A.map((p, i) => `${(p[0] + (B[i][0] - p[0])*m).toFixed(1)},${(p[1] + (B[i][1] - p[1])*m).toFixed(1)}`).join('L') + 'Z';
+const WSY = (688 - 486)/187.7, WS = g('legFwl').querySelectorAll('path,ellipse'), FS = { leg:g('legFl').children[0], spot:g('legFl').children[1], foot:g('footF').children[0] };
+const MR = { leg:[ring(FS.leg)], foot:[ring(FS.foot)], spot:[ellRing(FS.spot)] };
+MR.leg[1] = align(MR.leg[0], ring(WS[0], 192, 486, WSY)); MR.foot[1] = align(MR.foot[0], ring(WS[1], 192, 486, WSY)); MR.spot[1] = align(MR.spot[0], ellRing(WS[2], 192, 486, WSY));
+// standing legs reshape into Tim's seated legs (from his seated-reading drawing) as he sits
+function ringM(el){ const m = el.transform.baseVal.consolidate(), M = m ? m.matrix : null, pt = svg.createSVGPoint();
+  return ringT(el, (x, y) => { if (!M) return [x, y]; pt.x = x; pt.y = y; const q = pt.matrixTransform(M); return [q.x, q.y]; }); }
+const SF = g('seatSrcF').children, SB = g('seatSrcB').children;
+const SEAT = {
+  Fbody:[MR.leg[0], ringM(SF[0])], Fsole:[MR.foot[0], ringM(SF[1])], Fspot:[MR.spot[0], ringM(SF[2])],
+  Bbody:[ring(g('legBl').children[0]), ringM(SB[0])], Bshade:[ring(g('legBl').children[1]), ringM(SB[3])],
+  Bsole:[ring(g('footB').children[0]), ringM(SB[1])], Bdot:[null, ringM(SB[2])] };
+SEAT.Bdot[0] = dot(SEAT.Bdot[1]);
+for (const k in SEAT) SEAT[k][1] = align(SEAT[k][0], SEAT[k][1]);
+let lastSeat = -1;
+function seatMorph(u){ if (Math.abs(u - lastSeat) < .002) return; lastSeat = u; const on = u > .002;
+  g('lie_legF').style.display = g('lie_legB').style.display = on ? 'none' : ''; g('seatMF').style.display = g('seatMB').style.display = on ? '' : 'none';
+  if (on) for (const k in SEAT) g('s' + k).setAttribute('d', ringPath(SEAT[k][0], SEAT[k][1], u)); }
+let lastM = -1;
+function morphLeg(m){ if (Math.abs(m - lastM) < .002) return; lastM = m; const on = m > .002;
+  for (const k of ['leg','spot','foot']){ FS[k].style.display = on ? 'none' : ''; const el = g('m' + k[0].toUpperCase() + k.slice(1)); el.style.display = on ? '' : 'none'; if (on) el.setAttribute('d', ringPath(MR[k][0], MR[k][1], m)); } }
+
+/* ---------- planted foot: lowest heel or toe of either foot rests exactly on the floor ---------- */
+const FLOOR = 688, FB = {};
+for (const k of ['F','B']){ const b = g('foot'+k).getBBox(); FB[k] = [[b.x + 6, b.y + b.height], [b.x + b.width - 6, b.y + b.height]]; }
+{ const b = WS[1].getBBox(); FB.Fw = [[192 + b.x + 6, 486 + (b.y + b.height)*WSY], [192 + b.x + b.width - 6, 486 + (b.y + b.height)*WSY]]; }   // walking leg's foot (toe forward)
+function lowest(k, deg, lift, sy = 1){ const L = LEG[k], r = rad(deg), c = Math.cos(r), sn = Math.sin(r), fy = (sy - 1)*(L.a[1] - L.h[1]), fx = (1/Math.sqrt(sy) - 1)*(L.a[0] - L.h[0]);
+  const lr = rad(3*S.walk), lc = Math.cos(lr), ls = Math.sin(lr);   // include the forward lean of the whole body
+  const m = k === 'F' ? ease(S.walk) : 0, pts = FB[k].map((p, i) => m ? [lerp(p[0], FB.Fw[i][0], m), lerp(p[1], FB.Fw[i][1], m)] : p);
+  return Math.max(...pts.map(([x0, y0]) => { const y = y0 + fy, x = x0 + fx, px = L.h[0] + (x - L.h[0])*c - (y - L.h[1])*sn, py = L.h[1] + (x - L.h[0])*sn + (y - L.h[1])*c - lift;
+    return FLOOR + (px - 300)*ls + (py - FLOOR)*lc; })); }
+function plantDrop(dF, lF, dB, lB, sF = 1, sB = 1){ return FLOOR - Math.max(lowest('F', dF, lF, sF), lowest('B', dB, lB, sB)); }
+
+/* ---------- lying down to sleep: each part blends toward a resting layout on the floor ---------- */
+// [dx, dy, rotate, pivot x, pivot y]; the head rests on the folded front arm, the body and tail lie behind it
+const LIE = { head:[80,306,8,300,190], marks:[80,306,8,300,190], torso:[-150,84,75,300,470], tail:[-300,70,30,318,520],
+  legF:[-120,92,70,232,520], legB:[-150,40,80,362,515], armF:[115,196,0,0,0], armB:[80,195,0,0,0], side:[0,0,0,0,0] };
+// Tim's drawn sleeping pose replaces the standing rig: he sinks down into a squash, swaps to the pose, and it settles
+function applyLie(u){ const lying = u > .5, fo = 1 - ease(Math.min(1, Math.max(0, (u - .35)/.3))), fi = ease(Math.min(1, Math.max(0, (u - .4)/.3)));
+  g('root').style.display = fo < .01 ? 'none' : ''; g('root').setAttribute('opacity', fo); g('shadow').setAttribute('opacity', fo);
+  g('sleepPose').style.display = fi < .01 ? 'none' : ''; g('sleepPose').setAttribute('opacity', fi);
+  S.lieSq = lying ? 0 : u*2*.24;                                         // standing: squash down on the way to the floor
+  if (u > .4){ const k = Math.min(1, (u - .4)/.6), sy = .86 + .14*k, sx = 1.08 - .08*k;   // lying: arrive squashed, settle to full shape
+    g('sleepScale').setAttribute('transform', `translate(-6 356) translate(300 332) scale(${sx} ${sy}) translate(-300 -332) scale(.74)`); } }
+function sleepAnim(s){ const b = Math.sin(s*1.3), b2 = Math.sin(s*1.3 - .5);
+  P('sBody', `translate(300 409) scale(1 ${1 + .035*b}) translate(-300 -409)`);
+  P('sHead', `translate(0 ${-5*b2}) rotate(${.6*b2} 600 330)`); P('sFace', `translate(0 ${-5*b2}) rotate(${.6*b2} 600 330)`);
+  P('sArm', `translate(0 ${-1.5*b2})`); P('sTail', `rotate(${2.2*Math.sin(s*.7)} 330 300)`); P('sLeg', `translate(0 ${-1*b})`);
+  const z = g('sZ'); [...z.children].forEach((t, i) => { const ph = ((s*.45 + i*.33) % 1); t.setAttribute('opacity', Math.sin(ph*Math.PI)); t.setAttribute('transform', `translate(${ph*14} ${-ph*26})`); }); }
+
+/* ---------- props and performances ---------- */
+let petLean = 0, armsFeed = null, feedSq = 0, feedY = 0, feedHead = 0, lastFace = '';
+const once = f => { if (lastFace !== f){ lastFace = f; setFace(f); } };
+const PROP = {
+  apple:`<g><path d="M0 -26 c-20 -16 -52 -10 -50 22 c2 30 22 46 40 40 c6 -2 14 -2 20 0 c18 6 38 -10 40 -40 c2 -32 -30 -38 -50 -22z" fill="#E2614F"/><path d="M-30 -8 q-6 14 2 26" stroke="#F08A78" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M0 -26 c2 -14 8 -22 16 -28" stroke="#6B4A2B" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M6 -42 c10 -10 26 -8 30 0 c-10 8 -22 8 -30 0z" fill="#7FAF5A"/></g>`,
+  book:`<g><path d="M-78 -40 h156 v74 h-156z" fill="#C9603F"/><path d="M-72 -44 q36 -14 72 0 v74 q-36 -14 -72 0z" fill="#FBF3E2"/><path d="M72 -44 q-36 -14 -72 0 v74 q36 -14 72 0z" fill="#F3E6CC"/>
+    <g stroke="#C9BFA6" stroke-width="3" stroke-linecap="round"><path d="M-60 -30 h44M-60 -18 h48M-60 -6 h40M-60 6 h46M12 -30 h46M12 -18 h40M12 -6 h48M12 6 h36"/></g>
+    <path id="pageFlip" d="M0 -44 q36 -14 72 0 v74 q-36 -14 -72 0z" fill="#FFF9EE" style="display:none"/></g>`,
+  ball:`<g><circle r="36" fill="#F2B84B"/><path d="M-36 -4 q36 16 72 0" stroke="#E2614F" stroke-width="9" fill="none"/><path d="M0 -36 q-14 36 0 72" stroke="#E2614F" stroke-width="9" fill="none"/><circle r="36" fill="none" stroke="#D99A2E" stroke-width="3"/></g>` };
+function prop(name){ let el = g('pr_' + name); if (!el){ el = document.createElementNS(NS, 'g'); el.id = 'pr_' + name; el._b = performance.now(); el.innerHTML = PROP[name]; g('props').appendChild(el); } return el; }
+const popIn = el => { const k = Math.min(1, (performance.now() - (el._b || 0))/260), c1 = 1.70158; return 1 + (c1 + 1)*(k - 1)**3 + c1*(k - 1)**2; };   // grows in with a small overshoot
+function clearProps(){ g('props').innerHTML = ''; }
+function crumbs(x, y){ for (let i = 0; i < 7; i++){ const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 4 + Math.random()*5); c.setAttribute('fill', i % 2 ? '#E2614F' : '#F7E2B5'); g('props').appendChild(c);
+  const vx = Math.random()*260 - 60, vy = -200 - Math.random()*200, t0 = performance.now(); (function f(t){ const k = (t - t0)/1000; if (k > .7){ c.remove(); return; }
+    c.setAttribute('cx', x + vx*k); c.setAttribute('cy', y + vy*k + 900*k*k); c.setAttribute('opacity', 1 - k/.7); requestAnimationFrame(f); })(t0); } }
+// Feed: look up, catch, chomp, chew three times, swallow, wiggle
+// Drag-to-feed: the apple sits where you put it; Rex tracks it with his hungry mouth and leans toward it,
+// snaps it up when it gets close to his mouth, and watches it if you drop it on the floor
+const food = { on:false, x:0, y:0, vy:0, drag:false };
+const MOUTH_AT = () => [384, 268 + S.hb];
+function dragFeedFrame(t){ const ap = prop('apple'), [mx, my] = MOUTH_AT();
+  if (!food.drag && food.y < 640){ food.vy += 1800/60; food.y = Math.min(640, food.y + food.vy/60); } else if (!food.drag) food.vy = 0;
+  ap.setAttribute('transform', `translate(${food.x} ${food.y}) rotate(${food.drag ? Math.sin(t/120)*8 : 0}) scale(${popIn(ap)})`);
+  const dx = food.x - mx, dy = food.y - my, d = Math.hypot(dx, dy);
+  const cx = (eyeLC[0] + eyeRC[0])/2, cy = (eyeLC[1] + eyeRC[1])/2, ex = food.x - cx, ey = food.y - cy, m = Math.max(Math.hypot(ex, ey), 200);
+  T.lx = ex/m; T.ly = ey/m;
+  once(d < 380 || food.drag ? 'hungry' : 'curious');
+  food.lean = Math.max(-1, Math.min(1, dx/300)); food.reach = Math.max(-1, Math.min(1, -dy/300));
+  if (d < 70){ ap.style.display = 'none'; food.on = false; act = 'feed'; actT0 = performance.now() - 950; lastFace = ''; } }
+function feedFrame(k, t){ const ap = prop('apple'); feedSq = 0; feedY = 0; feedHead = 0;
+  const mouth = [384, 268];
+  if (k < .95){ const u = k/.95, x = 640 + (mouth[0] - 640)*u, y = 90 + (mouth[1] - 90)*u - 150*Math.sin(Math.PI*u);   // tossed in a high arc from the front
+    ap.setAttribute('transform', `translate(${x} ${y}) rotate(${-u*200}) scale(${1 - .35*Math.max(0, u - .7)/.3})`); once(k < .5 ? 'curious' : 'gape'); }
+  else { if (ap.parentNode && ap.style.display !== 'none'){ ap.style.display = 'none'; crumbs(mouth[0], mouth[1]); S.pop = 1.4; } }
+  if (k >= .95 && k < 2.2){ const c = (k - .95)/.42, ph = c % 1; once(ph < .5 ? 'munchA' : 'munchB'); feedSq = .03*Math.sin(c*Math.PI*2); feedHead = 3*Math.sin(c*Math.PI*2); }
+  if (k >= 2.2 && k < 2.3){ once('happy'); mark('sparkle'); heart(); heart(); }
+  if (k > 3.1){ ap.remove(); act = null; lastFace = ''; hint(); setFace(base); return null; }
+  const reach = k < .95 ? Math.min(1, k/.6) : 1;
+  return k < 2.2 ? [[lerp(147, 45, reach), lerp(51, -95, reach)], [lerp(28, 10, reach), lerp(116, -60, reach)]] : [POSES.rest.F, POSES.rest.B]; }
+// Read: hold the book in both hands, eyes down, turn a page every couple of seconds
+// Read: he sits down on the floor (your seated legs), holds the book in both hands at his belly, looks down at it
+function seat(u){ seatMorph(ease(u)); const b = Math.max(0, Math.min(1, (u - .45)/.55));
+  if (act !== 'read' && act !== 'putaway'){ g('bookSlot').style.display = b > .01 ? '' : 'none'; g('bookSlot').setAttribute('opacity', b); }
+  // the arms stay his rig arms and swing into the reading pose; the far hand moves on top of the book once he's holding it
+  const sh = u > .5 && (act === 'read' || act === 'putaway');
+  g('handB2').style.display = g('handF2').style.display = sh ? '' : 'none'; g('handB').style.visibility = g('handF').style.visibility = sh ? 'hidden' : '';
+  if (sh && WR.B) g('handB2').setAttribute('transform', `translate(${WR.B[0] - 522.25} ${WR.B[1] - 472.16})`);
+  if (sh && WR.F) g('handF2').setAttribute('transform', `translate(${WR.F[0] - 287.51} ${WR.F[1] - 499.53})`); }
+// The book, drawn from Tim's book images as flat vector shapes. Local space: the bottom of the spine is the origin.
+// open: 0 = shut, 1 = spread open. flip: 0..1 sweeps one page from the right side over to the left.
+const BK = { spine:[[-45,0],[45,0],[140,-410],[50,-410]], L:[[-45,0],[-450,-95],[-380,-517],[50,-410]], R:[[45,0],[140,-410],[535,-595],[375,-135]] };
+const poly = P => 'M' + P.map(p => p.map(v => v.toFixed(1)).join(',')).join('L') + 'Z';
+const lp = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+function drawBook(open, flip){ const o = Math.max(0, Math.min(1, open));
+  // shut: the right cover folds over onto the left one, pages squeeze into the spine
+  const R = BK.R.map((p, i) => lp([BK.L[[0, 3, 2, 1][i]][0] + 60, BK.L[[0, 3, 2, 1][i]][1] - 18], p, o));
+  g('bkLC').setAttribute('d', poly(BK.L)); g('bkRC').setAttribute('d', poly(R)); g('bkSP').setAttribute('d', poly(BK.spine));
+  const lt = lp([50, -410], [-315, -565], o), rt = lp([140, -410], [462, -640], o);
+  g('bkLP').setAttribute('d', `M50,-410L${lp([50,-410],[-380,-517],o)}L${lt}Q${lerp(80,-60,o)},${lerp(-430,-545,o)} 95,-425Z`);
+  g('bkRP').setAttribute('d', `M140,-410L${lp([140,-410],[535,-595],o)}L${rt}Q${lerp(130,240,o)},${lerp(-430,-585,o)} 118,-425Z`);
+  g('bkRP').style.display = o > .05 ? '' : 'none'; g('bkLP').style.display = o > .05 ? '' : 'none';
+  const fl = g('bkFL'), fs = g('bkFLs');
+  if (flip > 0 && flip < 1 && o > .9){ const f = ease(flip), up = Math.sin(Math.PI*f), S0 = [95, -425], A = [60, -170];
+    // the outer edge sweeps from the right stack, stands up tall, and lays down on the left stack
+    const T = [S0[0] + lerp(367, -410, f), S0[1] + lerp(-215, -140, f) - 330*up], Bm = [A[0] + lerp(320, -420, f), A[1] + lerp(30, 40, f) - 230*up];
+    const bend = 70*up*(f < .5 ? 1 : -1), c1 = [(S0[0] + T[0])/2 + bend*.4, (S0[1] + T[1])/2 - 60*up], c2 = [(A[0] + Bm[0])/2 + bend*.3, (A[1] + Bm[1])/2 - 40*up];
+    const d = `M${A}L${S0}Q${c1} ${T}L${Bm}Q${c2} ${A}Z`;
+    fl.setAttribute('d', d); fs.setAttribute('d', d); fl.style.display = ''; fs.style.display = '';
+    fs.setAttribute('opacity', f > .5 ? .9 : 0); fl.setAttribute('opacity', f > .5 ? 0 : 1);   // the page's back is a touch darker once it passes upright
+  } else { fl.style.display = 'none'; fs.style.display = 'none'; } }
+
+// Read: an over-the-top pickup with the far (back) arm. He looks back over his shoulder, reaches behind his back,
+// grabs the book with a little hop, swings it up and around, shows it off as it opens, then plops down and reads.
+const RD = { head:0, lean:0 };
+const seg = (k, a, b) => ease(Math.min(1, Math.max(0, (k - a)/(b - a))));
+const lerpA = (p, q, u) => [lerp(p[0], q[0], u), lerp(p[1], q[1], u)];
+const READ_F = [110, 9], READ_B = [388.2, 386], REST_B = [28, 116], BEHIND_B = [78, 112], OUT_B = [8, -10], OVER_B = [268, 300], SHOW_B = [338, 298];
+// Book layering: 'back' sits behind everything (even his far leg and the arm holding it), 'front' sits over his body
+function bookLayer(front){ const bs = g('bookSlot'), sm = g('bkSmear'), root = g('lie_armB').parentNode;
+  if (root.firstElementChild !== sm) root.prepend(sm);   // the smear trails behind everything
+  if (front){ if (bs.nextElementSibling !== g('lie_armF')) g('lie_armF').before(bs); }
+  else if (sm.nextElementSibling !== bs) sm.after(bs); }
+// True once the book no longer overlaps his far leg, so the layer swap can't pop over it
+function clearOfLeg(){ const a = g('bookV').getBoundingClientRect(), l = g('lie_legB').getBoundingClientRect();
+  return a.right < l.left || a.left > l.right || a.bottom < l.top || a.top > l.bottom; }
+// Motion smear: ghost copies of the book along its recent path plus a tapered streak, scaled by speed
+const SMR = { h:[], a:0, t:0 };
+function bookAt(B){ const tr = `translate(${B.x} ${B.y}) rotate(${B.r}) scale(${B.s}) translate(0 210)`; g('bookG').setAttribute('transform', tr);
+  const now = performance.now(), same = now === SMR.t; if (now - SMR.t > 120) SMR.h = []; SMR.t = now;
+  const r = rad(B.r), cx = B.x - Math.sin(r)*(-80*B.s) + Math.cos(r)*(40*B.s), cy = B.y + Math.cos(r)*(-80*B.s) + Math.sin(r)*(40*B.s);
+  const h = SMR.h; if (same && h.length) h.pop(); h.push({ x:cx, y:cy, tr, s:B.s }); if (h.length > 8) h.shift();
+  const n = h.length, v = n > 1 ? Math.hypot(h[n-1].x - h[n-2].x, h[n-1].y - h[n-2].y) : 0;
+  if (!same) SMR.a = Math.max(SMR.a*.72, Math.min(1, (v - 10)/22));
+  const sm = g('bkSmear'); if (SMR.a < .04 || n < 3){ sm.style.display = 'none'; return; } sm.style.display = '';
+  [0, 1, 2].forEach(i => { const e = h[n - 2 - i*2], u = g('bkGh' + i); if (e){ u.setAttribute('transform', e.tr); u.setAttribute('opacity', i < 2 ? (SMR.a*(.5 - i*.22)).toFixed(2) : 0); } else u.setAttribute('opacity', 0); });
+  // streak: a solid tapered smear through the recent path (subsampled so it reads as one swoosh), cream core, and two speed lines
+  const A0 = h[Math.max(0, n - 5)], M0 = h[Math.max(0, n - 3)], Z0 = h[n-1], C0 = { x:2*M0.x - (A0.x + Z0.x)/2, y:2*M0.y - (A0.y + Z0.y)/2 };
+  const P = []; for (let i = 0; i <= 18; i++){ const u = i/18, a = (1 - u)*(1 - u), b = 2*u*(1 - u), c = u*u; P.push({ x:a*A0.x + b*C0.x + c*Z0.x, y:a*A0.y + b*C0.y + c*Z0.y }); }
+  const m = P.length, W = 260*h[n-1].s, side = (k, f) => { const out = []; for (let i = 0; i < m; i++){ const q = P[Math.min(m - 1, i + 1)], o = P[Math.max(0, i - 1)], dx = q.x - o.x, dy = q.y - o.y, l = Math.hypot(dx, dy) || 1, w = W*f*(i/(m - 1))**1.2; out.push([P[i].x - dy/l*w*k, P[i].y + dx/l*w*k]); } return out; };
+  const shape = f => { const L = side(1, f), R = side(-1, f).reverse(); return 'M' + L.concat(R).map(p => p.map(v => v.toFixed(1)).join(',')).join('L') + 'Z'; };
+  const line = (k, from) => { const S = side(k, 1.35).slice(Math.floor(m*from), m - 3); return S.length > 1 ? 'M' + S.map(p => p.map(v => v.toFixed(1)).join(',')).join('L') : ''; };
+  g('bkStreak').setAttribute('d', shape(1)); g('bkStreak').setAttribute('opacity', (SMR.a*.95).toFixed(2));
+  g('bkStreak2').setAttribute('d', shape(.38)); g('bkStreak2').setAttribute('opacity', (SMR.a*.8).toFixed(2));
+  g('bkLine1').setAttribute('d', line(1, .25)); g('bkLine2').setAttribute('d', line(-1, .45));
+  g('bkLine1').setAttribute('opacity', (SMR.a*.55).toFixed(2)); g('bkLine2').setAttribute('opacity', (SMR.a*.45).toFixed(2)); }
+function heldInB(aB){ return WR.B ? { x:WR.B[0] + 46*Math.cos(rad(aB[1] - 90)), y:WR.B[1] + 46*Math.sin(rad(aB[1] - 90)), r:aB[1] - 110, s:.22 } : { x:400, y:450, r:0, s:.22 }; }
+function seatedBook(nod){ const dx = WR.F ? WR.F[0] - 287.5 : 0, dy = WR.F ? WR.F[1] - 499.5 : 0; return { x:418 + dx, y:481 + dy, r:6.6 - 2*nod, s:.32 }; }
+function lerpB(a, b, u){ return { x:lerp(a.x, b.x, u), y:lerp(a.y, b.y, u), r:lerp(a.r, b.r, u), s:lerp(a.s, b.s, u) }; }
+// Timing curves for the whip: slow anticipation, a fast snap, then a slow settle
+const lin = (k, a, b) => Math.min(1, Math.max(0, (k - a)/(b - a)));
+const eIn = x => x*x*x, eOut = x => 1 - (1 - x)**3;
+// Two-leg arm path (p -> q -> r) driven by one progress value, so the whip is one continuous motion
+const path3 = (p, q, r, u, m = .45) => u < m ? lerpA(p, q, u/m) : lerpA(q, r, (u - m)/(1 - m));
+const SHOW_A = [10, -25], READ_A = [READ_B[0] - 360, READ_B[1] - 360];
+// Pickup beats (seconds): 0-.6 slow reach behind his back · .6-.8 rummage · .8-.92 whip out and up · .92-1.35 overshoot and settle · 1.35-2.5 slow sit-down into reading
+function readFrame(k, t, leaving){
+  if (leaving){ RD.head = RD.lean = 0; g('bkSmear').style.display = 'none'; return null; }
+  const relaxedF = [100, 82], sit = eOut(lin(k, 1.35, 2.5));
+  let aB, aF = k < 1.35 ? relaxedF : lerpA(relaxedF, READ_F, sit);
+  if (k < .6) aB = lerpA(REST_B, BEHIND_B, seg(k, 0, .6));
+  else if (k < .8) aB = [BEHIND_B[0] + 5*Math.sin((k - .6)*45), BEHIND_B[1]];                      // rummaging
+  else if (k < .92) aB = lerpA(BEHIND_B, SHOW_A, eIn(lin(k, .8, .92)));                  // the whip: accelerates the whole way
+  else if (k < 1.35){ const x = lin(k, .92, 1.35), o = 16*Math.sin(Math.PI*x)*(1 - x); aB = [SHOW_A[0] - o, SHOW_A[1] - o]; }   // overshoot, then settle
+  else aB = lerpA(SHOW_A, READ_A, sit);
+  const whip = eIn(lin(k, .8, .92));
+  RD.head = k < .8 ? 9*seg(k, 0, .5) : k < .92 ? lerp(9, -7, whip) : k < 1.35 ? lerp(-7, 4, eOut(lin(k, .92, 1.35))) : lerp(4, 0, sit);
+  RD.lean = k < .8 ? 4*seg(k, 0, .5) : k < .92 ? lerp(4, -6, whip) : k < 1.35 ? lerp(-6, 3, eOut(lin(k, .92, 1.35))) : lerp(3, 0, sit);
+  if (k < .8){ T.lx = .6; T.ly = .9; } else if (k < 1.35){ const u = eOut(lin(k, .8, 1.2)); T.lx = lerp(.8, .7, u); T.ly = lerp(.7, -.3, u); }
+  once(k < .8 ? 'curious' : k < 1.3 ? 'excited' : k < 1.8 ? 'proud' : 'reading');
+  if (k >= .8 && !RD.hopped){ RD.hopped = true; hop(380); S.pop = 1.2; }
+  if (k < .1) RD.hopped = false;
+  S.seatT = k > 1.35 ? 1 : 0;
+  // eyes read: three lines on the left page, three on the right, each a few small jumps left to right and a quick snap back;
+  // during a page turn they ride the page over to the left
+  RD.eye = k >= 2.5 ? readEyes(k) : null;
+  readBlinks(k, t);
+  // reading loop: gentle bob, and a page turn every 4 seconds with a little nod
+  const bob = Math.sin(k*1.6), ph = k > 3 ? ((k - 3) % 4)/.9 : -1, nod = ph > 0 && ph < 1 ? .5*Math.sin(ph*Math.PI) : 0;
+  if (k >= 2.5){ aF = [READ_F[0] - 2*bob - 3*nod, READ_F[1] - 3*bob - 6*nod]; aB = [READ_A[0] - 1.5*bob - 2*nod, READ_A[1] - 2*bob - 5*nod]; }
+  // the book: behind his back until he whips it past his belly on the right, then in front
+  const bs = g('bookSlot'); bs.style.display = k > .62 ? '' : 'none'; bs.setAttribute('opacity', 1); if (k < .5) RD.front = false; if (!RD.front && k > .8 && WR.B && WR.B[0] > 470 && clearOfLeg()) RD.front = true; bookLayer(RD.front);
+  const pop = k < .8 ? .85 + .15*Math.sin(lin(k, .62, .8)*Math.PI) : 1;
+  const B = lerpB(heldInB(aB), seatedBook(nod), sit); B.s *= pop; bookAt(B);
+  drawBook(eOut(lin(k, .9, 1.08)) + (k > 1.08 && k < 1.3 ? .1*Math.sin(lin(k, 1.08, 1.3)*Math.PI) : 0), ph);
+  if (k > 40){ queued = null; startPutaway(); }
+  return [aF, aB]; }
+// Reading cycle (4 s, starting at 3 s): .9 page turn · 6 lines of .45 s · .4 s pause at the end of the spread
+function readEyes(k){
+  const c = k >= 3 ? (k - 3) % 4 : -1;
+  if (c >= 0 && c < .9) return [lerp(.75, .15, ease(c/.9)), .62];
+  if (c >= 3.6) return [.45, .5];                                    // pause: eyes drift up off the page for a beat
+  const tr = c >= 0 ? c - .9 : k - 2.5 + 2.25, line = Math.floor(tr/.45) % 6, p = (tr % .45)/.45, page = line < 3 ? 0 : 1, row = line % 3;
+  const x0 = page ? .45 : .1, x1 = page ? .8 : .4, y = lerp(.6, .9, row/2) + (page ? -.05 : 0);
+  return p < .85 ? [lerp(x0, x1, Math.min(1, Math.floor(p/.85*3)/2)), y] : [x0, Math.min(.95, y + .12)]; }
+// Blinks while reading: one at the end of every spread, and one between pages on every other spread
+function readBlinks(k, t){ if (k < 3) return; const ci = Math.floor((k - 3)/4), c = (k - 3) % 4;
+  const want = c >= 3.62 ? 'end' + ci : (ci % 2 && c >= .9 + 3*.45 - .06) ? 'mid' + ci : '';
+  if (want && RD.blinked !== want && (want[0] === 'e' || c < 3.6)){ RD.blinked = want; blinkT = t; } }
+// Put away, the same shape in reverse: 0-.5 book shuts as he stands and slowly winds the book up over his shoulder ·
+// .5-.62 whip it back behind his back · .62-.82 tuck · .82-1.5 slow arm return
+let queued = null;
+function startPutaway(){ act = 'putaway'; actT0 = performance.now(); lastFace = ''; }
+function putawayFrame(k){
+  drawBook(1 - seg(k, 0, .3), -1);
+  S.seatT = k < .3 ? 1 : 0;
+  const wind = seg(k, .05, .5), whip = eIn(lin(k, .5, .62));
+  let aB;
+  if (k < .5){ const o = 10*Math.sin(Math.PI*lin(k, .3, .5)); aB = lerpA(READ_A, [SHOW_A[0] - o, SHOW_A[1] - o], wind); }   // wind-up
+  else if (k < .62) aB = lerpA(SHOW_A, BEHIND_B, whip);                                              // the whip back
+  else if (k < .82) aB = [BEHIND_B[0] + 4*Math.sin((k - .62)*50), BEHIND_B[1]];                                   // tuck it in
+  else aB = lerpA(BEHIND_B, REST_B, eOut(lin(k, .82, 1.5)));
+  const aF = lerpA(READ_F, [147, 51], seg(k, .05, .5));
+  once(k < .5 ? 'happy' : k < .87 ? 'excited' : 'happy');
+  RD.head = k < .5 ? lerp(0, -5, wind) : k < .62 ? lerp(-5, 9, whip) : k < .82 ? 9 : lerp(9, 0, eOut(lin(k, .82, 1.5)));
+  RD.lean = k < .5 ? lerp(0, -3, wind) : k < .62 ? lerp(-3, 4, whip) : k < .82 ? 4 : lerp(4, 0, eOut(lin(k, .82, 1.5)));
+  if (k > .5 && k < .87){ T.lx = .6; T.ly = .9; }
+  if (k < .05) RD.front = true; if (RD.front && k > .52 && clearOfLeg()) RD.front = false;   /* drops behind him while it's still clear of his leg */
+  bookLayer(RD.front);
+  const B = lerpB(seatedBook(0), heldInB(aB), seg(k, .05, .4)); B.s *= k > .68 ? 1 - lin(k, .68, .8) : 1; bookAt(B);
+  g('bookSlot').style.display = k < .8 ? '' : 'none';
+  if (k > 1.52){ g('bkSmear').style.display = 'none'; act = null; RD.head = RD.lean = 0; lastFace = ''; setFace(base); const q = queued; queued = null; if (q) q(); }
+  return [aF, aB]; }
+function oldReadFrame(k, t){ const bk = prop('book'); once('reading');
+  if (WR.F && WR.B){ const x = (WR.F[0] + WR.B[0])/2 + 30, y = (WR.F[1] + WR.B[1])/2 - 20; bk.setAttribute('transform', `translate(${x} ${y + Math.sin(k*2.4)*2}) rotate(${-8 + Math.sin(k*.8)*2}) scale(.95)`); }
+  const pf = g('pageFlip'), ph = (k % 2.4) / .5; if (ph < 1){ pf.style.display = ''; pf.setAttribute('transform', `scale(${1 - 2*ph} 1)`); if (ph < .05) S.pop = .5; } else pf.style.display = 'none';
+  if (k > 9.6){ bk.remove(); act = null; lastFace = ''; setFace(base); return null; }
+  return [[62, -60], [18, -52]]; }
+// Play ball: the ball arcs in, Rex tracks it, crouches, hops and bonks it with his head, it flies off
+function ballFrame(k){ const b = prop('ball'); let x, y;
+  if (k < 1){ x = 760 - 330*k; y = -100 - 580*k + 700*k*k; } else { const u = k - 1; x = 430 + 420*u; y = 20 - 700*u + 700*u*u; }
+  b.setAttribute('transform', `translate(${x} ${y}) rotate(${k*(k < 1 ? -300 : 520)}) scale(${popIn(b)})`);
+  const cx = (eyeLC[0] + eyeRC[0])/2, cy = (eyeLC[1] + eyeRC[1])/2, dx = x - cx, dy = y - cy, m = Math.max(Math.hypot(dx, dy), 200); T.lx = dx/m; T.ly = dy/m;
+  if (k > 2.3){ b.remove(); } }
+
+/* ---------- actions ---------- */
+function hop(h = 620){ if (S.y === 0){ S.vy = -h; S.sq = -.06; } }
+const start = (a, face, ms) => { if (!['feed','read','ball','feedDrag'].includes(a)){ clearProps(); hint(); } if (a !== 'read') S.seatT = 0; act = a; actT0 = performance.now(); stage = ''; if (face) setFace(face, ms); };
+const ACTIONS = {
+  'Deep breath'(){ start('breath'); },
+  Wave(){ start('wave', 'happy'); },
+  Feed(){ clearProps(); lastFace = ''; Object.assign(food, { on:true, x:560, y:110, vy:0, drag:false }); start('feedDrag'); hint('Drag the apple to Rex.'); },
+  Read(){ clearProps(); lastFace = ''; start('read'); hint('Rex is reading. Pick another action to stop.'); },
+  'Play ball'(){ clearProps(); fired.clear(); start('ball'); },
+  Walk(){ start('walk', 'happy'); },
+  Jump(){ fired.clear(); start('jump'); },
+  Roar(){ fired.clear(); start('roar'); },
+  Think(){ setFace('thinking', 3200); },
+  'Look around'(){ start('look', 'curious'); },
+  Nap(){ act = null; sleeping = !sleeping; base = sleeping ? 'sleeping' : 'neutral'; setFace(sleeping ? 'sleepy' : 'surprised', sleeping ? 1800 : 900); },
+};
+$('#exGrid').innerHTML = Object.keys(EX).filter(k => !EX[k].hide).map(k => `<button class="chip" data-k="${k}" aria-pressed="${k === base}">${LABEL(k)}</button>`).join('');
+$('#exGrid').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; act = null; sleeping = b.dataset.k === 'sleeping'; base = b.dataset.k; setFace(base); };
+$('#acGrid').innerHTML = Object.keys(ACTIONS).map(k => `<button class="chip act" data-a="${k}">${k}</button>`).join('');
+$('#acGrid').onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const run = () => ACTIONS[b.dataset.a]();
+  if (act === 'read' && b.dataset.a !== 'Read'){ queued = run; startPutaway(); } else if (act === 'putaway') queued = run; else run(); };
+for (const id of ['optLook','optFlip','optIdle']) $('#'+id).onclick = e => { const b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+  if (id === 'optFlip') g('flip').setAttribute('transform', b.getAttribute('aria-pressed') === 'true' ? 'translate(560 0) scale(-1 1)' : ''); };
+
+/* ---------- pointer ---------- */
+function svgPt(e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(g('flip').getScreenCTM().inverse()); }
+addEventListener('pointermove', e => { const p = svgPt(e), cx = (eyeLC[0] + eyeRC[0])/2, cy = (eyeLC[1] + eyeRC[1])/2; let dx = p.x - cx, dy = p.y - cy; const d = Math.hypot(dx, dy), m = Math.max(d, 220);
+  ptr = [dx/m, dy/m]; lastPtr = performance.now(); });
+let downT = 0, petIv = null, petting = false;
+g('props').addEventListener('pointerdown', e => { if (act !== 'feedDrag' || !e.target.closest('#pr_apple')) return; e.stopPropagation(); e.preventDefault(); food.drag = true; });
+addEventListener('pointermove', e => { if (!food.drag) return; const p = svgPt(e); food.x = p.x; food.y = p.y; });
+addEventListener('pointerup', () => { food.drag = false; });
+function hint(txt){ const h = document.querySelector('#stage .hint'); if (h) h.textContent = txt || 'Tap Rex to poke him. Hold to pet. He watches your pointer.'; }
+g('rexHit').addEventListener('pointerdown', e => { if (e.target.closest('#props')) return; e.preventDefault(); downT = performance.now(); petting = false;
+  petIv = setTimeout(() => { petting = true; act = 'pet'; setFace('happy'); T.blush = 1.25; petIv = setInterval(heart, 260); }, 400); });
+addEventListener('pointerup', () => { if (!downT) return; clearTimeout(petIv); clearInterval(petIv); const was = petting; petting = false; downT = 0;
+  if (was){ act = null; setFace('laughing', 1400); return; }
+  if (sleeping){ setFace('tired', 1500); return; }
+  const r = Math.random(); act = null; setFace(r < .4 ? 'surprised' : r < .75 ? 'laughing' : 'excited', 1200); hop(r < .4 ? 260 : 480); heart(); });
+
+/* ---------- API for the app ---------- */
+window.RexRig = {
+  get act(){ return act; }, get sleeping(){ return sleeping; },
+  action(name){ const run = () => ACTIONS[name](); if (act === 'read' && name !== 'Read'){ queued = run; startPutaway(); } else if (act === 'putaway') queued = run; else run(); },
+  stopReading(){ if (act === 'read') startPutaway(); },
+  face(k, ms){ setFace(k, ms); }, hop(h){ hop(h); },
+  sleep(z){ if (z === sleeping) return; act = null; sleeping = z; base = z ? 'sleeping' : 'neutral'; setFace(z ? 'sleepy' : 'surprised', z ? 1800 : 900); },
+  poke(){ if (sleeping){ setFace('tired', 1500); return; } const r = Math.random(); if (act !== 'read') act = null; setFace(r < .4 ? 'surprised' : r < .75 ? 'laughing' : 'excited', 1200); hop(r < .4 ? 260 : 480); heart(); },
+  pet(z){ if (z){ act = 'pet'; setFace('happy'); T.blush = 1.25; } else if (act === 'pet'){ act = null; T.blush = 1; setFace('laughing', 1400); } },
+  hearts(n){ for (let i = 0; i < n; i++) setTimeout(heart, i*140); },
+  munch(){ clearProps(); act = 'feed'; actT0 = performance.now() - 950; lastFace = ''; },
+  pickUp(){ if (act === 'read' || act === 'putaway'){ act = null; S.seatT = 0; clearProps(); } if (act === 'pet') act = null; DG.on = true; setFace('surprised'); },
+  swing(v){ DG.swT = Math.max(-30, Math.min(30, v)); },
+  drop(){ DG.on = false; DG.swT = 0; setFace('worried'); },
+  land(v){ S.sq = Math.min(.22, .06 + v/9000); DG.shakeT = performance.now() + 160; setTimeout(() => { setFace('happy', 1800); blinkT = performance.now() + 900; }, 800); },
+  flip(f){ g('flip').setAttribute('transform', f < 0 ? 'translate(600 0) scale(-1 1)' : ''); },
+};
+setFace('neutral'); requestAnimationFrame(frame);
+</script>

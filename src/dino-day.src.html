@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dino Day</title>
+<title>Dino Day App</title>
 <meta name="theme-color" content="#FBF6EC">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
@@ -49,11 +49,19 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .world .zoom{transition:transform .7s cubic-bezier(.2,.8,.2,1),bottom .55s cubic-bezier(.2,.8,.2,1)}
 .rex{position:absolute;bottom:var(--ground,14%);left:0;width:var(--rexW,120px);transform-origin:50% 100%;pointer-events:auto;cursor:pointer;touch-action:none}
 .rex .body{position:relative;width:100%;transform-origin:50% 100%}
-.rex img{display:block;width:100%;height:auto;pointer-events:none;-webkit-user-drag:none;position:relative}
+.rex svg{display:block;width:100%;height:auto;aspect-ratio:536/688;overflow:visible;pointer-events:none;position:relative}
+.rexlayer{position:absolute;inset:0;pointer-events:none;z-index:15}
+/* contact shadow: soft and darkest at the middle; it fades while he is off the ground */
+.rex .shadow{left:22%;right:14%;bottom:-7px;height:18px;background:radial-gradient(closest-side,rgba(25,20,35,calc(var(--shadowA,.22)*1.9)),rgba(25,20,35,0));filter:blur(1px);transition:opacity .15s}
+.rex.lifted .shadow{opacity:0}
+.dropshadow{position:absolute;left:0;top:0;height:16px;border-radius:50%;background:radial-gradient(closest-side,rgba(25,20,35,.38),rgba(25,20,35,0));opacity:0;pointer-events:none}
+.rexlayer .rex{pointer-events:auto;bottom:auto}
+.rex.held{cursor:grabbing}
+.rexlayer .bubble{z-index:2}
 .rex .tint,.rex .rim{position:absolute;inset:0;pointer-events:none;-webkit-mask:var(--rexmask) center/100% 100% no-repeat;mask:var(--rexmask) center/100% 100% no-repeat;transition:background .8s,opacity .8s}
 .rex .tint{background:var(--tint,#fff);opacity:var(--tintA,0);mix-blend-mode:multiply}
 .rex .rim{background:radial-gradient(circle at var(--rimX,50%) var(--rimY,30%),var(--rim,#fff) 0,transparent 46%);opacity:var(--rimA,0);mix-blend-mode:screen}
-.rex .shadow{position:absolute;left:10%;right:10%;bottom:-7px;height:14px;border-radius:50%;background:rgba(25,20,30,var(--shadowA,.22));filter:blur(2px)}
+.rex .shadow{position:absolute;border-radius:50%;pointer-events:none}
 .bubble{position:absolute;left:50%;bottom:50%;transform:translate(-50%,8px) scale(.7);transform-origin:50% 100%;opacity:0;background:var(--card);color:var(--ink);font:600 13.5px/1.3 var(--display);padding:8px 12px;border-radius:16px;max-width:min(270px,80vw);width:max-content;text-align:center;box-shadow:0 4px 14px rgba(40,40,20,.15);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1);pointer-events:none;z-index:6}
 .bubble.on{opacity:1;transform:translate(-50%,0) scale(1)}
 .bubble.btns{pointer-events:auto}
@@ -351,7 +359,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .fxc.dark{mix-blend-mode:multiply;z-index:1}
 .fxc.light{mix-blend-mode:screen;z-index:1}
 .fxc.front{z-index:4}
-#props{position:relative;z-index:2}
+.fxc.back{z-index:2}
+#wprops{position:relative;z-index:2}
 
 /* ================= v8 UI pass: mockup look (logo, soft palette, rounded type) ================= */
 body{color:var(--text);transition:background .8s}
@@ -564,9 +573,9 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
   <section class="world" id="world" aria-label="Rex's world">
     <div class="zoom" id="zoom">
       <svg class="scene" id="scene" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
-      <div id="props"></div>
-      <div class="rex" id="rex" role="button" tabindex="0" aria-label="Rex. Tap to say hi, hold to pet.">
-        <div class="body" id="rexBody"><div class="shadow"></div><img id="rexImg" alt=""><div class="tint" aria-hidden="true"></div><div class="rim" aria-hidden="true"></div></div>
+      <div id="wprops"></div>
+      <div class="rex" id="rex" role="button" tabindex="0" aria-label="Rex. Tap to say hi, hold to pet, drag to carry him anywhere.">
+        <div class="body" id="rexBody"><div class="shadow"></div><svg id="rexSvg" viewBox="0 0 536 688" aria-hidden="true"><defs><filter id="rexFx" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB"><feFlood id="rexTintC" flood-color="#fff" flood-opacity="0" result="tc"/><feComposite in="tc" in2="SourceAlpha" operator="in" result="tm"/><feBlend in="tm" in2="SourceGraphic" mode="multiply" result="lit"/><feOffset id="rexRimO" in="SourceAlpha" dx="12" dy="4" result="sh"/><feComposite in="SourceAlpha" in2="sh" operator="out" result="edge"/><feGaussianBlur in="edge" stdDeviation="3.5" result="edgeB"/><feComposite in="edgeB" in2="SourceAlpha" operator="in" result="edgeIn"/><feFlood id="rexRimC" flood-color="#fff" flood-opacity="0" result="rc"/><feComposite in="rc" in2="edgeIn" operator="in" result="rim"/><feBlend in="rim" in2="lit" mode="screen" result="rl"/><feOffset in="SourceAlpha" dy="-34" result="up"/><feComposite in="SourceAlpha" in2="up" operator="out" result="low"/><feGaussianBlur in="low" stdDeviation="9" result="lowB"/><feComposite in="lowB" in2="SourceAlpha" operator="in" result="lowIn"/><feFlood id="rexBounceC" flood-color="#E7B481" flood-opacity=".3" result="bcol"/><feComposite in="bcol" in2="lowIn" operator="in" result="bounce"/><feBlend in="bounce" in2="rl" mode="screen"/></filter></defs><g id="rexLit" filter="url(#rexFx)"><g id="flip"><g id="rexHit">__RIG__</g></g></g></svg></div>
       </div>
       <div class="bubble" id="bubble" role="status"></div>
 
@@ -586,13 +595,15 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
   <nav class="tabs" id="tabs" aria-label="Sections"></nav>
   <div class="toast" id="toast" role="status"></div>
   <div class="snack" id="snack" role="status"><span></span><button>Undo</button></div>
+  <div class="rexlayer" id="rexLayer"><div class="dropshadow" id="dropShadow"></div></div>
 </div>
 
+<!--RIG_ENGINE-->
 <script>
 const REX_SRC = "__REX__";
 const $ = s => document.querySelector(s);
 const app = $('#app'), world = $('#world'), scene = $('#scene'), rexEl = $('#rex'), rexBody = $('#rexBody'), bubble = $('#bubble');
-$('#rexImg').src = REX_SRC; rexBody.style.setProperty('--rexmask', `url(${REX_SRC})`);
+
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- event bus ---------- */
@@ -667,13 +678,13 @@ const logoHTML = (sz='') => `<span class="logo ${sz}" aria-label="Dino Day">Dino
 const ENV = __ENV__;
 const PLACES = {
   meadow: { label:'Meadow', feetY:812, art:{ morning:'meadow_day', day:'meadow_day', golden:'meadow_sunset', dusk:'meadow_dusk', night:'meadow_night' }, bed:.12, ground:{ day:'#8E9A4A', golden:'#6A5420', dusk:'#48462D', night:'#1F404A' } },
-  bedroom:{ label:'Bedroom', feetY:700, art:{ morning:'bedroom_day', day:'bedroom_day', golden:'bedroom_sunset', dusk:'bedroom_sunset', night:'bedroom_night' }, bed:.16, ground:{ day:'#E89A5E', golden:'#974831', dusk:'#7A3E30', night:'#463655' } },
+  bedroom:{ label:'Bedroom', feetY:730, art:{ morning:'bedroom_morning', day:'bedroom_day', golden:'bedroom_golden', dusk:'bedroom_dusk', night:'bedroom_night' }, bed:.16, ground:{ morning:'#DFA17E', day:'#E7B481', golden:'#DD8860', dusk:'#BC5428', night:'#383563' } },
 };
 const GRADE = { morning:['#FFE6C2',.12], day:[null,0], golden:[null,0], dusk:['#5C4A86',.22], night:[null,0] };
 // how Rex is lit: [multiply color, strength, rim color, rim strength, key side (-1 left, 1 right), shadow alpha]
 const REXLIGHT = {
   meadow: { morning:['#FFE2BC',.35,'#FFF1C9',.18,1,.22], day:['#FFF1DA',.2,'#FFF6D8',.16,1,.22], golden:['#EE8F52',.85,'#FFB24E',.32,0,.32], dusk:['#86699C',.85,'#F7A06E',.26,0,.34], night:['#3B5287',.92,'#B9CCF2',.18,1,.4] },
-  bedroom:{ morning:['#FFC48A',.55,'#FFD08A',.24,0,.26], day:['#FFC48A',.55,'#FFD08A',.24,0,.26], golden:['#E07445',.85,'#FFA45A',.34,-1,.34], dusk:['#B86A5C',.85,'#FFA45A',.32,-1,.36], night:['#5E4A7C',.9,'#FFB86A',.4,-1,.42] },
+  bedroom:{ morning:['#FFE6CC',.3,'#FFF1D6',.16,1,.22], day:['#FFD9A8',.4,'#FFE8B8',.2,1,.24], golden:['#F2A066',.7,'#FFB870',.3,1,.3], dusk:['#E07A48',.7,'#FF9A55',.34,1,.34], night:['#4E5590',.9,'#FFB86A',.36,-1,.42] },
 };
 const PHASE_LABEL = { morning:'Morning', day:'Afternoon', golden:'Golden hour', dusk:'Dusk', night:'Night' };
 const PAL = Object.fromEntries(ORDER_INIT().map(k => [k, { label: PHASE_LABEL[k] }]));
@@ -691,11 +702,12 @@ function drawScene(){
   ${gc ? `<rect x="-60" y="0" width="1800" height="941" fill="${gc}" opacity="${ga}" style="mix-blend-mode:${ph==='dusk'?'multiply':'soft-light'}"/>` : ''}
 `;
   const [tc, ts, rc, rs, side, sh] = REXLIGHT[place()][ph];
-  rexEl.style.setProperty('--tint', tc); rexEl.style.setProperty('--tintA', ts); rexEl.style.setProperty('--rim', rc); rexEl.style.setProperty('--rimA', rs);
+  rexEl.style.setProperty('--tint', tc); rexEl.style.setProperty('--tintA', ts); rexTint(tc, ts); rexEl.style.setProperty('--rim', rc); rexEl.style.setProperty('--rimA', rs);
   rexEl.style.setProperty('--rimX', side === -1 ? '-8%' : side === 1 ? '108%' : '50%'); rexEl.style.setProperty('--rimY', side === 0 ? '-12%' : '32%'); rexEl.style.setProperty('--shadowA', sh); rexEl.style.setProperty('--rimBase', rs); if (typeof FX !== 'undefined') FX.seed();
   $('#timeChip').innerHTML = (night||dusk ? IC.moon : IC.today.replace('stroke="currentColor"','stroke="#E2A23B"')) + `<span>${S.lockDay ? 'Daytime' : PHASE_LABEL[ph]}</span>`;
   $('#placeChip').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>${L.label}</span>`;
   world.style.setProperty('--groundC', L.ground[ph] || L.ground.day);
+  rexBounce(L.ground[ph] || L.ground.day, { morning:.3, day:.36, golden:.42, dusk:.36, night:.22 }[ph]);
   if (app.dataset.phase !== ph){ app.dataset.phase = ph; document.documentElement.dataset.phase = ph; const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(app).getPropertyValue('--sheet').trim(); }
 }
 $('#placeChip') && ($('#placeChip').onclick = () => {
@@ -724,26 +736,128 @@ const rex = {
   poke(k=1){ if (!RM) this.sqv -= 6*k; },
   goTo(x, then){ this.tx = Math.max(.08, Math.min(.92, x)); this.state = 'walk'; this.after = then; this.sitting = 0; },
 };
-function rexSize(){ const h = $('#zoom').clientHeight; const w = Math.min(app.classList.contains('expanded') ? 190 : 128, Math.max(84, h*0.40)); return w; }
-function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); $('#zoom').appendChild(e); setTimeout(()=>e.remove(), 1300); }
-function rexBox(){ const r = rexEl.getBoundingClientRect(), z = $('#zoom').getBoundingClientRect(); return { x: r.left - z.left + r.width/2, y: r.top - z.top, w: r.width, h: r.height }; }
+function rexSize(){ const h = $('#zoom').clientHeight; const w = Math.min(app.classList.contains('expanded') ? 140 : 96, Math.max(68, h*0.29)); return w; }
+function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); fxHost().appendChild(e); setTimeout(()=>e.remove(), 1300); }
+function fxHost(){ return rex.away ? document.getElementById('rexLayer') : $('#zoom'); }
+function rig(){ return window.RexRig; }
+{ const s = document.querySelector('#rexSvg #shadow'); if (s) s.setAttribute('display', 'none'); }   // the app draws a softer contact shadow under him
+// Night and golden-hour light on Rex: a multiply tint clipped to his shape
+// Bounce light: the floor's color lifts the undersides of his feet, belly, and tail
+function rexBounce(c, a){ const f = document.getElementById('rexBounceC'); if (f){ f.setAttribute('flood-color', c); f.setAttribute('flood-opacity', a); } }
+function rexTint(c, a){ const f = document.getElementById('rexTintC'); if (!f) return; f.setAttribute('flood-color', c); f.setAttribute('flood-opacity', a); }
+// Rim light: reads the --rim* values the scene's light pass writes (color, strength, and where the light sits) and moves the lit edge to face it
+let rimKey = '';
+function rexRim(){ const st = rexEl.style, c = st.getPropertyValue('--rim') || '#fff', A = +st.getPropertyValue('--rimA') || 0, x = parseFloat(st.getPropertyValue('--rimX')), y = parseFloat(st.getPropertyValue('--rimY'));
+  const k = [c, A.toFixed(2), x, y].join('|'); if (k === rimKey) return; rimKey = k;
+  const cl = v => Math.max(-16, Math.min(16, v)); document.getElementById('rexRimO').setAttribute('dx', cl((50 - (isNaN(x) ? 50 : x))/50*14).toFixed(1)); document.getElementById('rexRimO').setAttribute('dy', cl((50 - (isNaN(y) ? 30 : y))/50*14).toFixed(1));
+  const r = document.getElementById('rexRimC'); r.setAttribute('flood-color', c.trim()); r.setAttribute('flood-opacity', Math.min(.9, A*2.2).toFixed(2)); }
+function rexBox(){ const r = rexEl.getBoundingClientRect(), z = fxHost().getBoundingClientRect(); return { x: r.left - z.left + r.width/2, y: r.top - z.top, w: r.width, h: r.height }; }
 
-/* interactions on Rex */
-let pressT = 0, petting = false, petTimer = null, lastPet = 0;
-rexEl.addEventListener('pointerdown', e => { e.preventDefault(); pressT = performance.now(); petting = false; rexEl.setPointerCapture(e.pointerId);
-  petTimer = setTimeout(()=>{ petting = true; rex.state='idle'; rex.say('Mmm…', 1400); }, 380); });
-rexEl.addEventListener('pointermove', e => { if (!petting) return; const now = performance.now(); if (now - lastPet > 160){ lastPet = now; const b = rexBox(); heart(b.x - 10 + Math.random()*20, b.y + 10); rex.sq = -0.05; } });
-rexEl.addEventListener('pointerup', e => { clearTimeout(petTimer); if (petting){ petting = false; rex.say(pick(['That was nice.','Hehe, again!','♥']), 1400); bus.emit('rex_petted'); played(); return; } tapRex(); });
-rexEl.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); tapRex(); } });
-function tapRex(){ if (S.asleep){ rex.poke(.4); rex.say('Zzz… (wake me with Start my day)', 1800); return; } rex.sleeping = false; rex.reading = false; rex.poke(1); rex.hop = 1; const b = rexBox(); heart(b.x, b.y+10);
+/* interactions on Rex: tap to poke, hold to pet, drag to carry him anywhere */
+let press = null, petting = false, petTimer = null, lastPet = 0;
+rexEl.addEventListener('pointerdown', e => { if (fall) return; e.preventDefault(); rexEl.setPointerCapture(e.pointerId);
+  press = { x:e.clientX, y:e.clientY }; petting = false;
+  petTimer = setTimeout(() => { if (!press || carry) return; petting = true; rex.state = 'idle'; rig()?.pet(true); rex.say('Mmm…', 1400); }, 380); });
+addEventListener('pointermove', e => {   // on the window: moving Rex between layers drops pointer capture
+  if (carry){ carryMove(e); return; }
+  if (!press) return;
+  if (!petting && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8){ clearTimeout(petTimer); startCarry(e); return; }
+  if (petting){ const now = performance.now(); if (now - lastPet > 160){ lastPet = now; const b = rexBox(); heart(b.x - 10 + Math.random()*20, b.y + 10); } } });
+addEventListener('pointerup', () => { clearTimeout(petTimer); if (!press) return; press = null;
+  if (carry){ release(); return; }
+  if (petting){ petting = false; rig()?.pet(false); rex.say(pick(['That was nice.','Hehe, again!','♥']), 1400); bus.emit('rex_petted'); played(); return; }
+  tapRex(); });
+addEventListener('pointercancel', () => { clearTimeout(petTimer); press = null; if (carry) release(); else if (petting){ petting = false; rig()?.pet(false); } });
+rexEl.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); tapRex(); } else if (e.key === 'h' && rex.away){ sendHome(); } });
+function tapRex(){ rig()?.poke(); if (S.asleep){ rex.poke(.4); rex.say('Zzz… (wake me with Start my day)', 1800); return; } rex.sleeping = false; rex.reading = false; rex.poke(1); rex.hop = 1; const b = rexBox(); heart(b.x, b.y+10);
   rex.say(pick(phase()==='night' ? ['*yawn* Hi.','Still up?','Sleepy…'] : ['Hi!','Hehe!','Boop!','What are we doing next?','I like you.','Rawr! (a small one)']), 1600); }
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const CHAT = { often:1.5, sometimes:1, quiet:.25 };
 const talk = p => Math.random() < p*(CHAT[S.chat]||1);
 
+/* ---------- carry Rex anywhere ----------
+   Pick him up: he's lifted out of the world into a layer over the whole app and swings from where you grabbed him.
+   Let go: he falls, lands on whatever is under him (the grass, a card, a task, the tab bar), squashes, shakes it off, and stays there.
+   On a card he rides along when the list scrolls, and hops down to the next thing if his spot scrolls away. */
+const rexLayer = $('#rexLayer');
+let carry = null, fall = null; rex.away = false; rex.perch = null;
+window.__rexWalking = () => rex.state === 'walk' && !rex.away && !carry && !fall;
+window.__rexBusy = () => !!(carry || fall || rex.state === 'walk' || rex.sleeping || rex.reading);
+const AR = () => app.getBoundingClientRect(), mix = (p, q, k) => p + (q - p)*k;
+const SOLID = '.task,.fcard,.card,.sheetcard,.tline,.add,.nudge,.hello,.section,.hab,.stats,.keep,.empty,.tlitem,.sticky';   // cards and rows, not the buttons inside them
+function rexRectApp(){ const r = rexEl.getBoundingClientRect(), a = AR(); return { x:r.left - a.left, y:r.top - a.top, w:r.width, h:r.height }; }
+function shadowVis(v){ rexEl.classList.toggle('lifted', !v); if (v) $('#dropShadow').style.opacity = 0; }
+// While he's held or falling, his shadow waits on the surface below: smaller and fainter the higher he is
+function dropShadowAt(x, y, w, h, s){ const d = $('#dropShadow'), gap = Math.max(0, s.y - (y + h)), k = Math.max(.35, 1 - gap/500), sw = w*.62*k;
+  d.style.width = sw + 'px'; d.style.transform = `translate(${x + w*.58 - sw/2}px, ${s.y - 8}px)`; d.style.opacity = (k*.9).toFixed(2); }
+function toLayer(){ const b = rexRectApp(); if (rexEl.parentNode !== rexLayer){ rexLayer.append(rexEl, bubble); rex.away = true; } rexEl.style.left = b.x + 'px'; rexEl.style.top = b.y + 'px'; return b; }
+function toWorld(cx){ const zr = $('#zoom').getBoundingClientRect(), a = AR(); $('#wprops').after(rexEl); rexEl.after(bubble); rexEl.style.top = ''; rex.away = false; rex.perch = null;
+  rex.x = rex.tx = Math.max(.08, Math.min(.92, (cx + a.left - zr.left)/zr.width)); rex.state = 'idle'; bubble._x = bubble._y = null; if (S.rexSpot){ S.rexSpot = null; save(); } }
+// After a reload, put him back where you left him: on the same spot if something is still there, otherwise he drops onto whatever is below
+function restoreSpot(){ const sp = S.rexSpot; if (!sp || app.classList.contains('expanded')) return; toLayer(); const a = AR(), w = rexEl.offsetWidth, h = rexEl.offsetHeight;
+  const x = Math.max(0, Math.min(a.width - w, sp.fx*a.width)), y = sp.fy*a.height - h; rexEl.style.left = x + 'px'; rexEl.style.top = y + 'px';
+  const s = surfaceBelow({ x, y:y - 6, w, h }); if (s.world){ toWorld(x + w/2); return; } if (Math.abs(s.y - (y + h)) < 12){ rexEl.style.top = (s.y - h) + 'px'; rex.perch = perchOn(s.el); } else startFall(x, y, w, h); }
+function startCarry(e){ rex.sleeping = false; rex.reading = false; rex.state = 'idle'; rex.after = null; rex.chase = false; fall = null; rex.perch = null;
+  const b = toLayer(), a = AR(), px = e.clientX - a.left, py = e.clientY - a.top;
+  carry = { n:0, surf:null, gx:px - b.x, gy:py - b.y, x:b.x, y:b.y, w:b.w, h:b.h, vx:0, vy:0, lt:performance.now(), lx:px, ly:py, ang:0, av:0 };
+  rexEl.classList.add('held'); rexBody.style.transformOrigin = `${carry.gx}px ${carry.gy}px`;
+  rig()?.pickUp(); shadowVis(false); if (talk(.7)) rex.say(pick(['Whoa!','Wheee!','Where are we going?','Hey!']), 1200); }
+function carryMove(e){ const c = carry, a = AR(), now = performance.now(), px = e.clientX - a.left, py = e.clientY - a.top, dt = Math.max(8, now - c.lt)/1000;
+  c.vx = mix(c.vx, (px - c.lx)/dt, .5); c.vy = mix(c.vy, (py - c.ly)/dt, .5); c.lx = px; c.ly = py; c.lt = now;
+  c.x = Math.max(-c.w*.3, Math.min(a.width - c.w*.7, px - c.gx)); c.y = Math.max(-c.h*.3, Math.min(a.height - c.h*.8, py - c.gy)); }
+function release(){ const c = carry; carry = null; rexEl.classList.remove('held'); rig()?.drop();
+  fall = { x:c.x, y:c.y, w:c.w, h:c.h, vx:Math.max(-500, Math.min(500, c.vx*.25)), vy:Math.max(-700, Math.min(900, c.vy*.35)), ang:c.ang, n:0 }; fall.surf = surfaceBelow(fall); }
+function startFall(x, y, w, h){ rex.perch = null; fall = { x, y, w, h, vx:0, vy:0, ang:0, n:0 }; fall.surf = surfaceBelow(fall); rig()?.face('surprised', 700); shadowVis(false); }
+// What's under his middle: the world's grass, the top edge of the sheet, the first card or row below his feet, or the tab bar
+function surfaceBelow(f){ const a = AR(), cx = f.x + f.w/2, feet = f.y + f.h;
+  const zr = $('#zoom').getBoundingClientRect(), gpx = parseFloat(getComputedStyle($('#zoom')).getPropertyValue('--ground')) || 0, wg = zr.bottom - a.top - gpx;
+  const sheetTop = $('#sheet').getBoundingClientRect().top - a.top;
+  if (app.classList.contains('expanded') || feet <= wg + 4) return { y:wg, world:true };
+  if (feet <= sheetTop + 10) return { y:sheetTop, el:$('#sheet') };
+  rexEl.style.pointerEvents = 'none'; let hit = null;
+  for (let y = Math.max(0, feet - 30); y < a.height && !hit; y += 6){ const el = document.elementFromPoint(a.left + cx, a.top + y); if (!el || !app.contains(el)) continue;
+    const s = el.closest(SOLID) || el.closest('#tabs'); if (s){ const top = s.getBoundingClientRect().top - a.top; if (top >= feet - 30) hit = { y:top, el:s }; } }
+  rexEl.style.pointerEvents = '';
+  return hit || { y:$('#tabs').getBoundingClientRect().top - a.top, el:$('#tabs') }; }
+function land(f){ const s = f.surf, v = f.vy; fall = null; rexBody.style.transform = ''; rexBody.style.transformOrigin = ''; shadowVis(true); rig()?.land(v);
+  if (s.world) toWorld(f.x + f.w/2); else { rexEl.style.left = f.x + 'px'; rexEl.style.top = f.y + 'px'; rex.perch = perchOn(s.el); const a = AR(); S.rexSpot = { fx:f.x/a.width, fy:(f.y + f.h)/a.height }; save(); }
+  if (talk(.6)) setTimeout(() => rex.say(pick(s.world ? ['Home!','Back on the grass.','Ta-da!'] : s.el.closest('.task') ? ['I\'ll keep an eye on this one.','Nice view!','Comfy.'] : ['Ooh, new spot.','I like it up here.','Ta-da!']), 1500), 900); }
+// What he's standing on: the element, and the task id when it's a task row
+function perchOn(el){ const row = el.closest && el.closest('[data-row]'); return { el, task: row ? +row.dataset.row : null }; }
+// He cheers when you finish the task he's sitting on, and minds when it disappears from under him
+bus.on('task_done', t => { const p = rex.perch; if (!rex.away || !p || p.task !== t.id) return;
+  rig()?.face('excited', 1800); rig()?.hop(560); rig()?.hearts(4); const b = rexBox(); heart(b.x, b.y + 10);
+  setTimeout(() => rex.say(pick(['You did it! I was watching this one.','Yes! That one\'s done.','Woo! We did it.']), 2200), 700); });
+bus.on('task_deleted', t => { const p = rex.perch; if (!rex.away || !p || p.task !== t.id) return; setTimeout(() => rex.say(pick(['Hey, that was my spot!','Whoa, where\'d it go?']), 1800), 700); });
+function placeBubbleAway(x, y, w){ const a = AR(), bw = bubble.offsetWidth || 120, bx = Math.max(bw/2 + 8, Math.min(a.width - bw/2 - 8, x + w/2));
+  bubble.style.left = Math.round(bx) + 'px'; bubble.style.bottom = Math.round(a.height - y + 4) + 'px'; }
+function perchStep(){ const p = rex.perch; if (!p) return; const a = AR(), w = rexEl.offsetWidth, h = rexEl.offsetHeight, x = parseFloat(rexEl.style.left), y = parseFloat(rexEl.style.top);
+  if (!p.el.isConnected){ const s = surfaceBelow({ x, y:y - 6, w, h }); if (!s.world && Math.abs(s.y - (y + h)) < 10) Object.assign(p, perchOn(s.el)); else { startFall(x, y, w, h); return; } }   // the list re-rendered: find the same spot again
+  const top = p.el.getBoundingClientRect().top - a.top, sheetTop = $('#sheet').getBoundingClientRect().top - a.top, tabsTop = $('#tabs').getBoundingClientRect().top - a.top;
+  if (p.el !== $('#tabs') && p.el !== $('#sheet') && (top < sheetTop + 10 || top > tabsTop - 4)){ startFall(x, Math.min(y, tabsTop - h), w, h); return; }   // his spot scrolled away: hop down
+  rexEl.style.top = (top - h) + 'px'; placeBubbleAway(x, top - h, w); }
+function carryStep(dt){
+  if (carry){ const c = carry, tgt = Math.max(-40, Math.min(40, -c.vx*.035)); c.av += ((tgt - c.ang)*60 - c.av*7)*dt; c.ang += c.av*dt; c.vx *= Math.pow(.02, dt);   // swings like a pendulum from your grip
+    rexEl.style.left = c.x + 'px'; rexEl.style.top = c.y + 'px'; rexBody.style.transform = `rotate(${c.ang.toFixed(2)}deg)`; rig()?.swing(c.ang*.9); placeBubbleAway(c.x, c.y, c.w);
+    if (!c.surf || ++c.n % 6 === 0) c.surf = surfaceBelow(c); dropShadowAt(c.x, c.y, c.w, c.h, c.surf); return; }
+  if (fall){ const f = fall, a = AR(); f.vy += 2600*dt; f.x += f.vx*dt; f.vx *= Math.pow(.3, dt); f.y += f.vy*dt; f.ang += (0 - f.ang)*Math.min(1, dt*6);
+    f.x = Math.max(0, Math.min(a.width - f.w, f.x));   // lands fully on screen if (!f.surf.world && ++f.n % 3 === 0) f.surf = surfaceBelow(f);
+    if (f.y + f.h >= f.surf.y){ f.y = f.surf.y - f.h; land(f); return; }
+    rexEl.style.left = f.x + 'px'; rexEl.style.top = f.y + 'px'; rexBody.style.transform = `rotate(${f.ang.toFixed(2)}deg)`; placeBubbleAway(f.x, f.y, f.w); dropShadowAt(f.x, f.y, f.w, f.h, f.surf); return; }
+  if (rex.away) perchStep(); }
+function sendHome(){ if (!rex.away || carry) return; const b = rexRectApp(); fall = null; rexBody.style.transform = ''; shadowVis(true); toWorld(b.x + b.w/2); rig()?.hop(480); }
+// The app's Rex brain (walk, hop, roar, sleep, read) drives the rig
+const rgPrev = { hop:0, shake:0, sleeping:false, reading:false, face:1 };
+function rigSync(){ const R = rig(); if (!R) return;
+  if (rex.face !== rgPrev.face){ R.flip(rex.face); rgPrev.face = rex.face; }
+  if (rex.hop > rgPrev.hop + .05) R.hop(480); rgPrev.hop = rex.hop;
+  if (rex.shake > rgPrev.shake + .05) R.action('Roar'); rgPrev.shake = rex.shake;
+  const z = !!rex.sleeping; if (z !== rgPrev.sleeping){ R.sleep(z); rgPrev.sleeping = z; }
+  const rd = !!rex.reading; if (rd !== rgPrev.reading){ rd ? R.action('Read') : R.stopReading(); rgPrev.reading = rd; } }
+
 /* play actions */
 const ACTIONS = [
-  { id:'pet', label:'Pet', bg:'var(--rose)', icon:IC.heart, run(){ rex.state='idle'; rex.sq=-.06; const b=rexBox(); for(let i=0;i<5;i++) setTimeout(()=>heart(b.x-20+Math.random()*40, b.y+8), i*140); rex.say('Aww, thank you.', 1600); } },
+  { id:'pet', label:'Pet', bg:'var(--rose)', icon:IC.heart, run(){ rex.state='idle'; rex.sq=-.06; rig()?.pet(true); setTimeout(() => rig()?.pet(false), 1500); const b=rexBox(); for(let i=0;i<5;i++) setTimeout(()=>heart(b.x-20+Math.random()*40, b.y+8), i*140); rex.say('Aww, thank you.', 1600); } },
   { id:'feed', label:'Feed', bg:'var(--mint)', icon:IC.apple, run(){ feed(); } },
   { id:'play', label:'Play', bg:'var(--butter)', icon:IC.ball, run(){ ballDrop(); } },
   { id:'roar', label:'Roar', bg:'var(--peach)', icon:IC.roar, run(){ roar(); } },
@@ -764,28 +878,29 @@ function mood(){ const ph = phase();
 function paintPlaybar(){ const [mt, ms, mi, mb] = mood();
   $('#playbar').innerHTML = `<div class="mood"><span class="mi" style="background:${mb}">${mi}</span><div><b>${mt}</b><span>${ms}</span></div></div><div class="tiles">` + ACTIONS.map(a => { const lk = a.lock && !unlocked(a.lock); const u = lk && UNLOCKS.find(x => x.id === a.lock);
   return `<button data-a="${a.id}" style="--tb:${a.bg}" ${lk ? `data-locked="${esc(NEED_TXT(u.need))}… then we can play ${esc(a.label.toLowerCase())}." class="locked" aria-label="${a.label}, locked. ${esc(NEED_TXT(u.need))}"` : ''}><span class="ic">${a.icon}${lk ? '<em class="lk">🔒</em>' : ''}</span>${a.label}</button>`; }).join('') + '</div>'; }
-$('#playbar').onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; if (S.asleep){ rex.say('Zzz… (wake me first)', 1500); return; } if (b.dataset.locked){ rex.say(b.dataset.locked, 2200); return; } played(); rex.sleeping=false; rex.reading=false; clearProp('book'); ACTIONS.find(a=>a.id===b.dataset.a).run(); };
+$('#playbar').onclick = e => { const b = e.target.closest('button[data-a]'); if (!b) return; sendHome(); if (S.asleep){ rex.say('Zzz… (wake me first)', 1500); return; } if (b.dataset.locked){ rex.say(b.dataset.locked, 2200); return; } played(); rex.sleeping=false; rex.reading=false; clearProp('book'); ACTIONS.find(a=>a.id===b.dataset.a).run(); };
 
 const props = {};
-function makeProp(id, svg, x, size){ clearProp(id); const e = document.createElement('div'); e.className='prop'; e.innerHTML=svg; e.style.width=size+'px'; e.style.left=(x*W()-size/2)+'px'; $('#props').appendChild(e); props[id] = { el:e, x, y:0, vx:0, vy:0, size }; return props[id]; }
+function makeProp(id, svg, x, size){ clearProp(id); const e = document.createElement('div'); e.className='prop'; e.innerHTML=svg; e.style.width=size+'px'; e.style.left=(x*W()-size/2)+'px'; $('#wprops').appendChild(e); props[id] = { el:e, x, y:0, vx:0, vy:0, size }; return props[id]; }
 function clearAllProps(){ Object.keys(props).forEach(clearProp); rex.chase = false; }
 function clearProp(id){ if (props[id]){ props[id].el.remove(); delete props[id]; } }
 function kite(){ clearProp('kite'); const p = makeProp('kite', `<svg viewBox="0 0 60 120"><path d="M30 2 L52 34 L30 66 L8 34 Z" fill="#E8775A"/><path d="M30 2 L30 66 M8 34 L52 34" stroke="#FBF6EC" stroke-width="3"/><path d="M30 66 q-8 12 0 22 q8 10 0 22" fill="none" stroke="#5E7A45" stroke-width="2.5"/></svg>`, rex.x, 44); p.fixed = false; p.kite = true; p.y = 0; p.t = 0;
   rex.say('Wheee!', 1400); rex.goTo(rex.x < .5 ? .8 : .2, () => { rex.say('Higher!', 1400); setTimeout(() => { clearProp('kite'); rex.say('That was fun.', 1500); }, 6000); }); }
-function bubbles(){ rex.say('Bubbles!', 1300); const b = rexBox(); for (let i = 0; i < 14; i++) setTimeout(() => { const e = document.createElement('div'); e.className = 'fx bubb'; const sz = 10 + Math.random()*22; e.style.cssText = `left:${b.x + rex.face*20 + (Math.random()*40-20)}px;top:${b.y + b.h*.3}px;width:${sz}px;height:${sz}px;--dx:${(Math.random()*120-60)}px;--dy:${-(120 + Math.random()*160)}px`; $('#zoom').appendChild(e); setTimeout(() => e.remove(), 3200); }, i*140); setTimeout(() => rex.hop = 1, 900); }
+function bubbles(){ rex.say('Bubbles!', 1300); const b = rexBox(); for (let i = 0; i < 14; i++) setTimeout(() => { const e = document.createElement('div'); e.className = 'fx bubb'; const sz = 10 + Math.random()*22; e.style.cssText = `left:${b.x + rex.face*20 + (Math.random()*40-20)}px;top:${b.y + b.h*.3}px;width:${sz}px;height:${sz}px;--dx:${(Math.random()*120-60)}px;--dy:${-(120 + Math.random()*160)}px`; fxHost().appendChild(e); setTimeout(() => e.remove(), 3200); }, i*140); setTimeout(() => rex.hop = 1, 900); }
 function stargaze(){ if (!['dusk','night'].includes(phase())){ rex.say('We need it to be dark for stars. Come back tonight!', 2600); return; }
   rex.sitting = 1; rex.say('Look up…', 1600); for (let i = 0; i < 3; i++) setTimeout(() => { const e = document.createElement('div'); e.className = 'fx shoot'; e.style.cssText = `left:${10 + Math.random()*60}%;top:${6 + Math.random()*18}%`; $('#zoom').appendChild(e); setTimeout(() => e.remove(), 1400); if (i === 2) rex.say(pick(['Did you make a wish?','Whoa. Three!','That one was for you.']), 2400); }, 1200 + i*1500); }
 function feed(){ const x = Math.random()<.5 ? .25 : .75; const p = makeProp('apple', IC.apple, x, 34); p.y = Hh()*0.5; p.vy = 0; p.drop = true;
   rex.say('Ooh, a snack!', 1200); setTimeout(()=> rex.goTo(x + (rex.x < x ? -.08 : .08), ()=>{ rex.face = x > rex.x ? 1 : -1; munch(p); }), 500); }
-function munch(p){ let bites = 0; const iv = setInterval(()=>{ bites++; rex.poke(.5); p.el.style.transform = `scale(${1 - bites*.28})`; if (bites>=3){ clearInterval(iv); clearProp('apple'); rex.say(pick(['Yum!','So crunchy.','Thank you!']), 1500); rex.hop = 1; } }, 520); }
+function munch(p){ rig()?.munch(); let bites = 0; const iv = setInterval(()=>{ bites++; rex.poke(.5); p.el.style.transform = `scale(${1 - bites*.28})`; if (bites>=3){ clearInterval(iv); clearProp('apple'); rex.say(pick(['Yum!','So crunchy.','Thank you!']), 1500); rex.hop = 1; } }, 520); }
 function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), 30); p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
 function roar(){ rex.state='idle'; rex.shake = 1; rex.sq = .12; rex.say('RAAAWR!', 1600); if (!RM){ world.animate([{transform:'translate(0,0)'},{transform:'translate(-3px,1px)'},{transform:'translate(3px,-1px)'},{transform:'translate(0,0)'}], {duration:220, iterations:3}); } setTimeout(()=>rex.say('…was that scary?', 1500), 1700); }
-function read(){ rex.state='idle'; rex.reading = true; rex.sitting = 1; const p = makeProp('book', IC.book, rex.x + rex.face*.06, 30); p.y = 26; p.fixed = true; rex.say('Story time.', 1400); }
+function read(){ rex.state='idle'; rex.reading = true; rex.sitting = 1; rex.say('Story time.', 1400); }
 function rest(){ const go = () => { rex.state='idle'; rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2200); }; if (place()==='bedroom'){ rex.say('Nap time…', 1200); rex.goTo(PLACES.bedroom.bed, go); } else go(); }
 
 /* autonomy */
 function autonomous(){
   if (bubble.classList.contains('btns')) return;
+  if (carry || fall || rex.away) return;
   if (S.asleep){ rex.sleeping = true; rex.sitting = 1; return; }
   if (petting || rex.state==='walk' || rex.chase || rex.reading || props.apple) return;
   const night = phase()==='night';
@@ -833,10 +948,10 @@ function frame(now){
   const sit = rex.sitting ? .9 : 1;
   const sy = (1 + rex.sq + breathe)*sit, sx = 1 - rex.sq*.6 - breathe*.5 + (rex.sitting?.05:0);
   const tilt = walking ? Math.sin(t*9)*3 : rex.sleeping ? -6*rex.face : rex.shake ? Math.sin(t*60)*4*rex.shake : 0;
-  rexEl.style.left = (rex.x*w - size/2)+'px';
-  rexBody.style.transform = `translateY(${-bob - hopY}px) rotate(${tilt}deg) scale(${sx*rex.face},${sy})`;
+  if (!rex.away){ rexEl.style.left = (rex.x*w - size/2)+'px'; rexBody.style.transform = ''; }   // the rig does his own bob, hop, squash, and facing
+  carryStep(dt); rigSync(); rexRim();
   rexEl.style.zIndex = 3;
-  { const still = bubble.classList.contains('btns'), bw = bubble.offsetWidth || 120, rh = size*1.286; let bx = rex.x*w; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, bx)));
+  if (!rex.away){ const still = bubble.classList.contains('btns'), bw = bubble.offsetWidth || 120, rh = size*1.286; let bx = rex.x*w; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, bx)));
     const by = Math.round(groundPx + rh + 10 + (still ? 0 : bob + hopY));
     if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
   // parallax follows Rex
@@ -848,13 +963,13 @@ function frame(now){
   const bf = scene.querySelector('#bfly'); if (bf){ bfly.x = 836 + Math.sin(t*.4)*560; bfly.y = 690 + Math.sin(t*1.3)*60; bf.setAttribute('transform', `translate(${bfly.x} ${bfly.y}) scale(${1 + Math.sin(t*14)*.3} 1)`); }
   scene.querySelectorAll('.fly').forEach(f => { const i = +f.dataset.i; f.setAttribute('cx', 120+i*150 + Math.sin(t*.7+i)*45); f.setAttribute('cy', 640+(i%3)*60 + Math.cos(t*.9+i*2)*30); f.setAttribute('opacity', .4 + .6*Math.abs(Math.sin(t*1.5+i))); });
   // zzz
-  if (rex.sleeping && Math.random() < dt*0.7){ const b = rexBox(); const z = document.createElement('div'); z.className='fx heart'; z.style.cssText += `left:${b.x+b.w*.25}px;top:${b.y}px;font:700 18px var(--display);color:#fff;width:auto;height:auto`; z.textContent='z'; $('#zoom').appendChild(z); setTimeout(()=>z.remove(), 1300); }
+  if (rex.sleeping && Math.random() < dt*0.7){ const b = rexBox(); const z = document.createElement('div'); z.className='fx heart'; z.style.cssText += `left:${b.x+b.w*.25}px;top:${b.y}px;font:700 18px var(--display);color:#fff;width:auto;height:auto`; z.textContent='z'; fxHost().appendChild(z); setTimeout(()=>z.remove(), 1300); }
   if (typeof FX !== 'undefined') FX.step(dt, t);
   requestAnimationFrame(frame);
 }
 
 /* ---------- expand / collapse ---------- */
-function setExpanded(on){ app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
+function setExpanded(on){ if (on) sendHome(); app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
   if (on){ rex.say(pick(['Yay, playtime!','Hi! Wanna play?','You came to visit!']), 1600); } }
 $('#expandBtn').onclick = () => setExpanded(!app.classList.contains('expanded'));
 let dragY = null; world.addEventListener('pointerdown', e => { if (e.target.closest('.rex,.playbar,button')) return; dragY = e.clientY; });
@@ -1591,10 +1706,11 @@ function setExpandedIf(on){ if (app.classList.contains('expanded') !== on) setEx
 /* ================= living world: light, dust, bugs, grass, tappable things ================= */
 const FX = (() => {
   const zoom = $('#zoom');
-  const light = document.createElement('canvas'); light.className = 'fxc light'; zoom.insertBefore(light, $('#props'));
+  const light = document.createElement('canvas'); light.className = 'fxc light'; zoom.insertBefore(light, $('#wprops'));
   const dark = document.createElement('canvas'); dark.className = 'fxc dark'; zoom.insertBefore(dark, light);
   const front = document.createElement('canvas'); front.className = 'fxc front'; zoom.insertBefore(front, $('#bubble'));
-  const lc = light.getContext('2d'), dc = dark.getContext('2d'), fc = front.getContext('2d');
+  const back = document.createElement('canvas'); back.className = 'fxc back'; zoom.insertBefore(back, $('#wprops'));   // things farther away than Rex (the sill ladybug, lamp moths)
+  const lc = light.getContext('2d'), dc = dark.getContext('2d'), bc = back.getContext('2d'); let fc = front.getContext('2d');
   let W = 0, H = 0, dpr = 1, M = { s:1, tx:0, ty:0, vx:0, vy:0, vw:1672, vh:941 };
   let dust = [], bugs = [], bits = [], rings = [], tufts = [], gust = 0, ptr = null, ptrV = { x:0, y:0 }, lastPtr = null, flick = 0;
 
@@ -1631,7 +1747,7 @@ const FX = (() => {
   const lampOn = () => S.lamp !== false;
 
   function resize(){ dpr = Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;
-    [light, dark, front].forEach(c => { c.width = Math.round(W*dpr); c.height = Math.round(H*dpr); }); seed(); }
+    [light, dark, front, back].forEach(c => { c.width = Math.round(W*dpr); c.height = Math.round(H*dpr); }); seed(); }
   function mapping(){ const vb = (scene.getAttribute('viewBox') || '0 0 1672 941').split(' ').map(Number); const s = Math.max(W/vb[2], H/vb[3]);
     const par = -(rex.x - .5)*70; M = { s, tx:(W - vb[2]*s)/2 - vb[0]*s + par*s, ty:(H - vb[3]*s) - vb[1]*s }; }
   const sx = x => M.tx + x*M.s, sy = y => M.ty + y*M.s;
@@ -1744,7 +1860,9 @@ const FX = (() => {
       const tw = .6 + .4*Math.sin(d.p*3);
       fc.fillStyle = night ? `rgba(220,230,255,${a*tw*.6})` : ph === 'golden' || ph === 'dusk' ? `rgba(255,214,150,${a*tw})` : `rgba(255,248,225,${a*tw})`;
       fc.beginPath(); fc.arc(d.x, d.y, d.r*d.z, 0, 6.28); fc.fill(); }
-    for (const b of bugs) drawBug(b, dt, t, rx, ry);
+    const BEHIND = { ladybug:1, moth:1 }, fcF = fc; fc = bc; bc.setTransform(dpr, 0, 0, dpr, 0, 0); bc.clearRect(0, 0, W, H);
+    for (const b of bugs) if (BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
+    fc = fcF; for (const b of bugs) if (!BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
     if (bugs[0] && bugs[0].kind === 'fly'){ bfly.x = ax(bugs[0].x); bfly.y = ay(bugs[0].y); }
     for (let i = bits.length - 1; i >= 0; i--){ const b = bits[i]; b.life -= b.decay; if (b.life <= 0){ bits.splice(i, 1); continue; } drawBit(b, dt); }
     for (let i = rings.length - 1; i >= 0; i--){ const r = rings[i]; r.r += 40*dt; r.life -= dt*.8; if (r.life <= 0){ rings.splice(i, 1); continue; }
@@ -1826,7 +1944,7 @@ const FX = (() => {
 /* boot */
 rollover(); S.lastOpen = Date.now(); save(); checkUnlocks(); paintPlaybar();
 drawScene(); render(); paintWake(); if (S.asleep){ rex.sleeping = true; rex.sitting = 1; }
-requestAnimationFrame(frame);
+requestAnimationFrame(frame); setTimeout(restoreSpot, 400);
 if (!S.onboarded) setTimeout(onboard, 500);
 else { setTimeout(morning, 600); setTimeout(() => { if (!bubble.classList.contains('on') && !S.asleep) rex.say(phase()==='night' ? 'Hi… it\'s late.' : `${greet()}!`, 1800); }, 900); }
 setInterval(()=>{ if (!preview && !S.lockDay) drawScene(); }, 60000);
