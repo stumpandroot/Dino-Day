@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791839658; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791840642; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -895,6 +895,10 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 
 .dacts{flex-wrap:wrap}.dacts .pill,.dacts .link{white-space:nowrap}
 @media (max-width:520px){.dacts .pill{padding:8px 12px;font-size:13px}}
+
+/* the sheet slides away under Rex's Space (an older color-fade rule had replaced its slide, so it vanished in one frame) */
+.sheet{transition:top .55s cubic-bezier(.2,.8,.2,1),transform .5s cubic-bezier(.2,.8,.2,1),background-color .8s}
+.app.desk .sheet{transition:background-color .8s}
 </style>
 </head>
 <body>
@@ -2017,7 +2021,7 @@ const rex = {
       const k = 'say' + Date.now(); nudges = nudges.filter(n => !n.ask); nudges.unshift({ k, ask:true, text:t, buttons:buttons.map(([l, fn, g]) => [l, fn, g]) });
       try { render(); } catch(_){} t = pick(['Psst!','Hey, look!','Over here!']); buttons = null; ms = 1400; }
     bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
-    bubble.classList.toggle('btns', !!(buttons && buttons.length));
+    bubble.classList.toggle('btns', !!(buttons && buttons.length)); rex._ask = buttons && buttons.length ? { t, buttons } : null;
     if (buttons && buttons.length){ const row = document.createElement('div'); row.className = 'bb';
       buttons.forEach(([label, fn, ghost]) => { const b = document.createElement('button'); b.textContent = label; if (ghost) b.className = 'g'; b.onclick = e => { e.stopPropagation(); bubble.classList.remove('on','btns'); fn && fn(); }; row.appendChild(b); });
       bubble.appendChild(row); ms = Math.max(ms, 6000); }
@@ -2224,7 +2228,7 @@ let last = performance.now(), t = 0; const bfly = { x:836, y:690 };
 function frame(now){
   const dt = Math.min(.05, (now-last)/1000); last = now; t += dt;
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
-  const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
+  const tall = app.classList.contains('expanded') ? (isDesk() ? h > w*0.9 : app.clientHeight > w*0.9) : isDesk() && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
   const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
@@ -2278,7 +2282,8 @@ function frame(now){
 }
 
 /* ---------- expand / collapse ---------- */
-function setExpanded(on){ if (on) sendHome(); app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
+function setExpanded(on){ if (on) sendHome(); app.classList.toggle('expanded', on);
+  if (!on && rex._ask && bubble.classList.contains('btns')){ const a = rex._ask; bubble.classList.remove('on','btns'); rex._ask = null; rex.say(a.t, 1800, a.buttons); } $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
   if (on){ rex.say(pick(['Yay, playtime!','Hi! Wanna play?','You came to visit!']), 1600); } }
 $('#expandBtn').onclick = () => setExpanded(!app.classList.contains('expanded'));
 // desktop: Rex's world sits over the card-shaped hole in the right column
@@ -3386,8 +3391,11 @@ const FX = (() => {
   const dxArt = () => 0;
   const lampOn = () => S.lamp !== false;
 
-  function resize(){ dpr = matchMedia('(pointer:coarse)').matches ? 1 : Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;   // soft light and dust don't need retina pixels on a phone
-    [light, dark, front, back].forEach(c => { c.width = Math.round(W*dpr); c.height = Math.round(H*dpr); }); seed(); }
+  // resizing keeps the dust and bugs where they are (scaled), so growing into Rex's Space doesn't scatter them
+  function resize(){ const oW = W, oH = H; dpr = matchMedia('(pointer:coarse)').matches ? 1 : Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;   // soft light and dust don't need retina pixels on a phone
+    if (!W || !H) return; [light, dark, front, back].forEach(c => { const cw = Math.round(W*dpr), ch = Math.round(H*dpr); if (c.width !== cw || c.height !== ch){ c.width = cw; c.height = ch; } });
+    if (!oW || !oH || !dust || !dust.length){ seed(); return; } const kx = W/oW, ky = H/oH; [...dust, ...bugs].forEach(o => { o.x *= kx; o.y *= ky; }); }
+  let rsT = 0; const resizeSoon = () => { clearTimeout(rsT); rsT = setTimeout(resize, 160); };   // wait until the world stops changing size; meanwhile the canvases just stretch
   function mapping(){ const vb = (scene.getAttribute('viewBox') || '0 0 1672 941').split(' ').map(Number); const s = Math.max(W/vb[2], H/vb[3]);
     const par = -(rex.x - .5)*70; M = { s, tx:(W - vb[2]*s)/2 - vb[0]*s + par*s, ty:(H - vb[3]*s) - vb[1]*s }; }
   const sx = x => M.tx + x*M.s, sy = y => M.ty + y*M.s;
@@ -3598,8 +3606,8 @@ const FX = (() => {
     rexEl.style.setProperty('--rimX', xPct); rexEl.style.setProperty('--rimY', yPct); rexEl.style.setProperty('--rim', `rgb(${best[2]})`);
     const base = +rexEl.style.getPropertyValue('--rimBase') || .3; rexEl.style.setProperty('--rimA', Math.min(.7, base*(.6 + bw*1.2)).toFixed(3)); }
 
-  addEventListener('resize', () => setTimeout(resize, 50));
-  new ResizeObserver(() => resize()).observe(zoom);
+  addEventListener('resize', resizeSoon);
+  new ResizeObserver(resizeSoon).observe(zoom);
   function where(id){ mapping(); const h = HOT[place()].find(x => x.id === id); if (!h) return null; const x = h.x || (h.box[0] + h.box[2])/2, y = h.y || (h.box[1] + h.box[3])/2; return { x: sx(x + dxArt()), y: sy(y) }; }
   return { step, seed, resize, tap, where, visit, hitAt:(x, y) => { const h = hitAt(x, y); return h ? (h.hot ? h.hot.id : 'bug:' + h.bug.kind) : null; } };
 })();
