@@ -669,6 +669,76 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .dkeod .pill{margin-left:auto;flex:none;background:none;border:1.5px solid var(--ink);color:var(--ink);padding:9px 16px;font-size:14px}
 .dkeod .pill:hover{background:var(--chip)}
 .dkleft .empty.dkdone{display:flex;align-items:center;gap:16px;text-align:left;border:0;background:none;padding:16px var(--in)}
+.dkbar{position:relative}
+.dkseg{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:3px;border-radius:14px;background:var(--chip)}
+.dkseg button{padding:7px 20px;border-radius:11px;font:600 14px var(--display);color:var(--muted)}
+.dkseg button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(40,30,20,.12)}
+.pjhead{flex:none;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:0 0 16px var(--in)}
+.pjhead h1{font:700 30px/1.15 var(--display);margin:0;letter-spacing:-.015em;color:var(--ink)}
+.pjhead .date{color:var(--muted);font:500 14px var(--body);margin-top:4px}
+.pjacts{display:flex;align-items:center;gap:8px;flex:none}
+.pjacts .pill.coral{display:inline-flex;align-items:center;gap:6px;padding:9px 16px}.pjacts .pill svg{width:16px;height:16px}
+.pjacts .pill.ghost{border:1.5px solid var(--line);background:var(--card);padding:8px 14px}
+.pjmore{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--muted);background:var(--card);border:1.5px solid var(--line)}
+.pjback{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:4px;margin:0 0 6px var(--in);font:600 14px var(--display);color:var(--olive)}
+.pjback svg{width:16px;height:16px}
+.pjprog{display:flex;align-items:center;gap:12px}
+.pjprog.wide{flex:none;margin:0 var(--in) 16px}
+.pjbar{flex:1;height:8px;border-radius:8px;background:var(--chip);overflow:hidden;display:block;min-width:60px}
+.pjbar i{display:block;height:100%;border-radius:8px;background:var(--sage)}
+.pjcount{font:600 13px var(--body);color:var(--muted);white-space:nowrap}
+.dkleft .pjscroll{border-radius:0;background:none;box-shadow:none;display:flex;flex-direction:column;gap:12px;padding:0 2px 6px}
+.pjgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.pjgrid{grid-template-columns:1fr}}
+.pjcard{display:flex;flex-direction:column;gap:10px;text-align:left;background:var(--card);border-radius:22px;padding:18px var(--in);box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow);cursor:pointer;transition:transform .2s}
+.pjcard:hover{transform:translateY(-2px)}
+.pjct{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.pjct b{font:700 19px/1.2 var(--display);color:var(--ink)}
+.pjclient{font-size:14px;color:var(--muted);margin-top:-6px}
+.pjdue{display:inline-flex;align-items:center;gap:5px;flex:none;padding:4px 10px;border-radius:999px;background:var(--chip);font:600 12.5px var(--display);color:var(--olive-ink);white-space:nowrap}
+.pjdue svg{width:13px;height:13px}
+.pjdue.over{background:#FBE1D9;color:#B6452B}
+.pjnext{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px;padding:12px 12px 12px 14px;border-radius:16px;background:var(--upnext)}
+.pjnext .k,.pjstep .k{font:700 11px var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--olive)}
+.pjnt{font:600 15px/1.3 var(--display);color:var(--ink)}
+.pjnext.empty .pjnt{color:var(--muted);font-weight:500}
+.pjon{font:600 12.5px var(--display);color:var(--muted);white-space:nowrap;padding:6px 10px}
+.app.desk .pjstep{flex:none;margin:0}.pjsrow{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.pjsact{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.pjsact .pill.coral{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;font-size:15px}
+.pjphase{flex:none;background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow);overflow:hidden}
+.pjph{display:flex;align-items:center;gap:12px;width:100%;padding:16px var(--in);text-align:left}
+.pjph .chev{display:grid;transform:rotate(-90deg);transition:transform .2s;color:var(--muted)}.pjph .chev svg{width:18px;height:18px}
+.pjphase.open .pjph .chev{transform:none}
+.pjph b{flex:1;font:700 17px var(--display);color:var(--ink)}.pjn{font:600 13px var(--body);color:var(--muted)}
+.pjtasks{border-top:1px solid var(--line)}
+.pjt{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 12px 6px var(--in);border-bottom:1px solid var(--line)}
+.dklater .pjt:last-child{border-bottom:0}
+.pjchk{width:24px;height:24px;border-radius:50%;border:2px solid #C9C2B4;display:grid;place-items:center;flex:none;color:#fff}
+.pjchk svg{width:14px;height:14px}
+.pjt.done .pjchk{background:var(--sage);border-color:var(--sage)}
+.pjtt{flex:1;min-width:0;font:600 15px/1.3 var(--body);color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.pjt.done .pjtt{text-decoration:line-through;color:var(--muted)}
+.pjtag{font:600 12px var(--display);color:var(--muted);background:var(--chip);padding:2px 8px;border-radius:7px}
+.pjwhen{font:600 13px var(--display);color:var(--muted);white-space:nowrap}.pjwhen.over{color:#B6452B}
+.pjx{width:28px;height:28px;border-radius:8px;color:var(--muted);font-size:18px;opacity:0;flex:none}
+.pjt:hover .pjx,.pjx:focus-visible{opacity:1}
+.pjadd{display:flex;align-items:center;gap:12px;padding:10px var(--in);color:var(--muted)}
+.pjadd span{display:grid;width:24px;place-items:center}.pjadd svg{width:18px;height:18px}
+.pjadd input{flex:1;border:0;outline:0;background:none;font:15px var(--body);color:var(--ink)}
+.pjphadd{flex:none;background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line);padding:14px var(--in)}
+.pjdonebtn{display:flex;align-items:center;gap:10px;width:100%;padding:16px var(--in);border:1.5px dashed var(--line);border-radius:20px;font:600 15px var(--display);color:var(--muted);text-align:left;flex:none}
+.pjdonebtn svg{width:18px;height:18px}.pjdonebtn .chev{margin-left:auto}
+.pjdrow{display:flex;justify-content:space-between;width:100%;padding:10px var(--in);text-align:left}.pjdrow span{color:var(--muted);font-size:13px}
+.pjrh{font:700 16px var(--display);color:var(--ink)}
+.dklater .dkhrow .link{display:inline-flex;align-items:center;gap:4px}.dklater .dkhrow .link svg{width:15px;height:15px}
+.pjli{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,150px) auto;align-items:center;gap:14px;width:100%;padding:12px var(--in);text-align:left;border-top:1px solid var(--line);position:relative}
+.pjli.on{background:var(--upnext)}.pjli.on::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--coral)}
+.pjlt{display:flex;flex-direction:column;min-width:0}.pjlt b{font:700 15px var(--display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pjlt span{font-size:13px;color:var(--muted)}
+.pjlb{display:flex;align-items:center;gap:8px}
+.dkempty.big{padding:40px var(--in)}.dkempty b{display:block;color:var(--ink);font:700 17px var(--display)}
+.pjsheet{max-width:520px}.pjf{display:flex;flex-direction:column;gap:5px;font:600 13px var(--display);color:var(--ink);width:100%}
+.pjf input{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:16px var(--body);color:var(--ink);background:var(--card)}
+.pjrow{display:grid;grid-template-columns:1fr 170px;gap:10px}
 .dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
 .dkback svg{width:16px;height:16px;transform:rotate(90deg)}
 .app.desk .toast{bottom:24px}
@@ -1062,7 +1132,8 @@ function autonomous(){
   if (bubble.classList.contains('btns')) return;
   if (carry || fall || rex.away) return;
   if (S.asleep){ rex.sleeping = true; rex.sitting = 1; return; }
-  if (petting || rex.state==='walk' || rex.chase || rex.reading || props.apple) return;
+  if (petting || rex.state==='walk' || rex.chase || rex.reading || props.apple || (rex.busyUntil || 0) > Date.now()) return;
+  if (place() === 'meadow' && !S.asleep && Math.random() < .22 && typeof FX !== 'undefined' && FX.visit){ FX.visit(); return; }
   const night = phase()==='night';
   if (night && Math.random()<.5){ if (!rex.sleeping){ rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2000); } return; }
   if (rex.sleeping){ if (Math.random()<.3){ rex.sleeping=false; rex.sitting=0; rex.say('*yawn*', 1200); } return; }
@@ -1604,6 +1675,7 @@ function myHabits(){ if (!S.habitsOn) return '';
   return `<div class="section"><span>My habits</span></div><div class="habs">${(S.myHabits||[]).map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
     <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div>`; }
 let dkTab = 'later';
+/*__PROJECTS__*/
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop],['lunch','Lunch',IC.fork],['stretch','Stretch',IC.heart],['plants','Plants',IC.sun],['walk','Walk',IC.star],['winddown','Wind-down',IC.moonB]];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
@@ -1623,7 +1695,9 @@ function render(){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
     const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1).concat(S.tasks.filter(t => t.when === 'someday'));
     sc.innerHTML = `<div class="dk">
-      <header class="dkbar">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+      <header class="dkbar">${logoHTML()}<div class="dkseg" role="tablist" aria-label="View">${[['today','Today'],['projects','Projects']].map(([k, l]) => `<button role="tab" data-pjmode="${k}" aria-selected="${dkMode === k}">${l}</button>`).join('')}</div>
+        <span class="thr">${dkMode === 'today' && open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+      ${dkMode === 'projects' ? `<div class="dkleft pjleft">${projectsLeft()}</div><div class="dkright"><div class="dkcard" id="dkCard" aria-hidden="true"></div>${projectsRight()}</div></div>` : `
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
         ${focusCard()}
@@ -1647,7 +1721,7 @@ function render(){
         ${timeline()}
         <div class="dklater"><div class="dkhrow"><div class="dktabs" role="tablist">${[['later','Later'],['habits','Habits']].map(([k, l]) => `<button role="tab" data-dktab="${k}" aria-selected="${dkTab === k}">${l}</button>`).join('')}</div>${dkTab === 'later' ? '<button type="button" class="link" data-tab="someday">View all</button>' : '<button type="button" class="link" data-tab="settings">Settings</button>'}</div>
           <div class="dscroll" id="dLater">${dkTab === 'later' ? `<div class="list">${later.length ? later.map(t => row(t, { bring:true }).replace('class="meta">', /^\d{4}/.test(t.when) ? `class="meta"><span class="mt when">${labelDay(t.when)}</span>` : 'class="meta">')).join('') : `<div class="dkempty">${pose('read', 60)}<span>Nothing waiting. Rex is reading until you park something here.</span></div>`}</div>` : deskHabits()}</div></div>
-      </div></div>`;
+      </div></div>`}`;
   } else if (tab === 'today'){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
     sc.innerHTML = `
@@ -2023,17 +2097,35 @@ const FX = (() => {
       case 'plant': case 'pothos': leaves(x, y, 7); rex.say(pick(['Hi, plant.','Does it need water?','Leafy!']), 1500); break;
       case 'poster': rex.face = -1; rex.shake = 1; rex.sq = .1; rex.say('RAWR! …he roared back. Probably.', 2200); break;
       case 'bunting': for (let i = 0; i < 6; i++) setTimeout(() => burst(x - 120 + i*50, y, 3, 'confetti'), i*60); rex.say('Party flags!', 1300); break;
-      case 'house': { wiggle('house'); const hb = M2.layout.back.find(i => i.id === 'house'), [hx, hy, hw] = m2Box(hb); smoke(sx(hx + hw*.62), sy(hy + hw*.08)); rex.say(pick(['That\'s home.','Someone\'s making dinner.']), 1800); break; }
-      case 'lake': ripple(x, y); setTimeout(() => ripple(x + 30, y + 4), 300); rex.say(pick(['Plop!','I want to skip a stone.']), 1500); break;
-      case 'tree': wiggle('tree', 'sway'); leaves(x, y - 80*M.s, 12); if (ph !== 'night') bird(x, y - 120*M.s); rex.say(pick(['Leaves!','A bird lives up there.']), 1500); break;
-      case 'fgL': case 'fgR': case 'daisy': case 'buttercup': case 'pink': case 'shrub': wiggle(id); burst(x, y, 12, id === 'shrub' ? 'leaf' : 'petal'); if (ph === 'day' && id !== 'shrub') bugs.push(Object.assign(bug('fly', 9), { x, y })); rex.say(pick(id === 'shrub' ? ['Rustle rustle.','Something\'s in there!'] : ['Smells nice.','Flowers!','Pretty!']), 1400); break;
-      case 'mushroom': wiggle('mushroom'); rex.say(pick(['Don\'t eat that one.','Boing!','A spotty mushroom.']), 1500); break;
-      case 'rock': wiggle('rock'); rex.say(pick(['A good sitting rock.','It\'s mossy.']), 1500); break;
-      case 'sign': wiggle('sign', 'sway'); rex.say(pick(['That way is the village.','Adventure that way!']), 1600); break;
-      case 'fence': wiggle('fence'); rex.say(pick(['Wobbly fence.','Knock knock.']), 1400); break;
-      case 'sky': if (ph === 'night') shootingStar(x, y); else { gust = 1; rex.say('Whoosh, wind!', 1200); } break;
+      case 'house': { wiggle('house'); const [hx, hy, hw] = m2Box(M2.layout.back.find(i => i.id === 'house')); smoke(sx(hx + hw*.62), sy(hy + hw*.08));
+        goDo(hx + hw*.36, 1, () => { rex.say(pick(['Be right back!','Let me grab something.']), 1200); hideRex(true);
+          setTimeout(() => { hideRex(false); rex.hop = 1; rig()?.face('excited', 1400); const b = rexBox(); heart(b.x, b.y + 10);
+            rex.say(pick(['Found a cookie!','I tidied up a bit.','Got my favorite book.']), 1800); }, 2600); }, 3400); break; }
+      case 'lake': goDo(Math.max(560, Math.min(1420, ax(x))), 1, () => { rex.face = ax(x) > 836 ? 1 : -1; rig()?.face('curious', 1200); rex.say(pick(['Plop!','Skipping a stone…']), 1500);
+        [0, 280, 520, 760].forEach((d, i) => setTimeout(() => ripple(x + i*26*(rex.face), y + i*3), d)); }); break;
+      case 'tree': { wiggle('tree', 'sway'); leaves(x, y - 80*M.s, 12); if (ph !== 'night') bird(x, y - 120*M.s);
+        const tr = M2.layout.back.find(i => i.id === 'tree'); goDo(tr.x + 150, -1, () => { rig()?.face('curious', 1400); rex.say(pick(['A bird lives up there.','Shady spot.']), 1500);
+          if (Math.random() < .6) setTimeout(() => { rex.face = 1; read(); rex.say('Reading under the tree.', 1500); }, 1700); }, 3000); break; }
+      case 'fgL': case 'fgR': case 'daisy': case 'buttercup': case 'pink': wiggle(id); burst(x, y, 12, 'petal');
+        goDo(ax(x), 0, () => { rig()?.face('happy', 1600); rig()?.hearts(2); rex.say(pick(['Smells nice.','Flowers!','Pretty!']), 1400);
+          if (ph === 'day') bugs.push(Object.assign(bug('fly', 9), { x, y })); }); break;
+      case 'shrub': wiggle('shrub'); leaves(x, y, 6); goDo(ax(x) + 120, -1, () => { rex.say('Rustle rustle…', 1000); setTimeout(() => { wiggle('shrub'); bugs.push(Object.assign(bug('fly', 8), { x, y: y - 20 })); rex.hop = 1; rig()?.face('surprised', 900); rex.say('Oh! A butterfly!', 1500); }, 900); }); break;
+      case 'mushroom': goDo(ax(x) + 90, -1, () => { wiggle('mushroom'); rig()?.face('surprised', 900); rex.hop = 1; rex.say(pick(['Boing!','Don\'t eat that one.']), 1400); }); break;
+      case 'rock': goDo(ax(x), 0, () => { wiggle('rock'); rex.hop = 1; rex.say(pick(['A good sitting rock.','Break time.']), 1400); setTimeout(() => { read(); }, 900); }, 2400); break;
+      case 'sign': wiggle('sign', 'sway'); goDo(ax(x) - 90, 1, () => { rig()?.face('thinking', 1600); rex.say(pick(['That way is the village.','Adventure that way!']), 1600); }); break;
+      case 'fence': goDo(ax(x) - 110, 1, () => { wiggle('fence'); rex.hop = 1; setTimeout(() => { rex.hop = 1; rex.goTo(Math.min(.92, rex.x + .08)); }, 350); rex.say(pick(['Hup!','Over the fence!']), 1200); }); break;
+      case 'sky': rig()?.face('curious', 1400); if (ph === 'night') { shootingStar(x, y); rex.say('Make a wish!', 1500); } else { gust = 1; rex.say(pick(['Whoosh, wind!','That cloud looks like a duck.']), 1500); } break;
     } }
 
+  // Rex walks over to something in the meadow (x in art space), faces it (dir 1 right, -1 left, 0 toward it), then does fn
+  function goDo(artX, dir, fn, busy = 2200){ if (S.asleep || rex.away || carry || fall) { fn && fn(); return; }
+    rex.reading = false; rex.sleeping = false; rex.sitting = 0; rex.busyUntil = Date.now() + 9000;
+    const tx = Math.max(.08, Math.min(.92, sx(artX)/W));
+    rex.goTo(tx, () => { if (dir) rex.face = dir; else rex.face = sx(artX) > rex.x*W ? 1 : -1; rex.busyUntil = Date.now() + busy; fn && fn(); }); }
+  function hideRex(on){ rexEl.style.transition = 'opacity .3s'; rexEl.style.opacity = on ? 0 : ''; bubble.style.visibility = on ? 'hidden' : ''; }
+  // on his own, now and then, he goes to see something
+  function visit(){ if (place() !== 'meadow') return; const pickId = pick(['tree','tree','house','daisy','buttercup','pink','rock','lake','sign','mushroom','shrub']);
+    const h = HOT.meadow.find(q => q.id === pickId); if (!h) return; const cx = (h.box[0] + h.box[2])/2, cy = (h.box[1] + h.box[3])/2; act(pickId, sx(cx), sy(cy)); }
   /* ---------- particle helpers ---------- */
   function burst(x, y, n, kind){ for (let i = 0; i < n; i++){ const a = Math.random()*6.28, sp = 1 + Math.random()*3;
     bits.push({ kind, x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - (kind === 'ember' || kind === 'glow' ? 1.5 : 1), life:1, decay: .012 + Math.random()*.02, r:2 + Math.random()*3, rot:Math.random()*6, c: kind === 'confetti' ? ['#E8775A','#F2B84B','#8DB07A','#7FA6C9'][i%4] : kind === 'petal' ? ['#FFF4EC','#F7C6C9'][i%2] : null }); } }
@@ -2154,7 +2246,7 @@ const FX = (() => {
   addEventListener('resize', () => setTimeout(resize, 50));
   new ResizeObserver(() => resize()).observe(zoom);
   function where(id){ mapping(); const h = HOT[place()].find(x => x.id === id); if (!h) return null; const x = h.x || (h.box[0] + h.box[2])/2, y = h.y || (h.box[1] + h.box[3])/2; return { x: sx(x + dxArt()), y: sy(y) }; }
-  return { step, seed, resize, tap, where, hitAt:(x, y) => { const h = hitAt(x, y); return h ? (h.hot ? h.hot.id : 'bug:' + h.bug.kind) : null; } };
+  return { step, seed, resize, tap, where, visit, hitAt:(x, y) => { const h = hitAt(x, y); return h ? (h.hot ? h.hot.id : 'bug:' + h.bug.kind) : null; } };
 })();
 
 /*__PLATFORM__*/
