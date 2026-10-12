@@ -620,8 +620,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk .task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
 .app.desk .task .tag{font-size:12px;padding:3px 9px 3px 6px}
 .app.desk .task .bar{flex-basis:100%;margin-top:4px}
-.dkcard{flex:3 1 62.5cqw;width:100%;min-height:260px;max-height:75cqw;border-radius:24px;margin-bottom:12px}
-.dklater{flex:1 1 auto;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:16px 0 6px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.dkcard{flex:0 1 62.5cqw;width:100%;min-height:260px;max-height:75cqw;border-radius:24px;margin-bottom:12px}
+.dklater{flex:1 1 0;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:16px 0 6px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dklater .list{box-shadow:none;border-radius:0;background:none}
 .app.desk .dklater .task{min-height:50px;padding:6px var(--in)}
 .app.desk .dklater .task .title{font-size:15px}
@@ -633,8 +633,10 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk.expanded .world .zoom{bottom:0}
 .app.desk:not(.dtoday):not(.expanded) .world{visibility:hidden;pointer-events:none}
 .dktiles,.dkexp{display:none}
-.app.desk:not(.expanded) .dktiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;position:absolute;left:12px;right:12px;bottom:12px;z-index:6}
-.dktiles button{display:flex;align-items:center;justify-content:center;gap:7px;height:44px;border-radius:14px;background:var(--tb);font:600 14px var(--display);color:var(--ink);box-shadow:0 4px 12px rgba(40,30,20,.14);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.app.desk:not(.expanded) .world{background:var(--card)}
+.app.desk:not(.expanded) .world .zoom{bottom:60px;border-radius:24px 24px 0 0;overflow:hidden}
+.app.desk:not(.expanded) .dktiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;position:absolute;left:8px;right:8px;bottom:8px;height:44px;z-index:6}
+.dktiles button{display:flex;align-items:center;justify-content:center;gap:7px;height:44px;border-radius:14px;background:var(--tb);font:600 14px var(--display);color:var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
 .dktiles button:hover{transform:translateY(-2px)}.dktiles button:active{transform:scale(.95)}
 .dktiles svg{width:22px;height:22px;flex:none}
 @media (max-width:1180px){.dktiles span{display:none}}
@@ -645,6 +647,28 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk.expanded .chips-r{bottom:24px;right:24px}
 .app.desk .playbar{left:50%;right:auto;bottom:24px;width:min(720px,calc(100% - 48px));margin-left:calc(min(720px,calc(100% - 48px))/-2)}
 .app.desk .tiles{grid-auto-columns:calc((100% - 50px)/6)}
+.dktabs{display:flex;gap:4px;margin:0;padding:3px;border-radius:12px;background:var(--chip);flex:none;align-self:flex-start}
+.dktabs button{padding:6px 14px;border-radius:9px;font:600 14px var(--display);color:var(--muted)}
+.dktabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(40,30,20,.12)}
+.dklater .dkhrow{display:flex;align-items:center;justify-content:space-between;margin:0 var(--in) 8px}
+.dklater .dkhrow .link{font:600 13px var(--display)}
+.dkhab{padding:4px var(--in) 12px}
+.dkhab h3{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 8px}
+.rexhabs{display:flex;flex-wrap:wrap;gap:6px}
+.rexhabs button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px 7px 9px;border-radius:999px;background:var(--chip);font:600 13px var(--display);color:var(--muted)}
+.rexhabs button svg{width:16px;height:16px}
+.rexhabs button[aria-pressed="true"]{background:var(--mint);color:var(--olive-ink)}
+.dkhab .habs{margin-top:2px}
+.dkempty{display:flex;align-items:center;gap:14px;padding:10px var(--in) 14px;color:var(--muted);font-size:14px}
+.dkempty .pose{flex:none}
+.dknudge{padding:12px 12px 4px}.dknudge .nudge{margin:0 0 8px}
+.dkeod{flex:none;display:flex;align-items:center;gap:14px;margin-top:12px;padding:10px 12px 10px var(--in);background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.dkeod .pose{flex:none;margin:-6px 0}
+.dkeod b{display:block;font:700 16px var(--display);color:var(--ink)}
+.dkeod span{font-size:13.5px;color:var(--muted)}
+.dkeod .pill{margin-left:auto;flex:none;background:none;border:1.5px solid var(--ink);color:var(--ink);padding:9px 16px;font-size:14px}
+.dkeod .pill:hover{background:var(--chip)}
+.dkleft .empty.dkdone{display:flex;align-items:center;gap:16px;text-align:left;border:0;background:none;padding:16px var(--in)}
 .dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
 .dkback svg{width:16px;height:16px;transform:rotate(90deg)}
 .app.desk .toast{bottom:24px}
@@ -781,6 +805,9 @@ const ENV = __ENV__;
 // The meadow is built from separate painted layers (sky, far hills and lake, ground, objects, foreground) so things can move on their own.
 // Positions are in art space (1672 x 941); "base" items are placed by the bottom center of their art.
 const M2 = __MEADOW__;
+// Still poses of Rex, rendered from the rig, for cards and empty states
+const POSE = __POSES__;
+const pose = (n, w, cls = '') => `<img class="pose ${cls}" src="${POSE[n]}" width="${w}" height="${Math.round(w*POSE[n + '_ar'])}" alt="">`;
 const M2TINT = { morning:[1,.97,.92], day:[1,1,1], golden:[1,.84,.66], dusk:[.74,.62,.8], night:[.34,.42,.66] };
 function m2Box(it){ const w = it.w, h = w*M2.ar[it.n]; return it.base ? [it.x - w/2, it.y - h, w, h] : [it.x, it.y, w, h]; }
 function m2Img(it){ const [x, y, w, h] = m2Box(it), full = w >= 1600, X = full ? -50 : x, Wd = full ? 1772 : w;
@@ -1056,7 +1083,7 @@ function frame(now){
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
   const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() ? (app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 58) : 0); z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0); z.style.setProperty('--ground', groundPx+'px');
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
   // walking
   if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
@@ -1576,6 +1603,14 @@ function myHabits(){ if (!S.habitsOn) return '';
   const wk = weekKeys(), L = ['M','T','W','T','F','S','S'];
   return `<div class="section"><span>My habits</span></div><div class="habs">${(S.myHabits||[]).map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
     <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div>`; }
+let dkTab = 'later';
+// Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
+const REXHABS = [['water','Water',IC.drop],['lunch','Lunch',IC.fork],['stretch','Stretch',IC.heart],['plants','Plants',IC.sun],['walk','Walk',IC.star],['winddown','Wind-down',IC.moonB]];
+function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
+  return `<div class="dkhab"><h3>Rex's habits</h3><div class="rexhabs">${REXHABS.map(([k, l, ic]) => `<button data-set="habits.${k}" data-val="${!S.habits[k]}" aria-pressed="${!!S.habits[k]}">${ic}${l}</button>`).join('')}</div>
+    <h3>My habits</h3>${H.length ? '' : `<div class="dkempty" style="padding:0 0 8px">${pose('think', 46)}<span>Add something small you want to do most days.</span></div>`}
+    <div class="habs">${H.map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
+    <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div></div>`; }
 function weekKeys(){ const d = new Date(); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow); return Array.from({ length:7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate()+i); return dayKey(x); }); }
 function streakOf(h){ let n = 0; const d = new Date(); if (!h.log[dayKey(d)]) d.setDate(d.getDate()-1); while (h.log[dayKey(d)]){ n++; d.setDate(d.getDate()-1); } return n; }
 
@@ -1591,7 +1626,6 @@ function render(){
       <header class="dkbar">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
-        ${nudgeCards()}
         ${focusCard()}
         <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
         <div class="qprev" id="qPrev"></div>
@@ -1602,16 +1636,17 @@ function render(){
         </div>
         <div class="section"><span>Today</span><button type="button" class="link" data-import>Paste a list</button></div>
         <div class="dscroll" id="dToday">
-          <div class="list" id="list">${open.length ? open.map(t => row(t)).join('') : `<div class="empty">${todays().length ? 'Nothing left for today. Rex is happy to just hang out.' : 'Nothing here yet. Add one small thing.'}</div>`}</div>
+          ${nudges.length ? `<div class="dknudge">${nudgeCards()}</div>` : ''}
+          <div class="list" id="list">${open.length ? open.map(t => row(t)).join('') : `<div class="empty dkdone">${pose(todays().length ? 'happy' : 'think', 64)}<span>${todays().length ? 'Nothing left for today. Rex is happy to just hang out.' : 'Nothing here yet. Add one small thing.'}</span></div>`}</div>
           ${done.length ? `<button class="section toggle" data-showdone>${S.showDone ? 'Hide completed' : 'Completed'}</button>${S.showDone ? `<div class="list">${done.map(t => row(t)).join('')}</div>` : ''}` : ''}
-          ${myHabits()}
         </div>
+        <div class="dkeod">${pose('sleep', 84)}<div>${S.asleep ? `<b>Rex is asleep</b><span>Wake him when you start your day.</span>` : `<b>End of day</b><span>When you're done for the day, tuck Rex in.</span>`}</div><button class="pill ghost" data-daybtn>${S.asleep ? 'Start my day' : 'Wrap up the day'}</button></div>
       </div>
       <div class="dkright">
         <div class="dkcard" id="dkCard" aria-hidden="true"></div>
         ${timeline()}
-        <div class="dklater"><div class="section"><span>Later</span><button type="button" class="link" data-tab="someday">View all</button></div>
-          <div class="dscroll" id="dLater"><div class="list">${later.length ? later.map(t => row(t, { bring:true }).replace('class="meta">', /^\d{4}/.test(t.when) ? `class="meta"><span class="mt when">${labelDay(t.when)}</span>` : 'class="meta">')).join('') : '<div class="empty">Nothing waiting. Swipe or move a task to Someday to park it here.</div>'}</div></div></div>
+        <div class="dklater"><div class="dkhrow"><div class="dktabs" role="tablist">${[['later','Later'],['habits','Habits']].map(([k, l]) => `<button role="tab" data-dktab="${k}" aria-selected="${dkTab === k}">${l}</button>`).join('')}</div>${dkTab === 'later' ? '<button type="button" class="link" data-tab="someday">View all</button>' : '<button type="button" class="link" data-tab="settings">Settings</button>'}</div>
+          <div class="dscroll" id="dLater">${dkTab === 'later' ? `<div class="list">${later.length ? later.map(t => row(t, { bring:true }).replace('class="meta">', /^\d{4}/.test(t.when) ? `class="meta"><span class="mt when">${labelDay(t.when)}</span>` : 'class="meta">')).join('') : `<div class="dkempty">${pose('read', 60)}<span>Nothing waiting. Rex is reading until you park something here.</span></div>`}</div>` : deskHabits()}</div></div>
       </div></div>`;
   } else if (tab === 'today'){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
@@ -1747,6 +1782,7 @@ $('#scroll').addEventListener('click', e => {
   if (q('[data-backup]')){ backup(); return; }
   if (q('[data-restore]')){ restore(); return; }
   if (q('[data-stats]')){ tab = 'stats'; render(); $('#scroll').scrollTop = 0; return; }
+  if ((el = q('[data-dktab]'))){ dkTab = el.dataset.dktab; render(); return; }
   if ((el = q('.hello [data-tab], .tophead [data-tab], .dkbar [data-tab], .dklater [data-tab], .dkback'))){ tab = el.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
   if (q('[data-daybtn]')){ if (S.asleep) wake(); else if (openToday().length){ tab = 'today'; wrapUp(true); } else goToBed(); render(); return; }
   if ((el = q('[data-sim]'))){ const s = el.dataset.sim;
