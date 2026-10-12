@@ -40,11 +40,13 @@ function detailHTML(t){ const chip = (attr, on, label, extra = '') => `<button t
 
 function openDetail(id){ if (openId === id){ closeDetail(); return; } const prev = openId; openId = id; newCatOpen = false; detEnter = true; SFX.pop && SFX.pop();
   render(); detEnter = false; const el = document.querySelector(`.tdet[data-det="${id}"]`); if (!el) return;
-  growIn(el); setTimeout(() => { const r = el.getBoundingClientRect(), sc = el.closest('.dscroll') || $('#scroll'), sr = sc.getBoundingClientRect(); if (r.bottom > sr.bottom - (isDesk() ? 8 : 88)) sc.scrollBy({ top: r.bottom - sr.bottom + (isDesk() ? 16 : 96), behavior:'smooth' }); }, 260); }
+  growIn(el); setTimeout(() => { if (openId !== id) return; const row = el.closest('.trow'), r = el.getBoundingClientRect(), top = row.getBoundingClientRect().top, sc = el.closest('.dscroll') || $('#scroll'), sr = sc.getBoundingClientRect(), pad = isDesk() ? 16 : 96;
+    // bring the whole panel into view, but never scroll the task's own title off the top
+    const need = r.bottom - (sr.bottom - pad); if (need > 0) sc.scrollBy({ top: Math.min(need, top - sr.top - 12), behavior:'smooth' }); }, 300); }
 function closeDetail(){ const el = document.querySelector('.tdet'); if (!el){ openId = null; render(); return; }
-  const h = el.offsetHeight; el.animate([{ height:h + 'px', opacity:1 }, { height:'0px', opacity:0, paddingTop:'0px', paddingBottom:'0px' }], { duration:220, easing:'cubic-bezier(.4,0,.2,1)' }).onfinish = () => { openId = null; render(); }; el.style.overflow = 'hidden'; }
+  const h = el.offsetHeight; el.animate([{ height:h + 'px', opacity:1 }, { height:'0px', opacity:0, paddingTop:'0px', paddingBottom:'0px' }], { duration:170, easing:'cubic-bezier(.4,0,.2,1)' }).onfinish = () => { openId = null; render(); }; el.style.overflow = 'hidden'; }
 function growIn(el){ const h = el.scrollHeight; el.style.overflow = 'hidden';
-  el.animate([{ height:'0px', opacity:0, transform:'translateY(-6px)' }, { height:(h + 6) + 'px', opacity:1, transform:'translateY(0)', offset:.7 }, { height:h + 'px', opacity:1, transform:'none' }], { duration:420, easing:'cubic-bezier(.2,.8,.2,1)' }).onfinish = () => { el.style.overflow = ''; }; }
+  el.animate([{ height:'0px', opacity:0, transform:'translateY(-6px)' }, { height:(h + 6) + 'px', opacity:1, transform:'translateY(0)', offset:.7 }, { height:h + 'px', opacity:1, transform:'none' }], { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' }).onfinish = () => { el.style.overflow = ''; }; }
 
 // link a Today task to a project: it joins the project's first phase, and finishing either finishes both
 function linkProj(t, pid){ const old = linkedProj(t);
@@ -91,35 +93,64 @@ let pressKey = null, pressAt = 0;
 document.addEventListener('pointerdown', e => { const b = e.target.closest('button,.dchip'); if (!b) { pressKey = null; return; } const a = [...b.attributes].find(x => x.name.startsWith('data-') && x.name !== 'data-flip');
   pressKey = a ? `[${a.name}="${CSS.escape(a.value)}"]` : null; pressAt = Date.now(); }, true);
 function springPressed(){ if (!pressKey || Date.now() - pressAt > 1500) return; const el = document.querySelector('#scroll ' + pressKey + ',#scroll .dchip:has(' + pressKey + ')'); pressKey = null;
-  el?.animate([{ transform:'scale(.9)' }, { transform:'scale(1.08)', offset:.55 }, { transform:'none' }], { duration:380, easing:'cubic-bezier(.2,.8,.2,1)' }); }
+  el?.animate([{ transform:'scale(.9)' }, { transform:'scale(1.08)', offset:.55 }, { transform:'none' }], { duration:300, easing:'cubic-bezier(.2,.8,.2,1)' }); }
 const _render = render;
 render = function(){ if (reduceMotion.matches){ _render(); return; }
   const first = snapRows(), vk = viewKey(), prevView = lastView; _render(); lastView = vk; springPressed();
   if (prevView && prevView !== vk){ const [a, b] = [prevView, vk].map(k => k.split('|')), sameTab = a[0] === b[0];
     const dir = sameTab ? (a[1] !== b[1] ? (b[1] === 'projects' ? 1 : -1) : a[2] !== b[2] ? (b[2] ? 1 : -1) : (b[3] === 'habits' ? 1 : -1)) : (b[0] === 'today' ? -1 : 1);
     const target = sameTab && a[1] === b[1] && a[2] === b[2] ? document.querySelector('#scroll .dklater .dscroll') : sameTab ? document.querySelector('#scroll .dkleft') : $('#scroll');
-    target?.animate([{ transform:`translateX(${dir*28}px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:380, easing:'cubic-bezier(.2,1.2,.4,1)' });
-    if (sameTab && a[1] !== b[1]) document.querySelector('#scroll .dklater')?.animate([{ transform:`translateY(10px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:420, delay:60, easing:'cubic-bezier(.2,1.2,.4,1)', fill:'backwards' });
+    target?.animate([{ transform:`translateX(${dir*28}px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:260, easing:'cubic-bezier(.2,1.2,.4,1)' });
+    if (sameTab && a[1] !== b[1]) document.querySelector('#scroll .dklater')?.animate([{ transform:`translateY(10px)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:300, delay:40, easing:'cubic-bezier(.2,1.2,.4,1)', fill:'backwards' });
     return; }
   let n = 0; document.querySelectorAll('#scroll [data-flip]').forEach(el => { const f = first.get(el.dataset.flip), l = el.getBoundingClientRect();
-    if (!f){ if (first.size) el.animate([{ transform:'scale(.92) translateY(-6px)', opacity:0 }, { transform:'scale(1.02)', opacity:1, offset:.6 }, { transform:'none', opacity:1 }], { duration:420, delay:Math.min(n++, 4)*30, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' }); return; }
-    const dy = f.top - l.top; if (Math.abs(dy) < 1) return; el.animate([{ transform:`translateY(${dy}px)` }, { transform:'none' }], { duration:460, easing:'cubic-bezier(.3,1.35,.5,1)' }); }); };
+    if (!f){ if (first.size) el.animate([{ transform:'scale(.92) translateY(-6px)', opacity:0 }, { transform:'scale(1.02)', opacity:1, offset:.6 }, { transform:'none', opacity:1 }], { duration:300, delay:Math.min(n++, 4)*25, easing:'cubic-bezier(.2,.8,.2,1)', fill:'backwards' }); return; }
+    const dy = f.top - l.top; if (Math.abs(dy) < 1) return; el.animate([{ transform:`translateY(${dy}px)` }, { transform:'none' }], { duration:320, easing:'cubic-bezier(.3,1.3,.5,1)' }); }); };
 
-/* ---------- drag to reorder: grab the handle (or long-press on a phone); other rows make room ---------- */
-(function reorder(){ let d = null;
-  $('#scroll').addEventListener('pointerdown', e => { const grip = e.target.closest('.grip'); if (!grip) return; const wrap = grip.closest('.trow'); if (!wrap || !wrap.closest('#list')) return;
-    e.preventDefault(); e.stopPropagation(); if (openId) { openId = null; render(); return; }
-    const rows = [...$('#list').querySelectorAll(':scope > .trow')], i0 = rows.indexOf(wrap), r0 = wrap.getBoundingClientRect(), gap = rows[1] ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom : 0;
-    d = { wrap, rows, i0, n:i0, y:e.clientY, h:r0.height + gap, mids:rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height/2; }), pid:e.pointerId };
-    wrap.classList.add('dragging'); rows.forEach(r => { if (r !== wrap) r.style.transition = 'transform .32s cubic-bezier(.3,1.35,.5,1)'; });
-    try { grip.setPointerCapture(e.pointerId); } catch(_){} buzz(8); SFX.pop && SFX.pop(); }, true);
-  addEventListener('pointermove', e => { if (!d) return; const dy = e.clientY - d.y; d.wrap.style.transform = `translateY(${dy}px) scale(1.03) rotate(${Math.max(-1.5, Math.min(1.5, dy/60))}deg)`;
-    const mid = d.mids[d.i0] + dy, n = d.mids.filter((m, j) => j !== d.i0 && m < mid).length;
-    if (n !== d.n){ d.n = n; buzz(4); }
-    d.rows.forEach((r, j) => { if (r === d.wrap) return; const s = d.i0 < j && j <= n ? -d.h : n <= j && j < d.i0 ? d.h : 0; r.style.transform = s ? `translateY(${s}px)` : ''; }); });
-  addEventListener('pointerup', () => { if (!d) return; const { wrap, rows, i0, n, h } = d; d = null; dragEnded = Date.now();
-    wrap.style.transition = 'transform .3s cubic-bezier(.3,1.35,.5,1)'; wrap.style.transform = `translateY(${(n - i0)*h}px)`;
+/* ---------- one gesture system for task rows ----------
+   Mouse: grab the grip to reorder. Touch: swipe sideways for the swipe actions, or press and hold to reorder.
+   The row follows your finger 1:1 (no transition while held), the page never pans sideways,
+   and an interrupted gesture (a call, a system swipe) puts everything back. */
+const SPRING = 'cubic-bezier(.3,1.3,.5,1)';
+let gest = null;
+function listRows(){ return [...$('#list').querySelectorAll(':scope > .trow')]; }
+function startDrag(g){ const rows = listRows(), i0 = rows.indexOf(g.wrap); if (i0 < 0) return false; if (openId){ openId = null; _render(); return false; }
+  const sc = $('#list').closest('.dscroll') || $('#scroll'), r0 = g.wrap.getBoundingClientRect(), gap = rows[1] ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom : 0;
+  Object.assign(g, { mode:'drag', rows, i0, n:i0, h:r0.height + gap, sc, st0:sc.scrollTop, mids:rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height/2; }) });
+  g.wrap.classList.add('dragging'); rows.forEach(r => { if (r !== g.wrap) r.style.transition = `transform .22s ${SPRING}`; });
+  try { g.cap.setPointerCapture(g.pid); } catch(_){} buzz(10); SFX.pop && SFX.pop(); dragFollow(g, g.lastY); return true; }
+function dragFollow(g, y){ const ds = g.sc.scrollTop - g.st0, dy = y - g.y + ds;
+  g.wrap.style.transform = `translateY(${dy}px) scale(1.03)`;
+  const mid = g.mids[g.i0] + dy, n = g.mids.filter((m, j) => j !== g.i0 && m < mid).length; if (n !== g.n){ g.n = n; buzz(4); }
+  g.rows.forEach((r, j) => { if (r === g.wrap) return; const s = g.i0 < j && j <= n ? -g.h : n <= j && j < g.i0 ? g.h : 0; const v = s ? `translateY(${s}px)` : ''; if (r.style.transform !== v) r.style.transform = v; });
+  // near the top or bottom edge, the list scrolls along
+  const sr = g.sc.getBoundingClientRect(), edge = 56, v = y < sr.top + edge ? -(sr.top + edge - y) : y > sr.bottom - edge - (isDesk() ? 0 : 80) ? (y - (sr.bottom - edge - (isDesk() ? 0 : 80))) : 0;
+  cancelAnimationFrame(g.as); if (v) g.as = requestAnimationFrame(() => { if (gest !== g) return; g.sc.scrollTop += v*.25; dragFollow(g, g.lastY); }); }
+function endGesture(cancel){ const g = gest; gest = null; if (!g) return; clearTimeout(g.lp); cancelAnimationFrame(g.as); g.wrap.classList.remove('swiping','swing','swr','swl','pressing');
+  if (g.mode === 'swipe'){ const act = !cancel && (g.dx > 72 ? S.swipeR : g.dx < -72 ? S.swipeL : null);
+    g.row.style.transition = `transform ${act ? '.16s ease-in' : '.3s ' + SPRING}`; g.row.style.transform = act ? `translateX(${g.dx > 0 ? 105 : -105}%)` : '';
+    setTimeout(() => { g.row.style.transition = ''; if (act) swipeDo(act, byId(g.id)); }, act ? 150 : 300); }
+  if (g.mode === 'drag'){ dragEnded = Date.now(); const { wrap, rows, i0, n, h } = g, ds = g.sc.scrollTop - g.st0;
+    wrap.style.transition = `transform .22s ${SPRING}`; wrap.style.transform = cancel ? '' : `translateY(${(n - i0)*h}px)`;
     setTimeout(() => { rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; }); wrap.classList.remove('dragging');
-      if (n !== i0){ const list = openToday(), [m] = list.splice(i0, 1); list.splice(n, 0, m); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); touch(); save(); }
-      _render(); SFX.pop && SFX.pop(); }, 300); });
-})();
+      if (!cancel && n !== i0){ const list = openToday(), [m] = list.splice(i0, 1); list.splice(n, 0, m); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); touch(); save(); }
+      _render(); SFX.pop && SFX.pop(); }, 220); } }
+$('#scroll').addEventListener('pointerdown', e => { if (gest) endGesture(true);
+  const row = e.target.closest('.task'); if (!row || !row.closest('#list') || e.target.closest('button,input,select,.tdet')) return;
+  const grip = e.target.closest('.grip'), touchy = e.pointerType !== 'mouse';
+  if (!grip && !touchy) return;   // a mouse click opens the details; reordering with a mouse uses the grip
+  const wrap = row.closest('.trow'); gest = { row, wrap, cap:grip || row, id:+row.dataset.row, pid:e.pointerId, x:e.clientX, y:e.clientY, lastY:e.clientY, dx:0, mode:null, touchy };
+  if (grip){ e.preventDefault(); startDrag(gest); return; }
+  wrap.classList.add('pressing'); gest.lp = setTimeout(() => { if (gest && !gest.mode){ wrap.classList.remove('pressing'); startDrag(gest); } }, 280); }, true);
+addEventListener('pointermove', e => { const g = gest; if (!g || e.pointerId !== g.pid) return; const dx = e.clientX - g.x, dy = e.clientY - g.y; g.lastY = e.clientY;
+  if (!g.mode){ if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)*1.2 && g.touchy){ g.mode = 'swipe'; clearTimeout(g.lp); g.wrap.classList.remove('pressing'); g.wrap.classList.add('swiping'); try { g.row.setPointerCapture(g.pid); } catch(_){} }
+    else if (Math.abs(dy) > 8 || Math.abs(dx) > 8){ clearTimeout(g.lp); g.wrap.classList.remove('pressing'); gest = null; return; } }
+  if (g.mode === 'swipe'){ const side = dx > 0 ? S.swipeR : S.swipeL; let x = side === 'none' ? 0 : dx; if (Math.abs(x) > 110) x = Math.sign(x)*(110 + (Math.abs(x) - 110)*.35);   // rubber band past the action point
+    g.dx = x; g.row.style.transform = `translateX(${x}px)`; g.wrap.dataset.sw = side; g.wrap.dataset.dir = x > 0 ? 'r' : 'l';
+    const past = Math.abs(x) > 72; if (past !== g.past){ g.past = past; if (past) buzz(6); } g.wrap.classList.toggle('swr', x > 72); g.wrap.classList.toggle('swl', x < -72); g.wrap.classList.toggle('swing', x !== 0); }
+  if (g.mode === 'drag') dragFollow(g, e.clientY); }, { passive:true });
+addEventListener('pointerup', e => { if (gest && e.pointerId === gest.pid) endGesture(false); });
+addEventListener('pointercancel', e => { if (gest && e.pointerId === gest.pid) endGesture(true); });
+// while a row is held or swiped, the page doesn't scroll or pan under your finger
+$('#scroll').addEventListener('touchmove', e => { if (gest && gest.mode) e.preventDefault(); }, { passive:false });
+addEventListener('blur', () => endGesture(true));

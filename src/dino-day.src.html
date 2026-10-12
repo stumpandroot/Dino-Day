@@ -800,16 +800,16 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 
 /* ===== motion system: springy, quick, and calm when reduced motion is on ===== */
 :root{--spring:cubic-bezier(.34,1.56,.64,1);--spring-s:cubic-bezier(.3,1.35,.5,1);--out:cubic-bezier(.2,.8,.2,1)}
-button,.pill,.chip,.dchip,.seg button,.dkseg button,.rexhabs button,.tiles button,.dktiles button{transition:transform .35s var(--spring),background-color .2s,color .2s,box-shadow .25s,opacity .2s}
+button,.pill,.chip,.dchip,.seg button,.dkseg button,.rexhabs button,.tiles button,.dktiles button{transition:transform .25s var(--spring),background-color .15s,color .15s,box-shadow .2s,opacity .15s}
 button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .app.desk .pill:hover:not(:disabled),.app.desk .dchip:hover,.app.desk .tiles button:hover,.app.desk .dktiles button:hover{transform:translateY(-2px)}
 .app.desk .pill:active:not(:disabled),.app.desk .tiles button:active,.app.desk .dktiles button:active{transform:translateY(0) scale(.92)}
 @keyframes pressPop{0%{transform:scale(.9)}60%{transform:scale(1.06)}100%{transform:none}}
 .task .check i{transition:background .2s,border-color .2s,transform .35s var(--spring)}
 .task .check:hover i{transform:scale(1.12)}
-.trow.popping .check i{background:var(--olive);border-color:var(--olive);animation:checkPop .38s var(--spring) both}
-.trow.popping .check i svg{animation:checkDraw .3s .05s var(--out) both}
-.trow.popping .task{animation:rowDone .38s .12s var(--out) both}
+.trow.popping .check i{background:var(--olive);border-color:var(--olive);animation:checkPop .26s var(--spring) both}
+.trow.popping .check i svg{animation:checkDraw .2s .03s var(--out) both}
+.trow.popping .task{animation:rowDone .26s .06s var(--out) both}
 .trow.popping .title{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted);transition:color .2s}
 @keyframes checkPop{0%{transform:scale(.6)}55%{transform:scale(1.3)}100%{transform:scale(1)}}
 @keyframes checkDraw{from{opacity:0;transform:scale(.3) rotate(-30deg)}to{opacity:1;transform:none}}
@@ -875,6 +875,26 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 /* the step bar only shows once a step is done; "0 of 5 steps" already says the rest */
 .task .bar.zero{display:none}
 .app.desk .task .bar{height:3px;max-width:240px}
+
+/* phones: no live blur over the moving scene or the scrolling list; a solid frosted color reads the same and costs nothing */
+@media (pointer:coarse){
+  .placechip,.timechip,.expandbtn,.playbar,.tabs,.spacepill,.dkexp{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .placechip,.timechip,.expandbtn,.spacepill{background:color-mix(in srgb,var(--card) 88%,transparent)}
+  .tabs{background:color-mix(in srgb,var(--sheet) 96%,transparent)}
+  .playbar{background:color-mix(in srgb,var(--card) 94%,transparent)}
+}
+
+/* gestures: rows follow the finger exactly; the page never pans sideways */
+.scroll{overflow-x:hidden;overscroll-behavior-x:none}
+.trow.swiping .task,.trow.dragging .task{transition:none!important}
+.trow.pressing .task{transform:scale(.985);transition:transform .28s ease-out}
+.trow.dragging{z-index:6;position:relative;transition:none!important}
+.trow.dragging .task{box-shadow:0 16px 36px rgba(60,50,20,.2);border-radius:16px}
+.fmeta>span.one{display:block;flex:1 1 0;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fmeta .go{flex:none}
+
+.dacts{flex-wrap:wrap}.dacts .pill,.dacts .link{white-space:nowrap}
+@media (max-width:520px){.dacts .pill{padding:8px 12px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -1082,7 +1102,7 @@ const W = () => $('#zoom').clientWidth, Hh = () => world.clientHeight;
 const rex = {
   x: 0.5, tx: 0.5, face: 1, state:'idle', until:0, sq:0, sqv:0, hop:0, shake:0, busy:0, sitting:0, sleeping:false, reading:false,
   say(t, ms=1800, buttons){
-    if (buttons && buttons.length && typeof isDesk === 'function' && isDesk() && !app.classList.contains('expanded') && !rex.away){
+    if (buttons && buttons.length && typeof isDesk === 'function' && (isDesk() || tab === 'today') && !app.classList.contains('expanded') && !rex.away){
       const k = 'say' + Date.now(); nudges = nudges.filter(n => !n.ask); nudges.unshift({ k, ask:true, text:t, buttons:buttons.map(([l, fn, g]) => [l, fn, g]) });
       try { render(); } catch(_){} t = pick(['Psst!','Hey, look!','Over here!']); buttons = null; ms = 1400; }
     bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
@@ -1333,7 +1353,8 @@ function frame(now){
   // parallax follows Rex
   const off = (rex.x - .5);
   const sfr = document.getElementById('sceneFront'); if (sfr.getAttribute('viewBox') !== scene.getAttribute('viewBox')) sfr.setAttribute('viewBox', scene.getAttribute('viewBox'));
-  for (const l of [...scene.querySelectorAll('.layer'), ...sfr.querySelectorAll('.layer')]) l.setAttribute('transform', `translate(${(-off*70*(+l.dataset.depth || 1)).toFixed(2)} 0)`);
+  if (frame._off !== off || frame._scene !== scene.firstElementChild || frame._front !== sfr.firstElementChild){ frame._off = off; frame._scene = scene.firstElementChild; frame._front = sfr.firstElementChild;   // only when Rex moves or the scene redraws: each change repaints the whole scene
+    for (const l of [...scene.querySelectorAll('.layer'), ...sfr.querySelectorAll('.layer')]){ const v = `translate(${(-off*70*(+l.dataset.depth || 1)).toFixed(1)} 0)`; if (l._tf !== v){ l._tf = v; l.setAttribute('transform', v); } } }
   // clouds drift
   scene.querySelectorAll('.cloud').forEach((c,i) => { let x = (+c.dataset.x + t*(6+i*3)) % 960 - 80; const tr = c.getAttribute('transform').replace(/translate\([^)]*\)/, `translate(${x} ${[140,90,190][i]})`); c.setAttribute('transform', tr); });
   // butterfly + fireflies
@@ -1643,7 +1664,7 @@ function setWhen(t, i){ const [, f, label0] = WHEN_OPTS[i]; let ms = f(), label 
 let askQ = [];
 function nudge(k, text, buttons){ askQ = askQ.filter(n => n.k !== k); askQ.push({ k, text, buttons }); pumpAsk(); }
 function pumpAsk(){ if (!askQ.length || bubble.classList.contains('btns')) return;
-  if (isDesk() && !app.classList.contains('expanded')){ if (nudges.some(x => x.ask)) return; const n = askQ.shift();
+  if ((isDesk() || tab === 'today') && !app.classList.contains('expanded')){ if (nudges.some(x => x.ask)) return; const n = askQ.shift();
     nudges.unshift({ k:n.k, ask:true, text:n.text, buttons:n.buttons.map(([l, fn, g]) => [l, () => { fn && fn(); setTimeout(pumpAsk, 600); }, g]) }); render();
     rex.hop = 1; rex.say(pick(['Psst!','Hey, look!','Over here!']), 1400); return; }
   const n = askQ.shift();
@@ -1958,7 +1979,7 @@ $('#scroll').addEventListener('click', e => {
   closeMenu();
   let el;
   if ((el = q('[data-check]'))){ const t = byId(+el.dataset.check), row = el.closest('.trow');
-    if (t && !t.done && row && !matchMedia('(prefers-reduced-motion: reduce)').matches){ row.classList.add('popping'); el.disabled = true; setTimeout(() => toggle(t), 380); } else toggle(t); return; }
+    if (t && !t.done && row && !matchMedia('(prefers-reduced-motion: reduce)').matches){ row.classList.add('popping'); el.disabled = true; setTimeout(() => toggle(t), 230); } else toggle(t); return; }
   if ((el = q('[data-more]'))){ openMenu(+el.dataset.more, el); return; }
   if ((el = q('[data-del]'))){ removeTask(byId(+el.dataset.del)); return; }
   if ((el = q('[data-bring]'))){ const t = byId(+el.dataset.bring); t.when = 'today'; t.carry = 0; save(); render(); toast('Moved to Today'); bus.emit('task_today', t); return; }
@@ -2064,27 +2085,6 @@ function closeMenuOutside(e){ if (!e.target.closest('#menu')) closeMenu(); }
 $('#tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (!b) return; if (b.dataset.tab === 'rex'){ setExpanded(true); return; } tab = b.dataset.tab; panel = null; render(); $('#scroll').scrollTop = 0; };
 $('#snack button').onclick = doUndo;
 
-/* swipe to complete or delete, long-press to reorder */
-(function gestures(){
-  let g = null;
-  $('#scroll').addEventListener('pointerdown', e => { const row = e.target.closest('.task'); if (!row || e.target.closest('button') || !row.closest('#list')) return;
-    const wrap = row.parentNode; g = { row, wrap, x:e.clientX, y:e.clientY, dx:0, mode:null, id:+row.dataset.row, pid:e.pointerId };
-    g.lp = setTimeout(() => { if (!g || g.mode) return; g.mode = 'drag'; row.classList.add('lift'); buzz(8); try { row.setPointerCapture(g.pid); } catch(_){} }, 340); });
-  addEventListener('pointermove', e => { if (!g) return; const dx = e.clientX - g.x, dy = e.clientY - g.y;
-    if (!g.mode){ if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)){ g.mode = 'swipe'; clearTimeout(g.lp); try { g.row.setPointerCapture(g.pid); } catch(_){} } else if (Math.abs(dy) > 10){ clearTimeout(g.lp); g = null; return; } }
-    if (g.mode === 'swipe'){ const side = dx > 0 ? S.swipeR : S.swipeL; if (side === 'none'){ g.dx = 0; return; } g.dx = Math.max(-150, Math.min(150, dx)); g.row.style.transform = `translateX(${g.dx}px)`;
-      g.wrap.dataset.sw = side; g.wrap.classList.toggle('swr', g.dx > 80); g.wrap.classList.toggle('swl', g.dx < -80); g.wrap.classList.toggle('swing', g.dx !== 0); g.wrap.dataset.dir = g.dx > 0 ? 'r' : 'l'; }
-    if (g.mode === 'drag'){ e.preventDefault(); g.row.style.transform = `translateY(${dy}px) scale(1.02)`; const rows = [...$('#list').querySelectorAll('.trow')];
-      const midY = g.row.getBoundingClientRect().top + g.row.offsetHeight/2; rows.forEach(r => r.classList.remove('dropa','dropb'));
-      const target = rows.find(r => r !== g.wrap && midY < r.getBoundingClientRect().top + r.offsetHeight/2); g.before = target ? +target.dataset.id : null; if (target) target.classList.add('dropa'); } }, { passive:false });
-  addEventListener('pointerup', () => { if (!g) return; clearTimeout(g.lp); const { row, wrap, mode, dx, id } = g; g = null; wrap.classList.remove('swing');
-    if (mode === 'swipe'){ wrap.classList.remove('swr','swl'); const act = dx > 80 ? S.swipeR : dx < -80 ? S.swipeL : null;
-      if (act){ row.style.transform = `translateX(${dx > 0 ? 110 : -110}%)`; setTimeout(() => swipeDo(act, byId(id)), 160); } else row.style.transform = ''; }
-    if (mode === 'drag'){ row.classList.remove('lift'); row.style.transform = ''; const before = dragBefore(); const list = openToday().filter(t => t.id !== id); let idx = before == null ? list.length : list.findIndex(t => t.id === before); if (idx < 0) idx = list.length; list.splice(idx, 0, byId(id)); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); save(); render(); SFX.pop(); }
-  });
-  function dragBefore(){ const el = $('#list .dropa'); return el ? +el.dataset.id : null; }
-})();
-
 /* keyboard */
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase(), typing = tag === 'input' || tag === 'textarea';
@@ -2175,7 +2175,7 @@ const FX = (() => {
   const dxArt = () => 0;
   const lampOn = () => S.lamp !== false;
 
-  function resize(){ dpr = Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;
+  function resize(){ dpr = matchMedia('(pointer:coarse)').matches ? 1 : Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;   // soft light and dust don't need retina pixels on a phone
     [light, dark, front, back].forEach(c => { c.width = Math.round(W*dpr); c.height = Math.round(H*dpr); }); seed(); }
   function mapping(){ const vb = (scene.getAttribute('viewBox') || '0 0 1672 941').split(' ').map(Number); const s = Math.max(W/vb[2], H/vb[3]);
     const par = -(rex.x - .5)*70; M = { s, tx:(W - vb[2]*s)/2 - vb[0]*s + par*s, ty:(H - vb[3]*s) - vb[1]*s }; }
