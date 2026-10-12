@@ -574,31 +574,53 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .scroll{padding-top:6px}
 .fmeta>span{flex:none}.fmeta>span.one{flex:0 1 auto;min-width:0}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
-/* ---------- desktop: Rex's world fills the window, the day sits in a panel on the right (any window 900 px wide or more).
-   In Rex's Space the play panel takes the same spot on the right. ---------- */
-.app.desk{--panelW:clamp(380px,31vw,460px);inset:0;top:0;bottom:0;width:auto;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none}
-.app.desk .world{inset:0;height:auto}
-.app.desk .world .zoom,.app.desk.expanded .world .zoom{right:var(--panelW);bottom:0}
-.app.desk.expanded .world .zoom{transform:none}
-.app.desk .sheet{left:auto;right:0;top:0;width:var(--panelW);border-radius:0;box-shadow:-10px 0 34px rgba(40,30,20,.1);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
-.app.desk.expanded .sheet{transform:translateX(105%)}
-.app.desk .grab{display:none}
-.app.desk .scroll{padding:18px 22px 110px}
-.app.desk .tabs{left:auto;width:var(--panelW)}
-.app.desk.expanded .tabs{transform:translateX(105%)}
-.app.desk .playbar{left:auto;right:0;top:0;bottom:0;width:var(--panelW);margin:0;border-radius:0;padding:max(env(safe-area-inset-top,0px),24px) 22px 24px;overflow-y:auto;transform:translateX(105%);box-shadow:-10px 0 34px rgba(40,30,20,.1);z-index:9}
-.app.desk.expanded .playbar{transform:none}
-.app.desk .mood{padding:4px 2px 18px}
-.app.desk .tiles{grid-auto-flow:row;grid-template-columns:1fr 1fr;grid-auto-columns:auto;overflow:visible;scroll-snap-type:none}
-.app.desk .playbar .tiles button{height:112px}
-.app.desk .expandbtn{left:16px}
-.app.desk .chips-r,.app.desk .spacepill{right:calc(var(--panelW) + 16px)}
-.app.desk.expanded .chips-r{top:auto;bottom:16px;right:calc(var(--panelW) + 16px)}
-.app.desk .wakechip{left:calc((100% - var(--panelW))/2)}
-.app.desk .toast{left:calc(100% - var(--panelW)/2)}
-.app.desk .snack{left:auto;right:14px;width:calc(var(--panelW) - 28px)}
-.app.desk.expanded .toast{left:calc((100% - var(--panelW))/2);bottom:24px}
-.app.desk.expanded .snack{right:calc(var(--panelW) + 14px);bottom:24px}
+/* ---------- desktop (any window 900 px wide or more): tasks on the left (58%), Rex's landscape card, Your day, and Later on the right (42%).
+   The header stays put; Today and Later scroll on their own. Rex's world is the card; the expand button opens Rex's Space full size. ---------- */
+.app.desk{inset:0;top:0;bottom:0;width:auto;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none}
+.app.desk .sheet{inset:0;top:0;border-radius:0;box-shadow:none;background:var(--cream);transform:none!important}
+.app.desk .grab,.app.desk .tabs{display:none}
+.app.desk .scroll{padding:24px 28px 40px;width:100%;max-width:760px;margin:0 auto}
+.app.desk.dtoday .scroll{overflow:hidden;padding:0;max-width:none}
+.dk{display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);grid-template-rows:auto minmax(0,1fr);column-gap:24px;height:100%;padding:16px 28px 22px;max-width:1680px;margin:0 auto}
+.dkhead{grid-column:1/-1;display:flex;align-items:center;gap:26px;padding:4px 2px 16px}
+.dkhead .logo{font-size:32px}.dkhead .logo .spark{width:20px;height:20px}
+.dkgreet h1{font:700 28px/1.1 var(--display);margin:0;letter-spacing:-.01em}
+.dkgreet .date{color:var(--muted);font-size:14px;margin-top:2px}
+.dkhead .thr{margin-left:auto;display:flex;gap:10px;align-items:center}
+.dkhead .avatar{width:44px;height:44px}
+.dkleft,.dkright{display:flex;flex-direction:column;min-height:0;min-width:0}
+.dkleft>.fcard,.dkleft>.nudge{flex:none}
+.dkleft .section,.dklater .section{margin:6px 2px 8px;flex:none}
+.dscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;border-radius:22px}
+.dkcard{flex:none;width:100%;aspect-ratio:16/10;max-height:max(280px,calc(100vh - 460px));min-height:280px;border-radius:24px;margin-bottom:12px}
+.dkright .tline{flex:none;margin-bottom:12px}
+.dklater{flex:1;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:10px 6px 4px 14px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.dklater .dscroll{border-radius:0;padding-right:8px}
+.dklater .list{box-shadow:none;border-radius:0;background:none}
+.dklater .task{padding:9px 2px}
+.dklater [data-bring]{padding:6px 11px;font-size:12.5px}
+.app.desk .task .tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:2px}
+.app.desk .task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.app.desk .task .bar{flex-basis:100%}
+.app.desk .world{border-radius:24px;z-index:8;box-shadow:0 10px 30px rgba(40,30,20,.14)}
+.app.desk.expanded .world{border-radius:0;box-shadow:none}
+.app.desk:not(.dtoday):not(.expanded) .world{visibility:hidden;pointer-events:none}
+.dktiles,.dkexp{display:none}
+.app.desk:not(.expanded) .dktiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;position:absolute;left:12px;right:12px;bottom:12px;z-index:6}
+.dktiles button{display:flex;align-items:center;justify-content:center;gap:7px;height:44px;border-radius:14px;background:var(--tb);font:600 14px var(--display);color:var(--ink);box-shadow:0 4px 12px rgba(40,30,20,.14);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.dktiles button:hover{transform:translateY(-2px)}.dktiles button:active{transform:scale(.95)}
+.dktiles svg{width:22px;height:22px;flex:none}
+@media (max-width:1180px){.dktiles span{display:none}}
+.app.desk:not(.expanded) .bubble{max-width:240px;font-size:13.5px}
+.app.desk:not(.expanded) .dkexp{display:grid;place-items:center;position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:var(--glass);backdrop-filter:blur(6px);color:var(--olive-ink);box-shadow:0 3px 12px rgba(40,30,20,.12);z-index:6}
+.app.desk:not(.expanded) .expandbtn{display:none}
+.app.desk:not(.expanded) .chips-r{left:12px;right:auto;top:12px}
+.app.desk .playbar{left:50%;right:auto;width:min(760px,calc(100% - 24px));margin-left:calc(min(760px,calc(100% - 24px))/-2)}
+.app.desk .tiles{grid-auto-columns:calc((100% - 50px)/6)}
+.dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
+.dkback svg{width:16px;height:16px;transform:rotate(90deg)}
+.app.desk .toast{bottom:24px}
+.app.desk .snack{left:50%;right:auto;width:min(440px,calc(100% - 28px));margin-left:calc(min(440px,calc(100% - 28px))/-2);bottom:24px}
 .app.desk .ov.obov{padding:24px;background:var(--page)}
 .app.desk .ov.obov .card{height:auto;max-height:min(900px,100%);border-radius:28px;box-shadow:0 30px 80px rgba(40,30,20,.16)}
 </style>
@@ -627,6 +649,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
     <div class="spacepill" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3.2 11.2 12 4l8.8 7.2a1 1 0 0 1-.6 1.8H19v6.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5h-4V21H6.5A1.5 1.5 0 0 1 5 19.5V13h-1.2a1 1 0 0 1-.6-1.8z"/></svg>Rex's Space</div>
     <div class="chips-r"><button class="placechip" id="placeChip" title="Change where Rex is"></button><button class="timechip" id="timeChip" title="Preview another time of day"></button></div>
     <nav class="playbar" id="playbar" aria-label="Play with Rex"></nav>
+    <button class="dkexp" id="dkExp" aria-label="Open Rex's Space" title="Open Rex's Space"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg></button>
+    <nav class="dktiles" id="dkTiles" aria-label="Play with Rex"></nav>
     <button class="wakechip" id="wakeChip" hidden>☀ Start my day</button>
   </section>
 
@@ -785,7 +809,7 @@ const rex = {
   poke(k=1){ if (!RM) this.sqv -= 6*k; },
   goTo(x, then){ this.tx = Math.max(.08, Math.min(.92, x)); this.state = 'walk'; this.after = then; this.sitting = 0; },
 };
-function rexSize(){ const h = $('#zoom').clientHeight; if (isDesk()) return rex.away ? 96 : Math.round(Math.min(app.classList.contains('expanded') ? 170 : 150, Math.max(110, h*0.17)));
+function rexSize(){ const h = $('#zoom').clientHeight; if (isDesk()){ if (app.classList.contains('expanded')) return Math.round(Math.min(170, Math.max(110, h*0.17))); return rex.away ? 84 : Math.round(Math.min(130, Math.max(84, h*0.30))); }
   const w = Math.min(app.classList.contains('expanded') ? 140 : 96, Math.max(68, h*0.29)); return w; }
 function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); fxHost().appendChild(e); setTimeout(()=>e.remove(), 1300); }
 function fxHost(){ return rex.away ? document.getElementById('rexLayer') : $('#zoom'); }
@@ -861,13 +885,16 @@ function startFall(x, y, w, h){ rex.perch = null; fall = { x, y, w, h, vx:0, vy:
 // What's under his middle: the world's grass, the top edge of the sheet, the first card or row below his feet, or the tab bar
 function surfaceBelow(f){ const a = AR(), cx = f.x + f.w/2, feet = f.y + f.h;
   const zr = $('#zoom').getBoundingClientRect(), gpx = parseFloat(getComputedStyle($('#zoom')).getPropertyValue('--ground')) || 0, wg = zr.bottom - a.top - gpx;
-  const sheetTop = $('#sheet').getBoundingClientRect().top - a.top;
-  if (app.classList.contains('expanded') || (isDesk() ? cx < zr.right - a.left : feet <= wg + 4)) return { y:wg, world:true };   // desktop: anywhere over the world drops him to the grass
-  if (feet <= sheetTop + 10) return { y:sheetTop, el:$('#sheet') };
+  const sheetTop = $('#sheet').getBoundingClientRect().top - a.top, desk = isDesk() && !app.classList.contains('expanded');
+  if (desk){ const wr = world.getBoundingClientRect();   // desktop: over Rex's card (and not below it), he drops onto its grass
+    if (cx >= wr.left - a.left && cx <= wr.right - a.left && feet <= wr.bottom - a.top + 8) return { y:wg, world:true }; }
+  else if (app.classList.contains('expanded') || feet <= wg + 4) return { y:wg, world:true };
+  if (!desk && feet <= sheetTop + 10) return { y:sheetTop, el:$('#sheet') };
   rexEl.style.pointerEvents = 'none'; let hit = null;
   for (let y = Math.max(0, feet - 30); y < a.height && !hit; y += 6){ const el = document.elementFromPoint(a.left + cx, a.top + y); if (!el || !app.contains(el)) continue;
     const s = el.closest(SOLID) || el.closest('#tabs'); if (s){ const top = s.getBoundingClientRect().top - a.top; if (top >= feet - 30) hit = { y:top, el:s }; } }
   rexEl.style.pointerEvents = '';
+  if (!hit && desk) return { y:a.height, el:$('#sheet') };   // nothing below: the bottom of the window
   return hit || { y:$('#tabs').getBoundingClientRect().top - a.top, el:$('#tabs') }; }
 function land(f){ const s = f.surf, v = f.vy; fall = null;
   // after he steadies himself, he turns (with his hop-and-step turn) to face where you tossed him, or back toward the middle of the screen
@@ -887,7 +914,9 @@ function placeBubbleAway(x, y, w){ const a = AR(), bw = bubble.offsetWidth || 12
 function perchStep(){ const p = rex.perch; if (!p) return; const a = AR(), w = rexEl.offsetWidth, h = rexEl.offsetHeight, x = parseFloat(rexEl.style.left), y = parseFloat(rexEl.style.top);
   if (!p.el.isConnected){ const s = surfaceBelow({ x, y:y - 6, w, h }); if (!s.world && Math.abs(s.y - (y + h)) < 10) Object.assign(p, perchOn(s.el)); else { startFall(x, y, w, h); return; } }   // the list re-rendered: find the same spot again
   const top = p.el.getBoundingClientRect().top - a.top, sheetTop = $('#sheet').getBoundingClientRect().top - a.top, tabsTop = $('#tabs').getBoundingClientRect().top - a.top;
-  if (p.el !== $('#tabs') && p.el !== $('#sheet') && (top < sheetTop + 10 || top > tabsTop - 4)){ startFall(x, Math.min(y, tabsTop - h), w, h); return; }   // his spot scrolled away: hop down
+  if (isDesk()){ const box = p.el.closest && p.el.closest('.dscroll');   // desktop: Today and Later scroll on their own
+    if (box){ const br = box.getBoundingClientRect(); if (top < br.top - a.top - 4 || top > br.bottom - a.top - 4){ startFall(x, Math.min(y, a.height - h), w, h); return; } } }
+  else if (p.el !== $('#tabs') && p.el !== $('#sheet') && (top < sheetTop + 10 || top > tabsTop - 4)){ startFall(x, Math.min(y, tabsTop - h), w, h); return; }   // his spot scrolled away: hop down
   rexEl.style.top = (top - h) + 'px'; placeBubbleAway(x, top - h, w); }
 function carryStep(dt){
   if (carry){ const c = carry, tgt = Math.max(-40, Math.min(40, -c.vx*.035)); c.av += ((tgt - c.ang)*60 - c.av*7)*dt; c.ang += c.av*dt; c.vx *= Math.pow(.02, dt);   // swings like a pendulum from your grip
@@ -973,10 +1002,10 @@ setInterval(autonomous, 4200);
 let last = performance.now(), t = 0; const bfly = { x:836, y:690 };
 function frame(now){
   const dt = Math.min(.05, (now-last)/1000); last = now; t += dt;
-  const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
+  placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
   const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc); z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() && !app.classList.contains('expanded') ? 58 : 0); z.style.setProperty('--ground', groundPx+'px');
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
   // walking
   if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
@@ -1005,7 +1034,8 @@ function frame(now){
   carryStep(dt); rigSync(); rexRim();
   rexEl.style.zIndex = 3;
   if (!rex.away){ const still = bubble.classList.contains('btns'), bw = bubble.offsetWidth || 120, rh = size*1.286; let bx = rex.x*w; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, bx)));
-    const by = Math.round(groundPx + rh + 10 + (still ? 0 : bob + hopY));
+    let by = Math.round(groundPx + rh + 10 + (still ? 0 : bob + hopY)); const bh = bubble.offsetHeight || 40;
+    if (by + bh > h - 8){ by = Math.max(8, h - bh - 8); const side = rex.x < .5 ? 1 : -1; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, rex.x*w + side*(size*.45 + bw/2)))); }   // no room above him (the desktop card): beside him instead
     if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
   // parallax follows Rex
   const off = (rex.x - .5);
@@ -1025,8 +1055,17 @@ function frame(now){
 function setExpanded(on){ if (on) sendHome(); app.classList.toggle('expanded', on); $('#expandBtn').setAttribute('aria-label', on ? 'Back to my day' : 'Play with Rex'); if (on) paintPlaybar();
   if (on){ rex.say(pick(['Yay, playtime!','Hi! Wanna play?','You came to visit!']), 1600); } }
 $('#expandBtn').onclick = () => setExpanded(!app.classList.contains('expanded'));
+// desktop: Rex's world sits over the card-shaped hole in the right column
+function placeDeskCard(){ const st = world.style, c = isDesk() && !app.classList.contains('expanded') && tab === 'today' ? document.getElementById('dkCard') : null;
+  if (!c){ if (st.left){ st.left = st.top = st.width = st.height = st.right = st.bottom = ''; } return; }
+  const a = AR(), r = c.getBoundingClientRect(), v = [r.left - a.left, r.top - a.top, r.width, r.height].map(n => Math.round(n) + 'px');
+  if (st.left !== v[0] || st.top !== v[1] || st.width !== v[2] || st.height !== v[3]) Object.assign(st, { left:v[0], top:v[1], width:v[2], height:v[3], right:'auto', bottom:'auto' }); }
+$('#dkExp').onclick = () => setExpanded(true);
+$('#dkTiles').innerHTML = ['pet','feed','play','read'].map(id => { const x = ACTIONS.find(q => q.id === id); return `<button data-dka="${id}" style="--tb:${x.bg}" aria-label="${x.label}" title="${x.label}">${x.icon}<span>${x.label}</span></button>`; }).join('') + `<button data-dka="more" style="--tb:var(--lav)" aria-label="More ways to play" title="More ways to play">${IC.more}<span>More</span></button>`;
+$('#dkTiles').onclick = e => { const b = e.target.closest('[data-dka]'); if (!b) return; if (b.dataset.dka === 'more'){ setExpanded(true); return; }
+  paintPlaybar(); const t = $('#playbar').querySelector(`[data-a="${b.dataset.dka}"]`); t && t.click(); };
 // switching between the phone and desktop layouts (resizing the window): Rex goes home first so he isn't left floating
-DESKQ.addEventListener('change', () => { if (rex.away) sendHome(); app.classList.toggle('desk', DESKQ.matches); setTimeout(() => { try { drawScene(); } catch(_){} }, 600); });
+DESKQ.addEventListener('change', () => { if (rex.away) sendHome(); app.classList.toggle('desk', DESKQ.matches); render(); setTimeout(() => { try { drawScene(); } catch(_){} }, 600); });
 let dragY = null; world.addEventListener('pointerdown', e => { if (e.target.closest('.rex,.playbar,button')) return; dragY = e.clientY; });
 addEventListener('pointerup', e => { if (dragY===null) return; const d = e.clientY - dragY; dragY = null;
   if (d > 50 && !app.classList.contains('expanded')) setExpanded(true); else if (d < -50 && app.classList.contains('expanded')) setExpanded(false); });
@@ -1491,7 +1530,38 @@ function streakOf(h){ let n = 0; const d = new Date(); if (!h.log[dayKey(d)]) d.
 function render(){
   const sc = $('#scroll'), keepScroll = sc.scrollTop;
   const dateStr = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
-  if (tab === 'today'){
+  const desk = isDesk(), dScroll = [...sc.querySelectorAll('.dscroll[id]')].map(e => [e.id, e.scrollTop]);
+  app.classList.toggle('dtoday', tab === 'today'); if (desk && tab !== 'today' && rex.away) sendHome();
+  if (tab === 'today' && desk){
+    const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
+    const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1).concat(S.tasks.filter(t => t.when === 'someday'));
+    sc.innerHTML = `<div class="dk">
+      <header class="dkhead">${logoHTML()}<div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
+        <span class="thr">${open.length > 1 ? `<button class="pill ghost mint" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+      <div class="dkleft">
+        ${nudgeCards()}
+        ${focusCard()}
+        <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+        <div class="qprev" id="qPrev"></div>
+        <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
+          <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
+          <select id="repeatSel" aria-label="Repeat"><option value="">Once</option>${Object.entries(REPEAT_LABEL).map(([v, l]) => `<option value="${v}" ${addRepeat===v?'selected':''}>${l}</option>`).join('')}</select>
+          <div class="cats" role="group" aria-label="Category">${Object.entries(CAT).map(([k, c]) => `<button type="button" data-cat="${k}" aria-pressed="${k===cat}">${c.label}</button>`).join('')}</div>
+        </div>
+        <div class="section"><span>Today</span><button type="button" class="link" data-import>Paste a list</button></div>
+        <div class="dscroll" id="dToday">
+          <div class="list" id="list">${open.length ? open.map(t => row(t)).join('') : `<div class="empty">${todays().length ? 'Nothing left for today. Rex is happy to just hang out.' : 'Nothing here yet. Add one small thing.'}</div>`}</div>
+          ${done.length ? `<button class="section toggle" data-showdone>${S.showDone ? 'Hide completed' : 'Completed'}</button>${S.showDone ? `<div class="list">${done.map(t => row(t)).join('')}</div>` : ''}` : ''}
+          ${myHabits()}
+        </div>
+      </div>
+      <div class="dkright">
+        <div class="dkcard" id="dkCard" aria-hidden="true"></div>
+        ${timeline()}
+        <div class="dklater"><div class="section"><span>Later</span><button type="button" class="link" data-tab="someday">View all</button></div>
+          <div class="dscroll" id="dLater"><div class="list">${later.length ? later.map(t => row(t, { bring:true }).replace('class="meta">', /^\d{4}/.test(t.when) ? `class="meta"><span class="mt when">${labelDay(t.when)}</span>` : 'class="meta">')).join('') : '<div class="empty">Nothing waiting. Swipe or move a task to Someday to park it here.</div>'}</div></div></div>
+      </div></div>`;
+  } else if (tab === 'today'){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
     sc.innerHTML = `
       <div class="tophead">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></div>
@@ -1518,6 +1588,8 @@ function render(){
       ${rest.length ? `<div class="section"><span>Resting until their day</span></div><div class="list">${rest.map(t => row(t, { bring:true })).join('')}</div>` : ''}`;
   } else if (tab === 'settings'){ sc.innerHTML = settingsHTML();
   } else if (tab === 'stats'){ sc.innerHTML = statsHTML(); }
+  if (desk && tab !== 'today') sc.insertAdjacentHTML('afterbegin', `<button class="dkback" data-tab="today">${IC.chev}Today</button>`);
+  dScroll.forEach(([id, top]) => { const e = document.getElementById(id); if (e) e.scrollTop = top; });
   $('#tabs').innerHTML = [['today','Today',IC.house],['someday','Later',IC.starO],['rex','Rex',IC.paw],['settings','Profile',IC.person]].map(([k, l, i]) => `<button data-tab="${k}" ${tab===k || (tab==='stats' && k==='settings') ? 'aria-current="page"' : ''}><span class="ti">${i}</span><span>${l}</span></button>`).join('');
   sc.scrollTop = keepScroll; sessionTick(); paintQuick();
 }
@@ -1623,7 +1695,7 @@ $('#scroll').addEventListener('click', e => {
   if (q('[data-backup]')){ backup(); return; }
   if (q('[data-restore]')){ restore(); return; }
   if (q('[data-stats]')){ tab = 'stats'; render(); $('#scroll').scrollTop = 0; return; }
-  if ((el = q('.hello [data-tab], .tophead [data-tab]'))){ tab = el.dataset.tab; render(); return; }
+  if ((el = q('.hello [data-tab], .tophead [data-tab], .dkhead [data-tab], .dklater [data-tab], .dkback'))){ tab = el.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
   if (q('[data-daybtn]')){ if (S.asleep) wake(); else if (openToday().length){ tab = 'today'; wrapUp(true); } else goToBed(); render(); return; }
   if ((el = q('[data-sim]'))){ const s = el.dataset.sim;
     if (s === 'stall'){ lastTaskAct = 0; lastStall = 0; checkStall(true); }
