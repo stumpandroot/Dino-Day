@@ -806,7 +806,7 @@ function carryMove(e){ const c = carry, a = AR(), now = performance.now(), px = 
   c.vx = mix(c.vx, (px - c.lx)/dt, .5); c.vy = mix(c.vy, (py - c.ly)/dt, .5); c.lx = px; c.ly = py; c.lt = now;
   c.x = Math.max(-c.w*.3, Math.min(a.width - c.w*.7, px - c.gx)); c.y = Math.max(-c.h*.3, Math.min(a.height - c.h*.8, py - c.gy)); }
 function release(){ const c = carry; carry = null; rexEl.classList.remove('held'); rig()?.drop();
-  fall = { x:c.x, y:c.y, w:c.w, h:c.h, vx:Math.max(-500, Math.min(500, c.vx*.25)), vy:Math.max(-700, Math.min(900, c.vy*.35)), ang:c.ang, n:0 }; fall.surf = surfaceBelow(fall); }
+  fall = { x:c.x, y:c.y, w:c.w, h:c.h, vx:Math.max(-500, Math.min(500, c.vx*.25)), vy:Math.max(-700, Math.min(900, c.vy*.35)), ang:c.ang, n:0, relVx:c.vx }; fall.surf = surfaceBelow(fall); }
 function startFall(x, y, w, h){ rex.perch = null; fall = { x, y, w, h, vx:0, vy:0, ang:0, n:0 }; fall.surf = surfaceBelow(fall); rig()?.face('surprised', 700); shadowVis(false); }
 // What's under his middle: the world's grass, the top edge of the sheet, the first card or row below his feet, or the tab bar
 function surfaceBelow(f){ const a = AR(), cx = f.x + f.w/2, feet = f.y + f.h;
@@ -819,7 +819,10 @@ function surfaceBelow(f){ const a = AR(), cx = f.x + f.w/2, feet = f.y + f.h;
     const s = el.closest(SOLID) || el.closest('#tabs'); if (s){ const top = s.getBoundingClientRect().top - a.top; if (top >= feet - 30) hit = { y:top, el:s }; } }
   rexEl.style.pointerEvents = '';
   return hit || { y:$('#tabs').getBoundingClientRect().top - a.top, el:$('#tabs') }; }
-function land(f){ const s = f.surf, v = f.vy; fall = null; rexBody.style.transform = ''; rexBody.style.transformOrigin = ''; shadowVis(true); rig()?.land(v);
+function land(f){ const s = f.surf, v = f.vy; fall = null;
+  // after he steadies himself, he turns (with his hop-and-step turn) to face where you tossed him, or back toward the middle of the screen
+  { const a = AR(), cx = f.x + f.w/2, dir = Math.abs(f.relVx || 0) > 150 ? Math.sign(f.relVx) : (cx > a.width/2 ? -1 : 1);
+    setTimeout(() => { if (!carry && !fall && rex.face !== dir) rex.face = dir; }, 650); } rexBody.style.transform = ''; rexBody.style.transformOrigin = ''; shadowVis(true); rig()?.land(v);
   if (s.world) toWorld(f.x + f.w/2); else { rexEl.style.left = f.x + 'px'; rexEl.style.top = f.y + 'px'; rex.perch = perchOn(s.el); const a = AR(); S.rexSpot = { fx:f.x/a.width, fy:(f.y + f.h)/a.height }; save(); }
   if (talk(.6)) setTimeout(() => rex.say(pick(s.world ? ['Home!','Back on the grass.','Ta-da!'] : s.el.closest('.task') ? ['I\'ll keep an eye on this one.','Nice view!','Comfy.'] : ['Ooh, new spot.','I like it up here.','Ta-da!']), 1500), 900); }
 // What he's standing on: the element, and the task id when it's a task row
