@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791830799; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791831255; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -672,6 +672,25 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk .tlmini .tlic svg{width:16px;height:16px}
 .app.desk .tlmini i{width:9px;height:9px;margin-left:-4.5px;top:8px}
 .app.desk .tlmini .nowm{width:3px;top:2px;bottom:2px}
+.app.desk .snack{transform:translate(-50%,-10px)}.app.desk .snack.on{transform:translate(-50%,0)}
+.dkdonerow{display:flex;align-items:center;gap:10px;width:100%;padding:14px var(--in);border-top:1px solid var(--line);font:600 14px var(--display);color:var(--muted);text-align:left}
+.dkdonerow svg{width:16px;height:16px}.dkdonerow .chev{margin-left:auto;display:grid}
+.app.desk .fcard:not(.mini){gap:12px}
+.app.desk .fcard .fhead .txt .k{font-size:12px}
+.app.desk .fcard .acts{gap:10px}
+.app.desk .fcard .acts .pill.coral{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;font-size:15px}
+.app.desk .fcard .acts .pill.coral svg{width:14px;height:14px}
+.app.desk .fcard .acts.small{gap:16px}.app.desk .fcard .acts.small .link{font-size:13.5px}
+.app.desk .lens{background:var(--card);padding:3px}.app.desk .lenb{min-width:36px;padding:7px 10px;font-size:13px}
+.app.desk .fcard.insess{background:var(--upnext)}
+.app.desk .steps{gap:2px}.app.desk .step{padding:8px 10px;font-size:15px}.app.desk .step.next{background:var(--card);box-shadow:0 1px 4px rgba(40,30,20,.06)}
+.app.desk .amb{background:var(--card);padding:3px;gap:3px}.app.desk .amb .lenb{padding:7px 12px}
+.app.desk .task.sel{box-shadow:none;background:color-mix(in srgb,var(--upnext) 40%,var(--card))}
+#spice{-webkit-appearance:none;appearance:none;width:100%;height:22px;margin:4px 0;background:none}
+#spice::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:var(--card)}
+#spice::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:var(--coral);box-shadow:0 2px 6px rgba(40,30,20,.2)}
+#spice::-moz-range-track{height:6px;border-radius:6px;background:var(--card)}#spice::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--coral)}
+.spv{color:var(--olive)}.spl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
 .dkeod{flex:none;display:flex;align-items:center;gap:14px;margin-top:12px;padding:10px 12px 10px var(--in);background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dkeod .pose{flex:none;margin:-6px 0}
 .dkeod b{display:block;font:700 16px var(--display);color:var(--ink)}
@@ -751,8 +770,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .pjrow{display:grid;grid-template-columns:1fr 170px;gap:10px}
 .dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
 .dkback svg{width:16px;height:16px;transform:rotate(90deg)}
-.app.desk .toast{bottom:24px}
-.app.desk .snack{left:50%;right:auto;width:min(440px,calc(100% - 28px));margin-left:calc(min(440px,calc(100% - 28px))/-2);bottom:24px}
+.app.desk .toast{top:64px;bottom:auto;left:calc(32px + (100% - 88px)*.29);transform:translate(-50%,-10px)}.app.desk .toast.on{transform:translate(-50%,0)}
+.app.desk .snack{left:calc(32px + (100% - 88px)*.29);right:auto;width:min(440px,calc((100% - 88px)*.58 - 24px));transform:translateX(-50%);margin-left:0;top:60px;bottom:auto;z-index:31}
 .app.desk .ov.obov{padding:24px;background:var(--page)}
 .app.desk .ov.obov .card{height:auto;max-height:min(900px,100%);border-radius:28px;box-shadow:0 30px 80px rgba(40,30,20,.16)}
 </style>
@@ -1872,7 +1891,11 @@ $('#timeChip').onclick = () => {
 const W = () => $('#zoom').clientWidth, Hh = () => world.clientHeight;
 const rex = {
   x: 0.5, tx: 0.5, face: 1, state:'idle', until:0, sq:0, sqv:0, hop:0, shake:0, busy:0, sitting:0, sleeping:false, reading:false,
-  say(t, ms=1800, buttons){ bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
+  say(t, ms=1800, buttons){
+    if (buttons && buttons.length && typeof isDesk === 'function' && isDesk() && !app.classList.contains('expanded') && !rex.away){
+      const k = 'say' + Date.now(); nudges = nudges.filter(n => !n.ask); nudges.unshift({ k, ask:true, text:t, buttons:buttons.map(([l, fn, g]) => [l, fn, g]) });
+      try { render(); } catch(_){} t = pick(['Psst!','Hey, look!','Over here!']); buttons = null; ms = 1400; }
+    bubble.innerHTML = ''; const p = document.createElement('div'); p.textContent = t; bubble.appendChild(p);
     bubble.classList.toggle('btns', !!(buttons && buttons.length));
     if (buttons && buttons.length){ const row = document.createElement('div'); row.className = 'bb';
       buttons.forEach(([label, fn, ghost]) => { const b = document.createElement('button'); b.textContent = label; if (ghost) b.className = 'g'; b.onclick = e => { e.stopPropagation(); bubble.classList.remove('on','btns'); fn && fn(); }; row.appendChild(b); });
@@ -1998,7 +2021,7 @@ function carryStep(dt){
     f.x = Math.max(0, Math.min(a.width - f.w, f.x));   // lands fully on screen if (!f.surf.world && ++f.n % 3 === 0) f.surf = surfaceBelow(f);
     if (f.y + f.h >= f.surf.y){ f.y = f.surf.y - f.h; land(f); return; }
     rexEl.style.left = f.x + 'px'; rexEl.style.top = f.y + 'px'; rexBody.style.transform = `rotate(${f.ang.toFixed(2)}deg)`; placeBubbleAway(f.x, f.y, f.w); dropShadowAt(f.x, f.y, f.w, f.h, f.surf); return; }
-  if (rex.away) perchStep(); }
+  if (rex.away) perchStep(); const ds = $('#dropShadow'); if (ds && ds.style.opacity !== '0') ds.style.opacity = 0; }
 function sendHome(){ if (!rex.away || carry) return; const b = rexRectApp(); fall = null; rexBody.style.transform = ''; shadowVis(true); toWorld(b.x + b.w/2); rig()?.hop(480); }
 // The app's Rex brain (walk, hop, roar, sleep, read) drives the rig
 const rgPrev = { hop:0, shake:0, sleeping:false, reading:false, face:1 };
@@ -2156,7 +2179,7 @@ const REPEAT_LABEL = { daily:'Every day', weekdays:'Weekdays', weekly:'Every wee
 const EFF = { e:'Easy', m:'Medium', h:'Hard' };
 const KEEP_NAMES = ['an acorn','a jar of jam','a paper star','a little carved bird','a pinecone','a tiny sprout pot','a painted stone','a pressed leaf','a drawing','a little scarf','a paper boat','a candle','a seashell','a birdhouse','a sprout mug','some dried flowers'];
 let addWhen = 'today', addRepeat = '', addOpen = false, fcOpen = false;
-let tab = 'today', cat = 'work', focusId = null, focusWhy = '', panel = null, session = null, picking = false, nudges = [], kbIndex = -1;
+let tab = 'today', cat = 'self', focusId = null, focusWhy = '', panel = null, session = null, picking = false, nudges = [], kbIndex = -1;
 let lastTaskAct = Date.now(), lastStall = 0, snow = 0;
 const touch = () => { lastTaskAct = Date.now(); };
 const tasks = () => S.tasks;
@@ -2428,7 +2451,11 @@ function setWhen(t, i){ const [, f, label0] = WHEN_OPTS[i]; let ms = f(), label 
 /* ---------- nudges (cards in the list) ---------- */
 let askQ = [];
 function nudge(k, text, buttons){ askQ = askQ.filter(n => n.k !== k); askQ.push({ k, text, buttons }); pumpAsk(); }
-function pumpAsk(){ if (!askQ.length || bubble.classList.contains('btns')) return; const n = askQ.shift();
+function pumpAsk(){ if (!askQ.length || bubble.classList.contains('btns')) return;
+  if (isDesk() && !app.classList.contains('expanded')){ if (nudges.some(x => x.ask)) return; const n = askQ.shift();
+    nudges.unshift({ k:n.k, ask:true, text:n.text, buttons:n.buttons.map(([l, fn, g]) => [l, () => { fn && fn(); setTimeout(pumpAsk, 600); }, g]) }); render();
+    rex.hop = 1; rex.say(pick(['Psst!','Hey, look!','Over here!']), 1400); return; }
+  const n = askQ.shift();
   rex.hop = 1; rex.say(n.text, 14000, n.buttons.map(([l, fn, g]) => [l, () => { fn && fn(); setTimeout(pumpAsk, 600); }, g])); }
 setInterval(pumpAsk, 2500);
 function dropNudge(k){ askQ = askQ.filter(n => n.k !== k); nudges = nudges.filter(n => n.k !== k); render(); }
@@ -2545,7 +2572,7 @@ function onboard(){ if (S.onboarded) return;
 /* ---------- rendering ---------- */
 function greet(){ const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
 function meta(t){ const c = CAT[t.cat]; const bits = []; const frog = S.frogDay === today() && S.frogId === t.id && !t.done;
-  if (t.startAt && t.startAt.label && t.when === 'today') bits.push(t.startAt.label + (t.startAt.place ? ', ' + t.startAt.place.toLowerCase() : ''));
+  if (t.startAt && t.startAt.label && t.when !== 'someday') bits.push(t.startAt.label + (t.startAt.place ? ', ' + t.startAt.place.toLowerCase() : ''));
   if (t.repeat) bits.push(REPEAT_LABEL[t.repeat]);
   if (t.eff && !frog) bits.push(EFF[t.eff]);
   if (t.steps.length) bits.push(`${t.steps.filter(s => s.done).length} of ${t.steps.length} steps`);
@@ -2579,7 +2606,7 @@ function focusCard(){
   const fc = CAT[f.cat], L0 = sessLen(f);
   if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div>${isDesk() ? pose('wave', 44, 'fcpose') : ''}<span class="chev">${IC.chev}</span></button>
     <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
-  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
+  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${isDesk() ? pose(inS ? 'read' : 'wave', 44, 'fcpose') : ''}${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
     ${f.steps.length ? `<div class="steps">${f.steps.map((s, i) => `<button class="step ${s.done?'done':''} ${s === next ? 'next' : ''}" data-step="${i}"><span class="sb">${s.done ? IC.check : ''}</span>${esc(s.t)}</button>`).join('')}</div>` : ''}
     ${body}</div>`; }
 function timeline(){ if (S.timeline === false) return '';
@@ -2774,7 +2801,7 @@ function render(){
       ${dkMode === 'projects' ? `<div class="dkleft pjleft">${projectsLeft()}</div><div class="dkright"><div class="dkcard" id="dkCard" aria-hidden="true"></div>${projectsRight()}</div></div>` : `
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
-        ${focusCard()}
+        ${S.asleep ? '' : focusCard()}
         <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
         <div class="qprev" id="qPrev"></div>
         <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
@@ -2786,7 +2813,7 @@ function render(){
         <div class="dscroll" id="dToday">
           ${nudges.length ? `<div class="dknudge">${nudgeCards()}</div>` : ''}
           <div class="list" id="list">${open.length ? open.map(t => row(t)).join('') : `<div class="empty dkdone">${pose(todays().length ? 'happy' : 'think', 64)}<span>${todays().length ? 'Nothing left for today. Rex is happy to just hang out.' : 'Nothing here yet. Add one small thing.'}</span></div>`}</div>
-          ${done.length ? `<button class="section toggle" data-showdone>${S.showDone ? 'Hide completed' : 'Completed'}</button>${S.showDone ? `<div class="list">${done.map(t => row(t)).join('')}</div>` : ''}` : ''}
+          ${done.length ? `<button class="dkdonerow" data-showdone aria-expanded="${!!S.showDone}">${IC.check}<span>Completed · ${done.length}</span><span class="chev">${S.showDone ? IC.chevup : IC.chev}</span></button>${S.showDone ? `<div class="list">${done.map(t => row(t)).join('')}</div>` : ''}` : ''}
         </div>
         <div class="dkeod">${pose('sleep', 84)}<div>${S.asleep ? `<b>Rex is asleep</b><span>Wake him when you start your day.</span>` : `<b>End of day</b><span>When you're done for the day, tuck Rex in.</span>`}</div><button class="pill ghost" data-daybtn>${S.asleep ? 'Start my day' : 'Wrap up the day'}</button></div>
       </div>
@@ -2888,7 +2915,7 @@ $('#scroll').addEventListener('click', e => {
   if ((el = q('[data-bring]'))){ const t = byId(+el.dataset.bring); t.when = 'today'; t.carry = 0; save(); render(); toast('Moved to Today'); bus.emit('task_today', t); return; }
   if ((el = q('[data-park]'))){ const t = byId(+el.dataset.park); t.when = 'someday'; t.carry = 0; save(); render(); bus.emit('task_someday', t); return; }
   if ((el = q('[data-keep]'))){ const t = byId(+el.dataset.keep); t.parkDay = today(); save(); render(); return; }
-  if ((el = q('[data-cat]'))){ cat = el.dataset.cat; render(); $('#addInput').focus(); return; }
+  if ((el = q('[data-cat]'))){ cat = el.dataset.cat; S.lastCat = cat; save(); render(); $('#addInput').focus(); return; }
   if ((el = q('[data-addwhen]'))){ addWhen = el.dataset.addwhen; render(); $('#addInput').focus(); return; }
   if ((el = q('[data-step]'))){ const [f] = focused(); stepDone(f, +el.dataset.step); return; }
   if ((el = q('[data-pick]'))){ const t = byId(+el.dataset.pick); focusTask(t, 'You picked'); rex.hop = 1; rex.say('Good choice.', 1400); return; }
@@ -2965,7 +2992,7 @@ $('#scroll').addEventListener('submit', e => { e.preventDefault();
   const w0 = q.when || (addWhen === 'tomorrow' ? tomorrow() : addWhen), rp = q.repeat || addRepeat;
   const t = addTask({ t:q.text.slice(0,90), est:q.est, when:w0, repeat:rp, dow: q.dow ?? (rp === 'weekly' ? new Date().getDay() : undefined), high:q.high, startAt: startAtFor(w0 === 'someday' ? 'today' : w0, q.at) });
   if (t.repeat && !isDue(t) && t.when === 'today') t.when = 'rest';
-  addRepeat = ''; save(); render(); SFX.add(); touch(); const ni = $('#addInput'); ni.focus();
+  addRepeat = ''; if (isDesk()) addOpen = false; save(); render(); SFX.add(); touch(); const ni = $('#addInput'); ni.focus();
   if (t.when !== 'today') toast(t.when === 'someday' ? 'Saved to Someday' : t.when === 'rest' ? `Repeats ${REPEAT_LABEL[t.repeat].toLowerCase()}` : `Saved for ${labelDay(t.when)}`);
   bus.emit('task_added', t); });
 function paintQuick(){ const inp = $('#addInput'), pv = $('#qPrev'); if (!inp || !pv) return; const v = inp.value; if (!v.trim()){ pv.innerHTML = ''; pv.classList.remove('on'); return; }
@@ -2974,7 +3001,7 @@ function paintQuick(){ const inp = $('#addInput'), pv = $('#qPrev'); if (!inp ||
   pv.innerHTML = chips.map(c => `<span class="qchip">${esc(c)}</span>`).join('') + `<span class="qtext">"${esc(q.text)}"</span>`; pv.classList.add('on'); }
 function openMenu(id, btn){ const t = byId(id); const m = document.createElement('div'); m.className = 'menu'; m.id = 'menu';
   m.innerHTML = `<button data-m="focus">Work on this</button><button data-m="high">${t.high ? 'Not important' : 'Mark important'}</button><button data-m="smaller">${t.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><button data-m="tomorrow">Move to tomorrow</button><button data-m="someday">Move to Someday</button><button data-m="delete" class="dz">Delete</button>`;
-  const r = btn.getBoundingClientRect(), s = $('#sheet').getBoundingClientRect(); const top = r.bottom - s.top + 4; m.style.top = Math.min(top, s.height - 290) + 'px'; $('#sheet').appendChild(m);
+  const r = btn.getBoundingClientRect(), s = $('#sheet').getBoundingClientRect(); const top = r.bottom - s.top + 4; m.style.top = Math.min(top, s.height - 290) + 'px'; m.style.right = 'auto'; m.style.left = Math.max(8, r.right - s.left - 190) + 'px'; $('#sheet').appendChild(m);
   m.onclick = ev => { const a = ev.target.dataset.m; if (!a) return; closeMenu();
     if (a === 'focus') focusTask(t, 'You picked');
     if (a === 'high'){ t.high = !t.high; save(); render(); }
