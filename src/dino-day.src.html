@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
+window.DINO_BUILD = __BUILD__; window.DINO_PACKV = "rig1";
+window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
+<script src="supabase.js"></script>
 <title>Dino Day App</title>
 <meta name="theme-color" content="#FBF6EC">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,6 +55,11 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .rex .body{position:relative;width:100%;transform-origin:50% 100%}
 .rex svg{display:block;width:100%;height:auto;aspect-ratio:536/688;overflow:visible;pointer-events:none;position:relative}
 .rexlayer{position:absolute;inset:0;pointer-events:none;z-index:15}
+.acctf{display:flex;flex-direction:column;gap:10px}.acctf label{display:flex;flex-direction:column;gap:4px;font:600 13px var(--display);color:var(--ink)}
+.acctf input{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:16px var(--body);color:var(--ink);background:var(--card)}
+.acctb{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:4px}.acctb .pill{width:100%}
+.row .pill{white-space:nowrap}
+.deskbtn{display:grid;place-items:center;width:34px;height:34px;border-radius:999px;background:var(--glass);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12)}
 /* contact shadow: soft and darkest at the middle; it fades while he is off the ground */
 .rex .shadow{left:22%;right:14%;bottom:-7px;height:18px;background:radial-gradient(closest-side,rgba(25,20,35,calc(var(--shadowA,.22)*1.9)),rgba(25,20,35,0));filter:blur(1px);transition:opacity .15s}
 .rex.lifted .shadow{opacity:0}
@@ -568,6 +577,13 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 </style>
 </head>
 <body>
+<script>
+// iPhone and Mac: a newer page downloaded on an earlier launch replaces this one before anything else runs
+(function(){ if (!window.IS_APP || window.__OTA) return; let o = null; try { o = JSON.parse(localStorage.getItem("dinoday.ota") || "null"); } catch(_){}
+  if (!(o && o.v > window.DINO_BUILD && o.packs === window.DINO_PACKV && o.html)) return; window.__OTA = o.v; window.DINO_BUILD = o.v;
+  const doc = new DOMParser().parseFromString(o.html, "text/html"); document.replaceChild(document.adoptNode(doc.documentElement), document.documentElement);
+  for (const s of [...document.querySelectorAll("script")]){ const n = document.createElement("script"); if (s.src) n.src = s.getAttribute("src"); else n.textContent = s.textContent; s.replaceWith(n); } })();
+</script>
 
 <div class="app" id="app">
   <section class="world" id="world" aria-label="Rex's world">
@@ -632,6 +648,10 @@ try { const saved = JSON.parse(localStorage.getItem(KEY)||'null');
   if (saved && saved.tasks) S = { ...S, ...saved, habits:{ ...S.habits, ...(saved.habits||{}) } };
   else { const old = JSON.parse(localStorage.getItem('dinoDayProto.v2')||'null'); if (old){ ['name','lockDay','place','chat','suggest'].forEach(k => { if (k in old) S[k] = old[k]; }); } }
 } catch(e){}
+// first launch after moving from the older Rex's Room app: bring its tasks, keepsakes, and habits over
+try { if (!localStorage.getItem(KEY) && localStorage.getItem('rexroom.tasks')){ const g = k => { try { return JSON.parse(localStorage.getItem('rexroom.' + k) || 'null'); } catch(_){ return null; } };
+  const o = fromOld({ tasks:g('tasks'), keeps:g('keeps'), state:g('state') || {}, projects:g('projects') }); if (o.tasks && o.tasks.length){ S = { ...S, ...o, habits:{ ...S.habits, ...(o.habits || {}) } }; S.tasks.forEach((t, i) => t.order = i + 1); }
+  const ca = localStorage.getItem('rexroom.cloudAt'); if (ca) localStorage.setItem('dinoday.cloudAt', ca); localStorage.setItem(KEY, JSON.stringify(S)); } } catch(e){}
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ---------- icons ---------- */
@@ -1504,7 +1524,7 @@ function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div 
     <div class="row"><div><div class="lab">Sort today's list</div><div class="hint">Tag effort and pick today's frog.</div></div><button class="pill ghost mint" data-sort>Sort</button></div>
     <div class="row"><div><div class="lab">Import tasks</div><div class="hint">Paste a list from anywhere.</div></div><button class="pill ghost mint" data-import>Paste</button></div>
     <div class="row"><div><div class="lab">Format for AI</div><div class="hint">Copy instructions so any AI writes a list Rex can read.</div></div><button class="pill ghost mint" data-copyfmt>Copy</button></div></div>
-  <div class="glabel">Data</div><div class="group">
+  ${accountRows()}<div class="glabel">Data</div><div class="group">
     <div class="row"><div><div class="lab">Backup</div><div class="hint">Copies everything as text you can keep.</div></div><div class="rowr"><button class="pill ghost mint" data-backup>Copy</button><button class="pill ghost mint" data-restore>Restore</button></div></div>
     <div class="row"><button class="danger" id="resetBtn">${S._confirmReset ? 'Tap again to replace everything with the examples' : 'Start over with example tasks'}</button></div></div>
   <div class="glabel">Prototype tools</div><div class="group">
@@ -1943,6 +1963,8 @@ const FX = (() => {
   function where(id){ mapping(); const h = HOT[place()].find(x => x.id === id); if (!h) return null; const x = h.x || (h.box[0] + h.box[2])/2, y = h.y || (h.box[1] + h.box[3])/2; return { x: sx(x + dxArt()), y: sy(y) }; }
   return { step, seed, resize, tap, where, hitAt:(x, y) => { const h = hitAt(x, y); return h ? (h.hot ? h.hot.id : 'bug:' + h.bug.kind) : null; } };
 })();
+
+/*__PLATFORM__*/
 
 /* boot */
 rollover(); S.lastOpen = Date.now(); save(); checkUnlocks(); paintPlaybar();
