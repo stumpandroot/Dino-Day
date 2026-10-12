@@ -718,7 +718,6 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .pjcount{font:600 13px var(--body);color:var(--muted);white-space:nowrap}
 .dkleft .pjscroll{border-radius:0;background:none;box-shadow:none;display:flex;flex-direction:column;gap:12px;padding:0 2px 6px}
 .pjgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-@media (max-width:1100px){.pjgrid{grid-template-columns:1fr}}
 .pjcard{display:flex;flex-direction:column;gap:10px;text-align:left;background:var(--card);border-radius:22px;padding:18px var(--in);box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow);cursor:pointer;transition:transform .2s}
 .pjcard:hover{transform:translateY(-2px)}
 .pjct{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.pjct b{font:700 19px/1.2 var(--display);color:var(--ink)}
@@ -783,6 +782,21 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk.expanded .spacepill{display:none}
 .app.desk.expanded .chips-r{top:16px;bottom:auto;right:16px}
 .app.desk:not(.expanded) #sceneFront [data-obj="fgL"],.app.desk:not(.expanded) #sceneFront [data-obj="fgR"]{display:none}
+
+/* Pages polish */
+.app.desk .nodesk{display:none}
+.deskonly{display:none}.app.desk .deskonly{display:block;margin:-2px 0 8px}
+.app.desk .rexhabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.app.desk .rexhabs button{justify-content:center;white-space:nowrap}
+.pjgrid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.pjli .pjbar:has(i[style="width:0%"]){opacity:.5}
+.pjli{margin:0 8px;width:calc(100% - 16px);border-radius:12px;border-top:0;padding:12px}
+.pjli + .pjli{box-shadow:0 -1px 0 var(--line)}
+.pjli.on + .pjli,.pjli.on{box-shadow:none}
+.pjli.on::before{left:0;top:10px;bottom:10px;border-radius:4px}
+.tlmini .tle{position:absolute;top:22px;font:600 10px var(--body,inherit);color:var(--muted);pointer-events:none}
+.tlmini .tle.l{left:0}.tlmini .tle.r{right:0}
+.app.desk .tline.mini{padding-bottom:20px}
 </style>
 </head>
 <body>
@@ -1717,7 +1731,7 @@ function timeline(){ if (S.timeline === false) return '';
   const fit = estMin ? `About ${fmtDur(estMin)} planned${unk ? ` + ${unk} unsized` : ''} · ${fmtDur(freeMin)} left before ${fmtMin(endM)}` : '';
   if (!items.length && !fit) return '';
   const pos = m => Math.max(0, Math.min(100, (m - T0) / (T1 - T0) * 100));
-  if (!S.tlOpen) return `<button class="tline mini" data-tlopen aria-expanded="false"><span class="tlh"><b>Your day</b>${fit ? `<span>${esc(fit)}</span>` : ''}</span><span class="tlmini"><em class="tlpast" style="width:${pos(nm)}%"></em>${items.map(it => it.ic ? `<b class="tlic" style="left:${pos(it.m)}%">${it.ic}</b>` : `<i class="${it.done?'done':''}" style="left:${pos(it.m)}%"></i>`).join('')}${nm >= T0 && nm <= T1 ? `<b class="nowm" style="left:${pos(nm)}%"></b>` : ''}</span><span class="chev">${IC.chev}</span></button>`;
+  if (!S.tlOpen) return `<button class="tline mini" data-tlopen aria-expanded="false"><span class="tlh"><b>Your day</b>${fit ? `<span>${esc(fit)}</span>` : ''}</span><span class="tlmini"><em class="tlpast" style="width:${pos(nm)}%"></em><small class="tle l">${fmtMin(T0)}</small><small class="tle r">${fmtMin(T1)}</small>${items.map(it => it.ic ? `<b class="tlic" style="left:${pos(it.m)}%" title="${esc(it.l)} · ${fmtMin(it.m)}">${it.ic}</b>` : `<i class="${it.done?'done':''}" style="left:${pos(it.m)}%" title="${esc(it.l)} · ${fmtMin(it.m)}"></i>`).join('')}${nm >= T0 && nm <= T1 ? `<b class="nowm" style="left:${pos(nm)}%"></b>` : ''}</span><span class="chev">${IC.chev}</span></button>`;
   return `<div class="tline"><div class="tlhead"><b>Your day</b><span>${fit ? esc(fit) + ' · ' : ''}${now.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}</span><button class="x fold" data-tlclose aria-label="Fold the timeline">${IC.chevup}</button></div><div class="tltrack"><em class="tlline"></em><em class="tlpast" style="width:${pos(nm)}%"></em>
     ${[9,12,15,18,21].map(h => `<span class="tick" style="left:${pos(h*60)}%">${h>12?h-12:h}${h<12?'a':'p'}</span>`).join('')}
     ${items.sort((a, b) => a.m - b.m).map((it, i, arr) => { it.lo = i > 0 && (it.m - arr[i-1].m) < 100 && !arr[i-1].lo; return it; }).map(it => `<button class="tlitem ${it.hab?'thab':''} ${it.done?'done':''} ${it.lo?'lo':''} ${it.ic?'hasic':''}" style="left:${pos(it.m)}%" ${it.id ? `data-tl="${it.id}"` : ''} title="${esc(it.l)} · ${fmtMin(it.m)}">${it.ic ? `<b class="tic">${it.ic}</b>` : '<i></i>'}<span>${esc(it.l)}</span></button>${it.est ? `<span class="tlspan" style="left:${pos(it.m)}%;width:${pos(it.m + it.est) - pos(it.m)}%"></span>` : ''}`).join('')}
@@ -1733,9 +1747,9 @@ function myHabits(){ if (!S.habitsOn) return '';
 let dkTab = 'later';
 /*__PROJECTS__*/
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
-const REXHABS = [['water','Water',IC.drop],['lunch','Lunch',IC.fork],['stretch','Stretch',IC.heart],['plants','Plants',IC.sun],['walk','Walk',IC.star],['winddown','Wind-down',IC.moonB]];
+const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
-  return `<div class="dkhab"><h3>Rex's habits</h3><div class="rexhabs">${REXHABS.map(([k, l, ic]) => `<button data-set="habits.${k}" data-val="${!S.habits[k]}" aria-pressed="${!!S.habits[k]}">${ic}${l}</button>`).join('')}</div>
+  return `<div class="dkhab"><h3>Rex's habits</h3><div class="rexhabs">${REXHABS.map(([k, l, ic, d]) => `<button data-set="habits.${k}" data-val="${!S.habits[k]}" aria-pressed="${!!S.habits[k]}" title="${d}">${ic}${l}</button>`).join('')}</div>
     <h3>My habits</h3>${H.length ? '' : `<div class="dkempty" style="padding:0 0 8px">${pose('think', 46)}<span>Add something small you want to do most days.</span></div>`}
     <div class="habs">${H.map(h => `<div class="hab"><div class="hn">${esc(h.n)}<button class="x" data-hdel="${h.id}" aria-label="Remove ${esc(h.n)}">×</button></div><div class="hw">${wk.map((k, i) => `<button class="hd ${h.log[k]?'on':''} ${k===today()?'td':''}" data-hk="${h.id}" data-day="${k}" aria-label="${L[i]} ${k}" ${k > today() ? 'disabled' : ''}>${L[i]}</button>`).join('')}</div></div>`).join('')}
     <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div></div>`; }
@@ -1752,7 +1766,7 @@ function render(){
     const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1).concat(S.tasks.filter(t => t.when === 'someday'));
     sc.innerHTML = `<div class="dk">
       <header class="dkbar">${logoHTML()}<div class="dkseg" role="tablist" aria-label="View">${[['today','Today'],['projects','Projects']].map(([k, l]) => `<button role="tab" data-pjmode="${k}" aria-selected="${dkMode === k}">${l}</button>`).join('')}</div>
-        <span class="thr">${dkMode === 'today' && open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+        <span class="thr">${dkMode === 'today' && open.length > 1 && !S.asleep && !picking && !nudges.some(n => n.ask && /first today/i.test(n.text)) ? `<button class="pill ghost mint sm" data-pickone>${focusId && byId(focusId) && !byId(focusId).done ? 'Pick again' : 'Pick one'}</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
       ${dkMode === 'projects' ? `<div class="dkleft pjleft">${projectsLeft()}</div><div class="dkright"><div class="dkcard" id="dkCard" aria-hidden="true"></div>${projectsRight()}</div></div>` : `
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
@@ -1811,8 +1825,8 @@ function render(){
   sc.scrollTop = keepScroll; sessionTick(); paintQuick();
 }
 function seg(key, opts, obj = S){ return `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-set="${key}" data-val="${v}" aria-pressed="${String(key.includes('.') ? key.split('.').reduce((o, k) => o && o[k], S) : obj[key]) === String(v)}">${l}</button>`).join('')}</div>`; }
-function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div class="row"><div><div class="lab">${l}</div><div class="hint">${hint}</div></div>${seg('habits.'+k, [[true,'On'],[false,'Off']])}</div>`;
-  return `<div class="tophead">${logoHTML()}</div><div class="profile"><span class="pav">${IC.person}</span><div><h1>${esc(S.name || 'Friend')}</h1><div class="date">Profile and settings. Make Dino Day yours.</div></div></div>
+function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div class="row nodesk"><div><div class="lab">${l}</div><div class="hint">${hint}</div></div>${seg('habits.'+k, [[true,'On'],[false,'Off']])}</div>`;
+  return `<div class="tophead nodesk">${logoHTML()}</div><div class="profile"><span class="pav">${IC.person}</span><div><h1>${esc(S.name || 'Friend')}</h1><div class="date">Profile and settings. Make Dino Day yours.</div></div></div>
   <div class="glabel">You</div><div class="group">
     <div class="row"><div><div class="lab">Your name</div><div class="hint">Rex uses it to greet you.</div></div><input type="text" id="setName" value="${esc(S.name)}" aria-label="Your name" autocomplete="given-name"></div>
     <div class="row"><div><div class="lab">Your stats</div><div class="hint">What you've done, sessions, keepsakes. Only here, never on Today.</div></div><button class="pill ghost mint" data-stats>Open</button></div></div>
@@ -1821,7 +1835,7 @@ function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div 
     <div class="row"><div><div class="lab">Chattiness</div><div class="hint">How often Rex talks and reacts.</div></div>${seg('chat', [['often','Often'],['sometimes','Some'],['quiet','Quiet']])}</div>
     <div class="row"><div><div class="lab">Suggests what's next</div><div class="hint">Rex's pick at the top of Today.</div></div>${seg('suggest', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>
-  <div class="glabel">Rex's habits</div><div class="group">
+  <div class="glabel">Rex's habits</div><div class="hint pad deskonly">Turn them on and off in the Habits tab on Today.</div><div class="group">
     ${hrow('water','Water','He drinks a glass in the morning and asks if you want one.')}
     <div class="row"><div><div class="lab">Lunch</div><div class="hint">He asks you to eat with him.</div></div><div class="rowr"><input type="time" id="lunchAt" value="${H.lunchAt||'12:30'}" aria-label="Lunch time">${seg('habits.lunch', [[true,'On'],[false,'Off']])}</div></div>
     ${hrow('stretch','Stretch','After a focus session.')}
