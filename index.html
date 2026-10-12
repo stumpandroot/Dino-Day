@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791829616; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791830174; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1010,11 +1010,7 @@ function frame(t){
     K = sampleKeys(keys, k); KH = sampleKeys(keys, k - .07); KT = sampleKeys(keys, k - .14);   // head drags 70 ms, tail 140 ms
     if (K.aF) armF = K.aF.slice(); if (K.aB) armB = K.aB.slice();
     if (K.done && KT.done){ act = null; clearProps(); setFace(base); } }
-  if (PROC[act]){ const f = PROC[act];
-    for (const fc of f.faces || []) if (fc[0] <= k && !fired.has(fc)){ fired.add(fc); setFace(fc[1]); }
-    for (const tt of f.turns || []) if (tt <= k && !fired.has(tt + act)){ fired.add(tt + act); turnTo(-TN.face); }
-    K = f(k); KH = f(Math.max(0, k - .07)); KT = f(Math.max(0, k - .14)); armF = K.aF.slice(); armB = K.aB.slice();
-    if (k > f.dur){ act = null; setFace(base); } }
+  if (PROC_TURNS[act]) for (const tt of PROC_TURNS[act]) if (tt <= k && !fired.has(act + tt)){ fired.add(act + tt); turnTo(-TN.face); }
   if (act === 'pet'){ armF = POSES.pet.F; armB = POSES.pet.B; petLean = 1; } else petLean = 0;
   if (act === 'feed') armsFeed = feedFrame(k, t); else armsFeed = null;
   if (act === 'feedDrag'){ dragFeedFrame(t); armF = [100 - 40*Math.max(0, food.reach || 0), 70 - 120*Math.max(0, food.reach || 0)]; armB = [70, 60]; }
@@ -1052,7 +1048,7 @@ function frame(t){
   // the planted leg gives a little under his weight
   const legS = c => 1 + W*(.08*Math.abs(sp) - .16*Math.max(0, c)**2 - .05*Math.max(0, -c)**2);
   const kls = K && K.ls ? K.ls : 1, syF = legS(cp)*kls, syB = legS(-cp)*kls;
-  const bob = (W > .01 || K) ? plantDrop(-legA*sp + (K ? K.lF : 0), liftF, legA*sp + (K ? K.lB : 0), liftB, syF, syB) - (K ? 0 : 0) : 0;   // hips ride on whichever foot is on the floor, so it stays planted
+  const bob = (W > .01 || K) ? plantDrop(-legA*sp + (K ? K.lF : 0), liftF + (K ? K.uF : 0), legA*sp + (K ? K.lB : 0), liftB + (K ? K.uB : 0), syF, syB) - (K ? 0 : 0) : 0;   // hips ride on whichever foot is on the floor, so it stays planted
   S.hb = bob;
   if (W > .01){ const sw = 26*W;
     const wf = [92 + sw*sp, 92 + sw*sp - 14 - 22*Math.max(0, -sp)], wb = [88 - sw*sp, 88 - sw*sp - 14 - 22*Math.max(0, sp)];
@@ -1080,7 +1076,7 @@ function frame(t){
   const s = t/1000, br = RM ? 0 : Math.sin(s*(e.sleep ? 1.4 : 2.4))*(1 - S.breath)*(1 - S.walk);
   morphLeg(ease(W));   // the front leg melts from the standing shape into the toe-forward walking shape
   const kick = S.petK > .3 ? Math.max(0, Math.sin(s*15)) : 0;   // happy thumping kick while he's petted
-  leg('F', -legA*sp + (K ? K.lF : 0) - 16*kick*S.petK + DG.k*(DG.sw*.7 + 12*Math.sin(s*9)) + TN.legF[0], liftF + 12*kick*S.petK + TN.legF[1], syF*(1 - .06*kick*S.petK)*(1 + .05*DG.k)); leg('B', legA*sp + (K ? K.lB : 0) + DG.k*(DG.sw*.7 - 12*Math.sin(s*9 + 1.4)) + TN.legB[0], liftB + TN.legB[1], syB*(1 + .05*DG.k));
+  leg('F', -legA*sp + (K ? K.lF : 0) - 16*kick*S.petK + DG.k*(DG.sw*.7 + 12*Math.sin(s*9)) + TN.legF[0], liftF + (K ? K.uF : 0) + 12*kick*S.petK + TN.legF[1], syF*(1 - .06*kick*S.petK)*(1 + .05*DG.k)); leg('B', legA*sp + (K ? K.lB : 0) + DG.k*(DG.sw*.7 - 12*Math.sin(s*9 + 1.4)) + TN.legB[0], liftB + (K ? K.uB : 0) + TN.legB[1], syB*(1 + .05*DG.k));
   P('tail', (TN.on ? `translate(318 520) scale(${1 - .75*TN.mT} 1) rotate(${TN.tail}) translate(-318 -520) ` : '') + rot(br*3 + Math.sin(s*1.7)*3*(1 - W) + 6*W*sp + (KT ? KT.tail : 0) + (petLean ? 7*Math.sin(s*13) : 0) + (act === 'feed' && k > 2.1 ? 6*Math.sin(s*14) : 0) + DG.k*(DG.sw*1.2 + 8*Math.sin(s*6)), 318, 520));
   const dn = W > .01 ? Math.min(1, Math.max(0, bob/8)) : 0;      // the body gives a little each time his weight lands
   const kb = K ? K.br : 0, tsy = 1 + br*.012 + .11*Math.max(S.breath, kb) - .03*W*dn, tsx = 1 + .06*Math.max(S.breath, kb) + .018*W*dn;
@@ -1096,7 +1092,7 @@ function frame(t){
   const tl = 1 - TN.mH, ex = TN.on && TN.eye ? TN.eye : S.lx*tl; P('irisL', `translate(${ex*18} ${S.ly*16})`); P('irisR', `translate(${ex*13} ${S.ly*13})`);
   P('blush', TT('blush') + `translate(226.84 302.5) scale(${S.blush}) translate(-226.84 -302.5)`);
   const ksq = TN.sq + (K ? K.sq : 0) + (S.lieSq || 0) + (act === 'feed' ? feedSq : 0) + (petLean ? .02*Math.sin(s*6) : 0), ky = K ? K.y : 0, kl = TN.lean + (K ? K.lean + K.shake*Math.sin(s*48)*.6 : 0) + (petLean ? -4 : 0) + (act === 'wave' ? 1.5*Math.sin(s*10) : 0) + RD.lean + 6*shake + (act === 'feedDrag' ? 4*(food.lean || 0) : 0), sq = S.sq + ksq;
-  P('root', `translate(0 ${S.y + bob + ky + TN.hy + 40*ease(S.seat || 0) + (act === 'wave' ? -3*Math.abs(Math.sin(s*10)) : 0) + (act === 'feed' ? feedY : 0)}) ${rot(3*W + kl, 300, 688)} translate(300 688) scale(${1 + sq*.6} ${1 - sq}) translate(-300 -688)`);
+  P('root', `translate(${K ? K.x : 0} ${S.y + bob + ky + TN.hy + 40*ease(S.seat || 0) + (act === 'wave' ? -3*Math.abs(Math.sin(s*10)) : 0) + (act === 'feed' ? feedY : 0)}) ${rot(3*W + kl, 300, 688)} translate(300 688) scale(${1 + sq*.6} ${1 - sq}) translate(-300 -688)`);
   P('shadow', `translate(300 684) scale(${1 + Math.min(0, S.y + ky)/600}) translate(-300 -684)`);
   const rw = g('roarw'); if (rw){ const u = ((s*2.2) % 1); rw.setAttribute('transform', `translate(548 252) scale(${.7 + u*.9}) translate(-548 -252)`); rw.setAttribute('opacity', K && K.shake > .1 ? 1 - u : 0); }
   const zz = g('zzz'); if (zz) zz.setAttribute('transform', `translate(0 ${Math.sin(s*1.5)*6})`);
@@ -1151,44 +1147,87 @@ KEYS.ball = [
   { t:1.24, ls:.86, y:0,  sq:.14,  lean:3,  head:7,   tail:6,  aF:[150,120], aB:[40,60], face:'laughing' },
   { t:1.42, ls:1.03, y:-3, sq:-.03, lean:-1, head:-2, tail:-4, aF:'relaxed', aB:'relaxed' },
   { t:2.2,  ls:1, y:0,    sq:0,    lean:0,  head:0,   tail:0,  aF:'rest', aB:'rest', face:'happy' } ];
-/* ---------- dances: procedural performances on the same channels as the keyframes ----------
-   Each returns the pose at time k (seconds); head and tail sample it a little late, so they drag and follow through.
-   groove: an easy side-to-side sway on the beat, eyes closed and smiling, one arm then the other pushing out front,
-           knees giving on every beat, tail swishing against the lean.
-   excited: wind-up first (crouch, fists in, wide eyes, then a squint), then quick little hops from foot to foot with
-           fists up by his chin and the tail going like mad.
-   shuffle: kick-steps with arms swinging, a turn to face away and kick, a turn back, then a crouch and a star jump. */
-const mixA = (a, b, u) => a.map((v, i) => v + (b[i] - v)*u);
-const BEAT = .46;
-const PROC = {
-  groove: Object.assign(k => { const ph = Math.PI*k/BEAT, s1 = Math.sin(ph), on = Math.min(1, k/.35)*Math.min(1, Math.max(0, (4.3 - k)/.4));
-    const pushF = Math.max(0, s1), pushB = Math.max(0, -s1), dip = Math.abs(Math.sin(ph));
-    return { y: on*5*dip, sq: on*.035*dip, lean: on*7*s1, head: on*6*s1, tail: on*-14*s1, br: 0, ls: 1 - on*.05*dip, shake: 0,
-      lF: on*5*pushF, lB: on*-5*pushB,
-      aF: mixA(POSES.relaxed.F, mixA([118,-38], [62,-6], pushF), on), aB: mixA(POSES.relaxed.B, mixA([70,96], [8,-12], pushB), on), done: k > 4.7 }; },
-    { faces: [[0, 'happy']], dur: 4.7 }),
-  excited: Object.assign(k => { let o;
-    if (k < .55){ const u = Math.min(1, k/.25), v = k > .32 ? Math.sin((k - .32)*60)*.6 : 0;   // wind-up: crouch, fists tight, a buzzing tremble
-      o = { y: 7*u, sq: .13*u, lean: -4*u, head: -5*u + v, tail: 8*u, ls: 1 - .12*u, lF: 4*u, lB: -4*u, shake: k > .32 ? .4 : 0, aF: mixA(POSES.rest.F, [128,-62], u), aB: mixA(POSES.rest.B, [64,-84], u) }; }
-    else if (k < 2.6){ const h = (k - .55)*3.1, hop = Math.abs(Math.sin(Math.PI*h)), side = Math.sign(Math.sin(Math.PI*h/1)) || 1, f = Math.sin(Math.PI*h*2);
-      o = { y: -18*hop + 3*(1 - hop), sq: .1*(1 - hop) - .05*hop, lean: 5*Math.sin(Math.PI*h) , head: 5*Math.sin(Math.PI*h + .8), tail: 16*Math.sin(k*22), ls: 1 + .06*hop,
-        lF: side > 0 ? 14*hop : -3, lB: side < 0 ? -14*hop : 3, shake: 0, aF: [128 + 14*f, -62 - 22*f], aB: [64 - 12*f, -84 + 18*f] }; }
-    else { const u = Math.min(1, (k - 2.6)/.45); o = { y: 0, sq: .05*(1 - u), lean: 0, head: 0, tail: 6*(1 - u)*Math.sin(k*18), ls: 1, lF: 0, lB: 0, shake: 0, aF: mixA([128,-62], POSES.rest.F, u), aB: mixA([64,-84], POSES.rest.B, u) }; }
-    o.br = 0; o.done = k > 3.1; return o; },
-    { faces: [[0, 'surprised'], [.3, 'determined'], [.55, 'excited'], [1.6, 'laughing'], [2.6, 'happy']], dur: 3.1 }),
-  shuffle: Object.assign(k => { const on = Math.min(1, k/.25);
-    if (k < 3.3){ const ph = Math.PI*k/.38, s1 = Math.sin(ph), kick = Math.max(0, Math.sin(ph*.5)), alt = Math.sin(ph*.5) > 0 ? 1 : -1, dip = Math.abs(s1);
-      return { y: on*(4*dip), sq: on*.03*dip, lean: on*4*Math.sin(ph*.5), head: on*4*Math.sin(ph*.5 + .6), tail: on*18*Math.sin(k*13), br: 0, ls: 1 - .04*dip, shake: 0,
-        lF: on*(alt > 0 ? -26*kick : 6), lB: on*(alt < 0 ? 24*kick : -6),
-        aF: mixA(POSES.relaxed.F, [176 + 16*s1, 196 + 20*s1], on), aB: mixA(POSES.relaxed.B, [6 - 16*s1, -8 - 20*s1], on), done: false }; }
-    const j = k - 3.3;   // crouch, launch, star at the top, land, hold the pose
-    const y = j < .22 ? 8*j/.22 : j < .62 ? 8 - 118*Math.sin(Math.PI*(j - .22)/.8) : j < .8 ? 0 : 0;
-    const sq = j < .22 ? .14*j/.22 : j < .3 ? -.1 : j > .62 && j < .8 ? .14*(1 - (j - .62)/.18) : 0, star = Math.min(1, Math.max(0, (j - .2)/.18));
-    return { y, sq, lean: 0, head: -6*star, tail: -10*star, br: 0, ls: j < .22 ? .88 : 1.06 - .06*Math.min(1, j/.9), shake: 0, lF: -16*star*(j < .7), lB: 16*star*(j < .7),
-      aF: mixA([150,120], [222,250], star), aB: mixA([40,60], [-48,-74], star), done: j > 1.5 }; },
-    { faces: [[0, 'happy'], [3.2, 'excited'], [3.75, 'laughing']], turns: [1.15, 2.25], dur: 4.8 }),
-};
-const NUM = ['y','sq','lean','head','tail','br','lF','lB','shake','ls'];
+/* ---------- dances, built from Tim's reference clips ----------
+   Each dance is keyframes on the performance channels, traced from the clip and timed to it (the clips run at 25 fps).
+   Principles: the beat lands on a held DOWN pose (weight drops, knees give); the body rises through the passing pose; the
+   hips lead and the head (70 ms) and tail (140 ms) follow late; held key poses with fast eased transitions between them,
+   like the clips' animation on twos; big committed shapes (about 5% of his height in bob, 4 to 10 degrees of lean);
+   anticipation before every big move; a settle at the end.
+   Channels: y (down +), sq, lean (+ = top tips forward), head, tail (+ = down, - = up), ls (leg length), lF/lB (leg swing,
+   + = back), uF/uB (foot lift), x (slide), aF/aB ([upper arm, forearm] angles; 0 = forward, 90 = down, -90 = up). */
+const RELAX = { aF:[150,58], aB:[30,112] };
+function loopKeys(cycle, period, n, t0){ const out = []; for (let i = 0; i < n; i++) for (const k of cycle) out.push(Object.assign({}, k, { t: t0 + (i + k.t)*period })); return out; }
+// 1. Dance (Bluey's sway): one 0.88 s loop, traced. Down and tipped forward with the tail kicked up behind (on the beat),
+//    rise through, rock back as the near arm pushes straight out front and holds, rise again, drop forward. Eyes shut, smiling.
+const SWAY = [
+  { t:0,   y:0, sq:.06,  lean:5,  head:0,  tail:16,  ls:.92, lF:-6,  lB:6,  uF:0, uB:0, x:0,  aF:[70,-60], aB:[40,-60] },
+  { t:.11, y:0, sq:.06,  lean:5,  head:1,  tail:18,  ls:.92, aF:[72,-58] },
+  { t:.2,  y:0, sq:-.03, lean:0,  head:-8, tail:6,  ls:1.05, lF:0, lB:0, aF:[60,-72] },
+  { t:.3,  y:0, sq:.02,  lean:-4, head:0,  tail:4,  ls:.95, lF:-12, lB:9, x:-4, aF:[20,-30] },
+  { t:.45, y:0, sq:.045, lean:-6, head:7,  tail:26, ls:.92, lF:-16, lB:12, x:-7, aF:[-6,-10], aB:[50,-72] },
+  { t:.6,  y:0, sq:.045, lean:-6, head:8,  tail:30, ls:.92, lF:-16, lB:12, x:-7, aF:[-6,-12] },
+  { t:.7,  y:0, sq:-.03, lean:-1, head:-6, tail:12,   ls:1.05, lF:0, lB:0, x:0, uF:6, aF:[60,-70], aB:[40,-60] },
+  { t:.8,  y:0, sq:0,    lean:3,  head:-2, tail:8,  ls:1.0, uF:0, aF:[70,-62] },
+  { t:1,   y:0, sq:.06,  lean:5,  head:0,  tail:16,  ls:.92, lF:-6, lB:6, aF:[70,-60], aB:[40,-60] } ];
+// 2. Excited (Bingo): a held, tense wind-up (gritted grin, wide eyes, leaning in, fists low and back), a sly squint, then
+//    a fast march in place: 0.24 s per step, the body pops up off each foot in turn while both feet stay near the floor,
+//    near fist tucked at the chest, far fist up and out, tail going.
+const MARCH = [
+  { t:0,   y:0, sq:.07,  lean:4, head:4,  tail:-6, ls:.92, uF:0,  uB:40, lF:-6, lB:-10, aF:[70,-80], aB:[-6,-84] },
+  { t:.25, y:0, sq:-.05, lean:2, head:-4, tail:14, ls:1.08, uF:0, uB:4, lF:0, lB:0,   aF:[82,-60], aB:[4,-62] },
+  { t:.5,  y:0, sq:.07,  lean:4, head:4,  tail:-6, ls:.92, uF:40, uB:0,  lF:-10, lB:-6, aF:[70,-80], aB:[-6,-84] },
+  { t:.75, y:0, sq:-.05, lean:2, head:-4, tail:14, ls:1.08, uF:4, uB:0, lF:0, lB:0,   aF:[82,-60], aB:[4,-62] },
+  { t:1,   y:0, sq:.07,  lean:4, head:4,  tail:-6, ls:.92, uF:0,  uB:40, lF:-6, lB:-10, aF:[70,-80], aB:[-6,-84] } ];
+// 3. Boogie (the opening titles): shimmy steps with bent arms; turn away and wiggle with back kicks; turn back for big
+//    kicks out front with the opposite arm flung; a twirl with arms up; a jump into a held star pose.
+const SHIMMY = [
+  { t:0,   y:0, sq:.05,  lean:8,  head:5,  tail:34, ls:.93, x:-10, uF:0,  uB:22, lF:-8, lB:-14, aF:[30,-30],  aB:[60,-80] },
+  { t:.25, y:0, sq:-.03, lean:0,  head:-4, tail:10, ls:1.05, x:0,  uF:0,  uB:0,  lF:0,  lB:0,   aF:[70,-70],  aB:[40,-70] },
+  { t:.5,  y:0, sq:.05,  lean:-8, head:-5, tail:-10, ls:.93, x:10, uF:22, uB:0,  lF:12, lB:6,   aF:[100,-90], aB:[-10,-40] } ];
+SHIMMY.push(Object.assign({}, SHIMMY[1], { t:.75 }), Object.assign({}, SHIMMY[0], { t:1 }));
+const WIGGLE = [
+  { t:0,   y:0, sq:.04,  lean:-4, head:3,  tail:40, ls:.95, x:-8, uF:34, uB:0,  lF:42, lB:-4, aF:[70,-70], aB:[40,-60] },
+  { t:.25, y:0, sq:-.03, lean:0,  head:-3, tail:0,  ls:1.05, x:0, uF:0,  uB:0,  lF:0,  lB:0 },
+  { t:.5,  y:0, sq:.04,  lean:4,  head:3,  tail:40, ls:.95, x:8,  uF:0,  uB:34, lF:-4, lB:42, aF:[70,-70], aB:[40,-60] } ];
+WIGGLE.push(Object.assign({}, WIGGLE[1], { t:.75 }), Object.assign({}, WIGGLE[0], { t:1 }));
+const KICK = [     // hop, kick the near leg straight out front with the far arm flung forward, land
+  { t:0,   y:8,  sq:.08, lean:-2, head:3,  tail:-10, ls:.92, lF:0,   lB:0,  uF:0, uB:0, aF:[160,70], aB:[40,120] },
+  { t:.35, y:-24,sq:-.05,lean:-8, head:-6, tail:16,  ls:1.06, lF:-55, lB:6,  uF:10, aF:[200,190], aB:[-10,-20] },
+  { t:.6,  y:-6, sq:0,   lean:-5, head:-3, tail:10,  ls:1.02, lF:-50, lB:4,  uF:8 },
+  { t:1,   y:8,  sq:.08, lean:2,  head:3,  tail:-12, ls:.92, lF:0,   lB:0,  uF:0, aF:[160,70], aB:[40,120] } ];
+KEYS.groove = [ { t:0, y:0, sq:0, lean:0, head:0, tail:0, ls:1, lF:0, lB:0, uF:0, uB:0, x:0, aF:'rest', aB:'rest' },
+  { t:.22, y:8, sq:.05, lean:-3, head:-4, tail:8, ls:.95, aF:[160,70], aB:[40,120], face:'happy' },   // anticipation: a little dip and a rock back
+  ...loopKeys(SWAY, .88, 4, .4),
+  { t:.4 + 4*.88 + .25, y:-4, sq:-.02, lean:0, head:-2, tail:-6, ls:1.03, x:0, aF:'relaxed', aB:'relaxed', face:'proud' },
+  { t:.4 + 4*.88 + .5,  y:2,  sq:.02,  lean:0, head:1,  tail:3,  ls:.99 },
+  { t:.4 + 4*.88 + .8,  y:0,  sq:0,    lean:0, head:0,  tail:0,  ls:1, aF:'rest', aB:'rest' } ];
+KEYS.excited = [ { t:0, y:0, sq:0, lean:0, head:0, tail:0, ls:1, lF:0, lB:0, uF:0, uB:0, x:0, aF:'rest', aB:'rest', face:'surprised' },
+  { t:.14, y:0, sq:.09, lean:9, head:4, tail:20, ls:.9, aF:[150,100], aB:[120,90], face:'determined' },
+  { t:.46, y:0, sq:.09, lean:10, head:5, tail:24, ls:.9, shake:.5 },   // the tense hold, buzzing
+  { t:.56, y:0, sq:.04, lean:6, head:-6, tail:8, ls:.97, shake:0, aF:[80,-50], aB:[10,-50], face:'confident' },   // sly squint
+  ...loopKeys(MARCH, .48, 4, .66).map((k, i) => i === 0 ? Object.assign(k, { face:'excited' }) : i === 10 ? Object.assign(k, { face:'laughing' }) : k),
+  { t:.66 + 4*.48 + .2,  y:-6, sq:-.02, lean:0, head:-3, tail:6, ls:1.03, uF:0, uB:0, lF:0, lB:0, aF:[200,190], aB:[-20,-40], face:'excited' },
+  { t:.66 + 4*.48 + .45, y:3,  sq:.03,  lean:0, head:2,  tail:-3, ls:.98, aF:'relaxed', aB:'relaxed', face:'happy' },
+  { t:.66 + 4*.48 + .8,  y:0,  sq:0,    lean:0, head:0,  tail:0,  ls:1, aF:'rest', aB:'rest' } ];
+const B1 = .35, B2 = B1 + 1.5, B3 = B2 + .3 + 2*.64, B4 = B3 + .2 + 2*.55, B5 = B4 + 1.2;
+KEYS.shuffle = [ { t:0, y:0, sq:0, lean:0, head:0, tail:0, ls:1, lF:0, lB:0, uF:0, uB:0, x:0, aF:'rest', aB:'rest', face:'happy' },
+  { t:.2, y:8, sq:.06, lean:3, head:3, tail:-10, ls:.94, aF:[100,10], aB:[150,100] },
+  ...loopKeys(SHIMMY, 1, 1, B1), ...loopKeys(SHIMMY.slice(0, 3), 1, 1, B1 + 1),
+  { t:B2 + .15, y:8, sq:.07, lean:0, head:0, tail:-10, ls:.93, x:0, uF:0, uB:0, lF:0, lB:0, aF:[120,60], aB:[60,120] },   // turn away
+  ...loopKeys(WIGGLE, .64, 2, B2 + .3),
+  { t:B3, y:6, sq:.05, lean:0, head:0, tail:0, ls:.95, x:0, uF:0, uB:0, lF:0, lB:0, aF:[160,70], aB:[40,120], face:'excited' },   // turn back
+  ...loopKeys(KICK, .55, 2, B3 + .2),
+  { t:B4 + .1, y:8, sq:.07, lean:0, head:0, tail:-6, ls:.93, lF:0, lB:0, uF:0, aF:[230,250], aB:[-50,-70] },   // twirl, arms up
+  { t:B4 + .5, y:-10, sq:-.03, lean:0, head:-4, tail:10, ls:1.06, uF:24, aF:[235,255], aB:[-55,-75] },
+  { t:B4 + .9, y:10, sq:.12, lean:2, head:5, tail:-8, ls:.88, uF:0, aF:[170,150], aB:[20,40] },   // crouch
+  { t:B4 + 1.08, y:-70, sq:-.08, lean:-2, head:-8, tail:-20, ls:1.1, lF:-22, lB:22, aF:[220,240], aB:[-50,-70], face:'laughing' },   // star jump
+  { t:B4 + 1.3, y:-96, sq:-.02, lean:-2, head:-8, tail:-22, ls:1.06, lF:-26, lB:26, aF:[225,248], aB:[-55,-74] },
+  { t:B4 + 1.52, y:10, sq:.14, lean:2, head:6, tail:6, ls:.88, lF:-12, lB:12, aF:[215,235], aB:[-45,-65] },
+  { t:B4 + 1.68, y:0, sq:0, lean:0, head:-3, tail:-4, ls:1.02, lF:-14, lB:14, aF:[215,235], aB:[-45,-65] },   // hold the pose
+  { t:B4 + 2.3, y:0, sq:0, lean:0, head:-3, tail:-4, ls:1, lF:-14, lB:14, aF:[215,235], aB:[-45,-65] },
+  { t:B4 + 2.7, y:0, sq:0, lean:0, head:0, tail:0, ls:1, lF:0, lB:0, aF:'rest', aB:'rest', face:'happy' } ];
+const PROC_TURNS = { shuffle: [B2, B3, B4 + .1, B4 + .4] };
+const NUM = ['y','sq','lean','head','tail','br','lF','lB','shake','ls','x','uF','uB'];
 function sampleKeys(keys, k){ const out = {}; const last = keys[keys.length - 1];
   for (const p of NUM){ let a = null, b = null; for (const key of keys){ if (key[p] === undefined) continue; if (key.t <= k) a = key; else { b = key; break; } }
     out[p] = !a ? (b ? b[p] : 0) : !b ? a[p] : lerp(a[p], b[p], ease((k - a.t)/(b.t - a.t))); }
@@ -3024,7 +3063,7 @@ bus.on('task_done', t => { if (S.asleep) return;
   if (talk(.6)){ if (Math.random() < .45){ danceRex('Excited', pick(['Ooh! Ooh! You did it!','Yes yes yes!'])); return; } rex.hop = 1; const b = rexBox(); heart(b.x, b.y + 10); rex.say(pick(['Nice!','You did it.','One less thing!','Yay!']), 1400); } });
 // dances: the rig performs; the app keeps him still while he does
 function danceRex(name, line){ if (S.asleep || rex.away) return; rex.state = 'idle'; rex.reading = false; rex.sleeping = false; rex.sitting = 0; rex.chase = false;
-  rex.busyUntil = Date.now() + ({ Dance:5000, Boogie:5000, Excited:3300 }[name] || 4000); rig()?.action(name); if (line) rex.say(line, 1600); }
+  rex.busyUntil = Date.now() + ({ Dance:4900, Boogie:7600, Excited:3500 }[name] || 4000); rig()?.action(name); if (line) rex.say(line, 1600); }
 bus.on('task_someday', () => { rex.say('Saved it for later.', 1500); });
 bus.on('task_deleted', () => { if (talk(.35)) rex.say('Bye-bye, task.', 1200); });
 

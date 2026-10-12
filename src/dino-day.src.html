@@ -2008,7 +2008,7 @@ bus.on('task_done', t => { if (S.asleep) return;
   if (talk(.6)){ if (Math.random() < .45){ danceRex('Excited', pick(['Ooh! Ooh! You did it!','Yes yes yes!'])); return; } rex.hop = 1; const b = rexBox(); heart(b.x, b.y + 10); rex.say(pick(['Nice!','You did it.','One less thing!','Yay!']), 1400); } });
 // dances: the rig performs; the app keeps him still while he does
 function danceRex(name, line){ if (S.asleep || rex.away) return; rex.state = 'idle'; rex.reading = false; rex.sleeping = false; rex.sitting = 0; rex.chase = false;
-  rex.busyUntil = Date.now() + ({ Dance:5000, Boogie:5000, Excited:3300 }[name] || 4000); rig()?.action(name); if (line) rex.say(line, 1600); }
+  rex.busyUntil = Date.now() + ({ Dance:4900, Boogie:7600, Excited:3500 }[name] || 4000); rig()?.action(name); if (line) rex.say(line, 1600); }
 bus.on('task_someday', () => { rex.say('Saved it for later.', 1500); });
 bus.on('task_deleted', () => { if (talk(.35)) rex.say('Bye-bye, task.', 1200); });
 
