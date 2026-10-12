@@ -368,6 +368,12 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .fxc.dark{mix-blend-mode:multiply;z-index:1}
 .fxc.light{mix-blend-mode:screen;z-index:1}
 .fxc.front{z-index:4}
+.world svg.sfront{z-index:4;pointer-events:none}
+.scene .obj{transform-box:fill-box;transform-origin:50% 100%}
+.scene .obj.wig{animation:wig .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes wig{0%{transform:scale(1,1)}25%{transform:scale(1.07,.9)}50%{transform:scale(.96,1.06)}75%{transform:scale(1.02,.98)}100%{transform:scale(1,1)}}
+.scene .obj.sway{animation:sway 1.4s ease-out}
+@keyframes sway{0%{transform:rotate(0)}20%{transform:rotate(1.6deg)}45%{transform:rotate(-1.2deg)}70%{transform:rotate(.6deg)}100%{transform:rotate(0)}}
 .fxc.back{z-index:2}
 #wprops{position:relative;z-index:2}
 
@@ -574,36 +580,57 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .scroll{padding-top:6px}
 .fmeta>span{flex:none}.fmeta>span.one{flex:0 1 auto;min-width:0}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
-/* ---------- desktop (any window 900 px wide or more): tasks on the left (58%), Rex's landscape card, Your day, and Later on the right (42%).
-   The header stays put; Today and Later scroll on their own. Rex's world is the card; the expand button opens Rex's Space full size. ---------- */
-.app.desk{inset:0;top:0;bottom:0;width:auto;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none}
+/* ---------- desktop (any window 900 px wide or more). Spacing runs on an 8 px grid:
+   32 px window margin, 20 px inset inside every card (so text and checkboxes share one left edge), 24 px gutter,
+   12 px between stacked controls, 28 px before a section header and 10 px after it. Both columns end on one line, 32 px above the bottom. ---------- */
+.app.desk{inset:0;top:0;bottom:0;width:auto;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none;--m:32px;--in:20px}
 .app.desk .sheet{inset:0;top:0;border-radius:0;box-shadow:none;background:var(--cream);transform:none!important}
 .app.desk .grab,.app.desk .tabs{display:none}
-.app.desk .scroll{padding:24px 28px 40px;width:100%;max-width:760px;margin:0 auto}
+.app.desk .scroll{padding:24px var(--m) 40px;width:100%;max-width:760px;margin:0 auto}
 .app.desk.dtoday .scroll{overflow:hidden;padding:0;max-width:none}
-.dk{display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);grid-template-rows:auto minmax(0,1fr);column-gap:24px;height:100%;padding:16px 28px 22px;max-width:1680px;margin:0 auto}
-.dkhead{grid-column:1/-1;display:flex;align-items:center;gap:26px;padding:4px 2px 16px}
-.dkhead .logo{font-size:32px}.dkhead .logo .spark{width:20px;height:20px}
-.dkgreet h1{font:700 28px/1.1 var(--display);margin:0;letter-spacing:-.01em}
-.dkgreet .date{color:var(--muted);font-size:14px;margin-top:2px}
-.dkhead .thr{margin-left:auto;display:flex;gap:10px;align-items:center}
-.dkhead .avatar{width:44px;height:44px}
-.dkleft,.dkright{display:flex;flex-direction:column;min-height:0;min-width:0}
-.dkleft>.fcard,.dkleft>.nudge{flex:none}
-.dkleft .section,.dklater .section{margin:6px 2px 8px;flex:none}
-.dscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;border-radius:22px}
-.dkcard{flex:none;width:100%;aspect-ratio:16/10;max-height:max(280px,calc(100vh - 460px));min-height:280px;border-radius:24px;margin-bottom:12px}
-.dkright .tline{flex:none;margin-bottom:12px}
-.dklater{flex:1;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:10px 6px 4px 14px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
-.dklater .dscroll{border-radius:0;padding-right:8px}
+.dk{display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);grid-template-rows:56px minmax(0,1fr);column-gap:24px;height:100%;padding:0 var(--m) var(--m);max-width:1680px;margin:0 auto}
+.dkbar{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.dkbar .logo{font-size:22px}.dkbar .logo .spark{width:14px;height:14px}
+.dkbar .thr{margin-left:auto;display:flex;gap:10px;align-items:center}
+.dkbar .avatar{width:36px;height:36px}.dkbar .pill{padding:7px 14px}
+.dkleft,.dkright{display:flex;flex-direction:column;min-height:0;min-width:0;padding-top:12px}
+.dkright{container-type:inline-size}
+.dkgreet{flex:none;margin:0 0 24px var(--in)}
+.dkgreet h1{font:700 30px/1.15 var(--display);margin:0;letter-spacing:-.015em;color:var(--ink)}
+.dkgreet .date{color:var(--muted);font:500 14px var(--body);margin-top:4px}
+.dkleft>.fcard,.dkleft>.nudge,.dkleft>.add,.dkleft>.addopts,.dkleft>.qprev{flex:none}
+.app.desk .fcard{margin:0 0 12px;padding:18px var(--in) 18px;border-radius:22px}
+.app.desk .fcard.mini{gap:12px}
+.app.desk .fmini{padding:0}
+.app.desk .fcard .k{font-size:12px}
+.app.desk .ft1,.app.desk .fcard .ft{font-size:22px;line-height:1.2}
+.app.desk .fmeta{gap:14px;font-size:14px}
+.app.desk .fmeta .go{padding:11px 18px;font-size:15px}
+.app.desk .add{margin:0;padding:8px 8px 8px var(--in);border-radius:18px}
+.app.desk .add input{font-size:16px}
+.dkleft .section,.dklater .section{margin:28px var(--in) 10px;flex:none;font-size:16px}
+.dklater .section{margin:0 0 8px var(--in);margin-right:var(--in)}
+.dscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.dkleft .dscroll{background:var(--card);border-radius:22px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
+.dkleft .dscroll .list{box-shadow:none;border-radius:0}
+.app.desk .task{min-height:56px;padding:8px 10px 8px var(--in);gap:14px}
+.app.desk .task .check{width:24px;height:24px;margin:0;padding:0;background:none;box-shadow:none}
+.app.desk .task .title{font-size:16px;line-height:1.3}
+.app.desk .task .tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:3px}
+.app.desk .task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
+.app.desk .task .tag{font-size:12px;padding:3px 9px 3px 6px}
+.app.desk .task .bar{flex-basis:100%;margin-top:4px}
+.dkcard{flex:3 1 62.5cqw;width:100%;min-height:260px;max-height:75cqw;border-radius:24px;margin-bottom:12px}
+.dklater{flex:1 1 auto;min-height:150px;display:flex;flex-direction:column;background:var(--card);border-radius:22px;padding:16px 0 6px;box-shadow:0 1px 0 var(--line),0 6px 18px var(--shadow)}
 .dklater .list{box-shadow:none;border-radius:0;background:none}
-.dklater .task{padding:9px 2px}
-.dklater [data-bring]{padding:6px 11px;font-size:12.5px}
-.app.desk .task .tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:2px}
-.app.desk .task .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.app.desk .task .bar{flex-basis:100%}
+.app.desk .dklater .task{min-height:50px;padding:6px var(--in)}
+.app.desk .dklater .task .title{font-size:15px}
+.dklater [data-bring]{padding:6px 12px;font-size:13px}
+.dkright .tline{flex:none;margin:0 0 12px}
+.app.desk .tline.mini{padding:14px var(--in)}
 .app.desk .world{border-radius:24px;z-index:8;box-shadow:0 10px 30px rgba(40,30,20,.14)}
 .app.desk.expanded .world{border-radius:0;box-shadow:none}
+.app.desk.expanded .world .zoom{bottom:0}
 .app.desk:not(.dtoday):not(.expanded) .world{visibility:hidden;pointer-events:none}
 .dktiles,.dkexp{display:none}
 .app.desk:not(.expanded) .dktiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;position:absolute;left:12px;right:12px;bottom:12px;z-index:6}
@@ -615,7 +642,8 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk:not(.expanded) .dkexp{display:grid;place-items:center;position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:var(--glass);backdrop-filter:blur(6px);color:var(--olive-ink);box-shadow:0 3px 12px rgba(40,30,20,.12);z-index:6}
 .app.desk:not(.expanded) .expandbtn{display:none}
 .app.desk:not(.expanded) .chips-r{left:12px;right:auto;top:12px}
-.app.desk .playbar{left:50%;right:auto;width:min(760px,calc(100% - 24px));margin-left:calc(min(760px,calc(100% - 24px))/-2)}
+.app.desk.expanded .chips-r{bottom:24px;right:24px}
+.app.desk .playbar{left:50%;right:auto;bottom:24px;width:min(720px,calc(100% - 48px));margin-left:calc(min(720px,calc(100% - 48px))/-2)}
 .app.desk .tiles{grid-auto-columns:calc((100% - 50px)/6)}
 .dkback{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 13px 7px 9px;border-radius:999px;background:var(--chip);font:600 13.5px var(--display);color:var(--olive-ink)}
 .dkback svg{width:16px;height:16px;transform:rotate(90deg)}
@@ -642,6 +670,7 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
       <div class="rex" id="rex" role="button" tabindex="0" aria-label="Rex. Tap to say hi, hold to pet, drag to carry him anywhere.">
         <div class="body" id="rexBody"><div class="shadow"></div><svg id="rexSvg" viewBox="0 0 536 688" aria-hidden="true"><defs><filter id="rexFx" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB"><feFlood id="rexTintC" flood-color="#fff" flood-opacity="0" result="tc"/><feComposite in="tc" in2="SourceAlpha" operator="in" result="tm"/><feBlend in="tm" in2="SourceGraphic" mode="multiply" result="lit"/><feOffset id="rexRimO" in="SourceAlpha" dx="12" dy="4" result="sh"/><feComposite in="SourceAlpha" in2="sh" operator="out" result="edge"/><feGaussianBlur in="edge" stdDeviation="3.5" result="edgeB"/><feComposite in="edgeB" in2="SourceAlpha" operator="in" result="edgeIn"/><feFlood id="rexRimC" flood-color="#fff" flood-opacity="0" result="rc"/><feComposite in="rc" in2="edgeIn" operator="in" result="rim"/><feBlend in="rim" in2="lit" mode="screen" result="rl"/><feOffset in="SourceAlpha" dy="-34" result="up"/><feComposite in="SourceAlpha" in2="up" operator="out" result="low"/><feGaussianBlur in="low" stdDeviation="9" result="lowB"/><feComposite in="lowB" in2="SourceAlpha" operator="in" result="lowIn"/><feFlood id="rexBounceC" flood-color="#E7B481" flood-opacity=".3" result="bcol"/><feComposite in="bcol" in2="lowIn" operator="in" result="bounce"/><feBlend in="bounce" in2="rl" mode="screen"/></filter></defs><g id="rexLit" filter="url(#rexFx)"><g id="flip"><g id="rexHit">__RIG__</g></g></g></svg></div>
       </div>
+      <svg class="scene sfront" id="sceneFront" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
       <div class="bubble" id="bubble" role="status"></div>
 
     </div>
@@ -749,8 +778,28 @@ const logoHTML = (sz='') => `<span class="logo ${sz}" aria-label="Dino Day">Dino
 
 /* ---------- scene drawing ---------- */
 const ENV = __ENV__;
+// The meadow is built from separate painted layers (sky, far hills and lake, ground, objects, foreground) so things can move on their own.
+// Positions are in art space (1672 x 941); "base" items are placed by the bottom center of their art.
+const M2 = __MEADOW__;
+const M2TINT = { morning:[1,.97,.92], day:[1,1,1], golden:[1,.84,.66], dusk:[.74,.62,.8], night:[.34,.42,.66] };
+function m2Box(it){ const w = it.w, h = w*M2.ar[it.n]; return it.base ? [it.x - w/2, it.y - h, w, h] : [it.x, it.y, w, h]; }
+function m2Img(it){ const [x, y, w, h] = m2Box(it), full = w >= 1600, X = full ? -50 : x, Wd = full ? 1772 : w;
+  return `<image href="${M2.img[it.n]}" x="${X.toFixed(1)}" y="${y.toFixed(1)}" width="${Wd.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="none"/>`; }
+function m2Filter(ph){ const [r, g, b] = M2TINT[ph] || M2TINT.day; return `<defs><filter id="m2t" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${r} 0 0 0 0  0 ${g} 0 0 0  0 0 ${b} 0 0  0 0 0 1 0"/></filter></defs>`; }
+function meadowScene(ph){ const L = M2.layout, F = ph === 'day' ? '' : ' filter="url(#m2t)"', dark = ph === 'night' || ph === 'dusk';
+  const skyIt = L.back.find(i => i.n === 'sky'), farIt = L.back.find(i => i.n === 'far'), rest = L.back.filter(i => i !== skyIt && i !== farIt);
+  const stars = ph === 'night' ? Array.from({ length:46 }, (_, i) => `<circle cx="${(i*373)%1672}" cy="${(i*197)%380 + 10}" r="${i%5 ? 1.6 : 2.6}" fill="#FFF7DC" opacity="${.45 + (i%4)*.15}"/>`).join('') : '';
+  const sky = dark ? `<rect x="-60" y="-10" width="1800" height="620" fill="url(#m2sky)"/>${stars}${ph === 'night' ? '<circle cx="1240" cy="150" r="44" fill="#FFF3CF" opacity=".95"/>' : ''}` : m2Img(skyIt);
+  const grad = ph === 'night' ? ['#141B36', '#2C3A6A'] : ['#4E4A86', '#F0A07A'];
+  const back = `${m2Filter(ph)}<defs><linearGradient id="m2sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${grad[0]}"/><stop offset="1" stop-color="${grad[1]}"/></linearGradient></defs>
+    <g class="layer" data-depth=".2"${dark ? '' : F}>${sky}</g>
+    <g class="layer" data-depth=".5"${F}>${m2Img(farIt)}</g>
+    <g class="layer" data-depth="1"${F}>${rest.map(it => it.id ? `<g class="obj" data-obj="${it.id}">${m2Img(it)}</g>` : m2Img(it)).join('')}</g>`;
+  const front = `${m2Filter(ph)}<g class="layer" data-depth="1.5"${F}>${L.front.map(it => `<g class="obj" data-obj="${it.id}">${m2Img(it)}</g>`).join('')}</g>`;
+  return [back, front]; }
+function wiggle(id, kind){ for (const sv of [scene, document.getElementById('sceneFront')]){ const g = sv && sv.querySelector(`[data-obj="${id}"]`); if (g){ const c = kind || 'wig'; g.classList.remove(c); void g.getBBox(); g.classList.add(c); setTimeout(() => g.classList.remove(c), 1500); } } }
 const PLACES = {
-  meadow: { label:'Meadow', feetY:812, art:{ morning:'meadow_day', day:'meadow_day', golden:'meadow_sunset', dusk:'meadow_dusk', night:'meadow_night' }, bed:.12, ground:{ day:'#8E9A4A', golden:'#6A5420', dusk:'#48462D', night:'#1F404A' } },
+  meadow: { label:'Meadow', feetY:840, art:{ morning:'meadow_day', day:'meadow_day', golden:'meadow_sunset', dusk:'meadow_dusk', night:'meadow_night' }, bed:.12, ground:{ day:'#8E9A4A', golden:'#6A5420', dusk:'#48462D', night:'#1F404A' } },
   bedroom:{ label:'Bedroom', feetY:730, art:{ morning:'bedroom_morning', day:'bedroom_day', golden:'bedroom_golden', dusk:'bedroom_dusk', night:'bedroom_night' }, bed:.16, ground:{ morning:'#DFA17E', day:'#E7B481', golden:'#DD8860', dusk:'#BC5428', night:'#383563' } },
 };
 const GRADE = { morning:['#FFE6C2',.12], day:[null,0], golden:[null,0], dusk:['#5C4A86',.22], night:[null,0] };
@@ -770,10 +819,12 @@ function phase(){ return S.lockDay ? 'day' : (preview || phaseNow()); }
 function place(){ return PLACES[S.place] ? S.place : 'meadow'; }
 function drawScene(){
   const ph = phase(), L = PLACES[place()], [gc, ga] = GRADE[ph], night = ph==='night', dusk = ph==='dusk';
-  scene.innerHTML = `
+  const sf = document.getElementById('sceneFront');
+  if (place() === 'meadow'){ const [b, f] = meadowScene(ph); scene.innerHTML = b; sf.innerHTML = f; }
+  else { sf.innerHTML = ''; scene.innerHTML = `
   <g class="layer" data-depth="1"><image href="${ENV[L.art[ph]]}" x="-40" y="0" width="1752" height="941" preserveAspectRatio="none"/></g>
   ${gc ? `<rect x="-60" y="0" width="1800" height="941" fill="${gc}" opacity="${ga}" style="mix-blend-mode:${ph==='dusk'?'multiply':'soft-light'}"/>` : ''}
-`;
+`; }
   const [tc, ts, rc, rs, side, sh] = REXLIGHT[place()][ph];
   rexEl.style.setProperty('--tint', tc); rexEl.style.setProperty('--tintA', ts); rexTint(tc, ts); rexEl.style.setProperty('--rim', rc); rexEl.style.setProperty('--rimA', rs);
   rexEl.style.setProperty('--rimX', side === -1 ? '-8%' : side === 1 ? '108%' : '50%'); rexEl.style.setProperty('--rimY', side === 0 ? '-12%' : '32%'); rexEl.style.setProperty('--shadowA', sh); rexEl.style.setProperty('--rimBase', rs); if (typeof FX !== 'undefined') FX.seed();
@@ -809,7 +860,7 @@ const rex = {
   poke(k=1){ if (!RM) this.sqv -= 6*k; },
   goTo(x, then){ this.tx = Math.max(.08, Math.min(.92, x)); this.state = 'walk'; this.after = then; this.sitting = 0; },
 };
-function rexSize(){ const h = $('#zoom').clientHeight; if (isDesk()){ if (app.classList.contains('expanded')) return Math.round(Math.min(170, Math.max(110, h*0.17))); return rex.away ? 84 : Math.round(Math.min(130, Math.max(84, h*0.30))); }
+function rexSize(){ const h = $('#zoom').clientHeight; if (isDesk()){ if (app.classList.contains('expanded')) return Math.round(Math.min(170, Math.max(110, h*0.17))); return rex.away ? 84 : Math.round(Math.min(118, Math.max(80, h*0.26))); }
   const w = Math.min(app.classList.contains('expanded') ? 140 : 96, Math.max(68, h*0.29)); return w; }
 function heart(x, y){ const e = document.createElement('div'); e.className = 'fx heart'; e.innerHTML = IC.heart; e.style.left = x+'px'; e.style.top = y+'px'; e.style.setProperty('--dx', (Math.random()*40-20)+'px'); fxHost().appendChild(e); setTimeout(()=>e.remove(), 1300); }
 function fxHost(){ return rex.away ? document.getElementById('rexLayer') : $('#zoom'); }
@@ -1005,7 +1056,7 @@ function frame(now){
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
   const tall = (app.classList.contains('expanded') || isDesk()) && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() && !app.classList.contains('expanded') ? 58 : 0); z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + (isDesk() ? (app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 58) : 0); z.style.setProperty('--ground', groundPx+'px');
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
   // walking
   if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
@@ -1039,7 +1090,8 @@ function frame(now){
     if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
   // parallax follows Rex
   const off = (rex.x - .5);
-  scene.querySelectorAll('.layer').forEach(l => l.setAttribute('transform', `translate(${-off*70} 0)`));
+  const sfr = document.getElementById('sceneFront'); if (sfr.getAttribute('viewBox') !== scene.getAttribute('viewBox')) sfr.setAttribute('viewBox', scene.getAttribute('viewBox'));
+  for (const l of [...scene.querySelectorAll('.layer'), ...sfr.querySelectorAll('.layer')]) l.setAttribute('transform', `translate(${(-off*70*(+l.dataset.depth || 1)).toFixed(2)} 0)`);
   // clouds drift
   scene.querySelectorAll('.cloud').forEach((c,i) => { let x = (+c.dataset.x + t*(6+i*3)) % 960 - 80; const tr = c.getAttribute('transform').replace(/translate\([^)]*\)/, `translate(${x} ${[140,90,190][i]})`); c.setAttribute('transform', tr); });
   // butterfly + fireflies
@@ -1536,9 +1588,9 @@ function render(){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
     const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1).concat(S.tasks.filter(t => t.when === 'someday'));
     sc.innerHTML = `<div class="dk">
-      <header class="dkhead">${logoHTML()}<div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
-        <span class="thr">${open.length > 1 ? `<button class="pill ghost mint" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+      <header class="dkbar">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
       <div class="dkleft">
+        <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
         ${nudgeCards()}
         ${focusCard()}
         <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
@@ -1695,7 +1747,7 @@ $('#scroll').addEventListener('click', e => {
   if (q('[data-backup]')){ backup(); return; }
   if (q('[data-restore]')){ restore(); return; }
   if (q('[data-stats]')){ tab = 'stats'; render(); $('#scroll').scrollTop = 0; return; }
-  if ((el = q('.hello [data-tab], .tophead [data-tab], .dkhead [data-tab], .dklater [data-tab], .dkback'))){ tab = el.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
+  if ((el = q('.hello [data-tab], .tophead [data-tab], .dkbar [data-tab], .dklater [data-tab], .dkback'))){ tab = el.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
   if (q('[data-daybtn]')){ if (S.asleep) wake(); else if (openToday().length){ tab = 'today'; wrapUp(true); } else goToBed(); render(); return; }
   if ((el = q('[data-sim]'))){ const s = el.dataset.sim;
     if (s === 'stall'){ lastTaskAct = 0; lastStall = 0; checkStall(true); }
@@ -1855,19 +1907,16 @@ const FX = (() => {
       { id:'poster', box:[275, 60, 485, 300], label:'the poster' },
       { id:'bunting', box:[60, 0, 360, 70], label:'the flags' },
     ],
-    meadow: [
-      { id:'house', box:[1045, 350, 1275, 530], label:'the house' },
-      { id:'lake', box:[540, 495, 880, 545], label:'the lake' },
-      { id:'treeL', box:[0, 60, 330, 470], label:'the big tree' },
-      { id:'treeR', box:[1460, 200, 1672, 520], label:'the tree' },
-      { id:'flowersL', x:160, y:648, r:70, label:'the flowers' },
-      { id:'flowersR', x:1490, y:668, r:70, label:'the flowers' },
-      { id:'sky', box:[380, 0, 1672, 330], label:'the sky' },
+    meadow: [   // front corners first, then each object's own box from the layout (front-most first), then the lake and sky
+      { id:'fgL', box:[0, 690, 470, 941] }, { id:'fgR', box:[1250, 700, 1672, 941] },
+      ...M2.layout.back.filter(it => it.id).reverse().map(it => { const [x, y, w, h] = m2Box(it), pad = it.id === 'tree' ? 0 : 12; return { id:it.id, box:[x - pad, y + h*(it.id === 'tree' ? .02 : .1), x + w + pad, y + h] }; }),
+      { id:'lake', box:[540, 505, 1500, 600] },
+      { id:'sky', box:[0, 0, 1672, 300] },
     ],
   };
   const LIGHTS = { // key lights per place/art: [x, y, color, size]
     bedroom: { day:[[965, 240, '255,214,150', 1]], golden:[[1000, 290, '255,170,90', 1], [520, 345, '255,196,110', .7]], dusk:[[1000, 290, '255,160,90', .8], [520, 345, '255,196,110', .8]], night:[[500, 340, '255,196,110', 1], [1495, 185, '255,180,90', .55], [110, 112, '255,230,180', .35], [1070, 130, '170,190,255', .45]] },
-    meadow: { day:[[1335, 145, '255,245,200', 1]], golden:[[720, 385, '255,170,80', 1.2]], dusk:[[755, 430, '255,140,90', .7]], night:[[1295, 155, '210,220,255', .7], [1225, 480, '255,200,120', .35]] },
+    meadow: { day:[[1238, 170, '255,245,200', 1]], golden:[[1238, 190, '255,170,80', 1.2]], dusk:[[1238, 250, '255,140,90', .6]], night:[[1240, 150, '210,220,255', .6], [1300, 590, '255,200,120', .45]] },
   };
   const artPh = () => { const ph = phase(); return ph === 'morning' ? 'day' : ph; };
   const dxArt = () => place() === 'bedroom' && ['golden','dusk'].includes(phase()) ? 25 : 0;
@@ -1892,7 +1941,7 @@ const FX = (() => {
       if (ph === 'night' && lampOn()) for (let i = 0; i < 2; i++) bugs.push(bug('moth', i));
       if (ph === 'day') bugs.push(bug('ladybug', 0));
     }
-    tufts = pl === 'meadow' ? Array.from({ length: 26 }, (_, i) => ({ x: (i + Math.random()*.6)/26, h: 16 + Math.random()*16, b:0, bv:0, k: Math.random() })) : [];
+    tufts = [];   // the painted foreground layers replace the drawn grass
   }
   function bug(kind, i){ const b = { kind, i, x: Math.random()*W, y: H*(.35 + Math.random()*.4), vx:0, vy:0, t:Math.random()*100, scared:0, home:null };
     if (kind === 'moth'){ b.home = [500, 330]; }
@@ -1938,10 +1987,14 @@ const FX = (() => {
       case 'plant': case 'pothos': leaves(x, y, 7); rex.say(pick(['Hi, plant.','Does it need water?','Leafy!']), 1500); break;
       case 'poster': rex.face = -1; rex.shake = 1; rex.sq = .1; rex.say('RAWR! …he roared back. Probably.', 2200); break;
       case 'bunting': for (let i = 0; i < 6; i++) setTimeout(() => burst(x - 120 + i*50, y, 3, 'confetti'), i*60); rex.say('Party flags!', 1300); break;
-      case 'house': smoke(sx(1185), sy(358)); rex.say(pick(['That\'s home.','Someone\'s making dinner.']), 1800); break;
+      case 'house': { wiggle('house'); const hb = M2.layout.back.find(i => i.id === 'house'), [hx, hy, hw] = m2Box(hb); smoke(sx(hx + hw*.62), sy(hy + hw*.08)); rex.say(pick(['That\'s home.','Someone\'s making dinner.']), 1800); break; }
       case 'lake': ripple(x, y); setTimeout(() => ripple(x + 30, y + 4), 300); rex.say(pick(['Plop!','I want to skip a stone.']), 1500); break;
-      case 'treeL': case 'treeR': leaves(x, y, 10); if (ph !== 'night') bird(x, y); rex.say(pick(['Leaves!','A bird lives up there.']), 1500); break;
-      case 'flowersL': case 'flowersR': burst(x, y, 12, 'petal'); if (ph === 'day') bugs.push(Object.assign(bug('fly', 9), { x, y })); rex.say(pick(['Smells nice.','Flowers!']), 1400); break;
+      case 'tree': wiggle('tree', 'sway'); leaves(x, y - 80*M.s, 12); if (ph !== 'night') bird(x, y - 120*M.s); rex.say(pick(['Leaves!','A bird lives up there.']), 1500); break;
+      case 'fgL': case 'fgR': case 'daisy': case 'buttercup': case 'pink': case 'shrub': wiggle(id); burst(x, y, 12, id === 'shrub' ? 'leaf' : 'petal'); if (ph === 'day' && id !== 'shrub') bugs.push(Object.assign(bug('fly', 9), { x, y })); rex.say(pick(id === 'shrub' ? ['Rustle rustle.','Something\'s in there!'] : ['Smells nice.','Flowers!','Pretty!']), 1400); break;
+      case 'mushroom': wiggle('mushroom'); rex.say(pick(['Don\'t eat that one.','Boing!','A spotty mushroom.']), 1500); break;
+      case 'rock': wiggle('rock'); rex.say(pick(['A good sitting rock.','It\'s mossy.']), 1500); break;
+      case 'sign': wiggle('sign', 'sway'); rex.say(pick(['That way is the village.','Adventure that way!']), 1600); break;
+      case 'fence': wiggle('fence'); rex.say(pick(['Wobbly fence.','Knock knock.']), 1400); break;
       case 'sky': if (ph === 'night') shootingStar(x, y); else { gust = 1; rex.say('Whoosh, wind!', 1200); } break;
     } }
 

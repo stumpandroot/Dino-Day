@@ -1,0 +1,120 @@
+{
+ "feetY": 840,
+ "rexW": 270,
+ "back": [
+  {
+   "n": "sky",
+   "x": 0,
+   "y": -120,
+   "w": 1672
+  },
+  {
+   "n": "far",
+   "x": 0,
+   "y": 250,
+   "w": 1672
+  },
+  {
+   "n": "ground",
+   "x": 0,
+   "y": 455,
+   "w": 1672
+  },
+  {
+   "n": "tree",
+   "x": 330,
+   "y": 712,
+   "w": 470,
+   "base": true,
+   "id": "tree"
+  },
+  {
+   "n": "cottage",
+   "x": 1270,
+   "y": 650,
+   "w": 300,
+   "base": true,
+   "id": "house"
+  },
+  {
+   "n": "p_fence",
+   "x": 1075,
+   "y": 650,
+   "w": 130,
+   "base": true,
+   "id": "fence"
+  },
+  {
+   "n": "p_sign",
+   "x": 1440,
+   "y": 735,
+   "w": 110,
+   "base": true,
+   "id": "sign"
+  },
+  {
+   "n": "p_shrub",
+   "x": 110,
+   "y": 720,
+   "w": 170,
+   "base": true,
+   "id": "shrub"
+  },
+  {
+   "n": "p_mushroom",
+   "x": 520,
+   "y": 735,
+   "w": 95,
+   "base": true,
+   "id": "mushroom"
+  },
+  {
+   "n": "p_daisy",
+   "x": 640,
+   "y": 775,
+   "w": 110,
+   "base": true,
+   "id": "daisy"
+  },
+  {
+   "n": "p_buttercup",
+   "x": 1060,
+   "y": 770,
+   "w": 105,
+   "base": true,
+   "id": "buttercup"
+  },
+  {
+   "n": "p_rock",
+   "x": 1290,
+   "y": 800,
+   "w": 130,
+   "base": true,
+   "id": "rock"
+  },
+  {
+   "n": "p_pink",
+   "x": 430,
+   "y": 805,
+   "w": 85,
+   "base": true,
+   "id": "pink"
+  }
+ ],
+ "front": [
+  {
+   "n": "fg_left",
+   "x": -20,
+   "y": 600,
+   "w": 540,
+   "id": "fgL"
+  },
+  {
+   "n": "fg_right",
+   "x": 1190,
+   "y": 650,
+   "w": 500,
+   "id": "fgR"
+  }
+ ]
+}
