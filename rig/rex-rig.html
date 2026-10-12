@@ -208,6 +208,7 @@ function ik(k, [tx, ty], side){ const A = ARM[k], dx = tx - A.s[0], dy = ty - A.
 function drawArm(k, [u, f], dy){ const A0 = ARM[k], m = typeof TN !== 'undefined' && TN.on ? TN.mB : 0, AT = m ? ARM_T[k] : null;
   const A = m ? { s:[lerp(A0.s[0], AT.s[0], m), lerp(A0.s[1], AT.s[1], m)], L1:lerp(A0.L1, AT.L1, m), L2:lerp(A0.L2, AT.L2, m), f0:A0.f0, w0:A0.w0 } : A0;
   if (m){ u = lerp(u, AT.a[0], m); f = lerp(f, AT.a[1], m); }
+  if (typeof TN !== 'undefined' && TN.on){ const sw = (k === 'F' ? 1 : -1)*TN.arm; u += sw; f += sw*1.3; }
   const s = [A.s[0], A.s[1] + dy], e = [s[0] + A.L1*Math.cos(rad(u)), s[1] + A.L1*Math.sin(rad(u))], w = [e[0] + A.L2*Math.cos(rad(f)), e[1] + A.L2*Math.sin(rad(f))];
   WR[k] = w; g('arm'+k+'p').setAttribute('d', `M${s[0]},${s[1]} L${e[0]},${e[1]} L${w[0]},${w[1]}`);
   g('hand'+k).setAttribute('transform', `translate(${w[0]} ${w[1]}) rotate(${f - A.f0}) translate(${-A.w0[0]} ${-A.w0[1]})`); }
@@ -345,7 +346,7 @@ function frame(t){
   const s = t/1000, br = RM ? 0 : Math.sin(s*(e.sleep ? 1.4 : 2.4))*(1 - S.breath)*(1 - S.walk);
   morphLeg(ease(W));   // the front leg melts from the standing shape into the toe-forward walking shape
   const kick = S.petK > .3 ? Math.max(0, Math.sin(s*15)) : 0;   // happy thumping kick while he's petted
-  leg('F', -legA*sp + (K ? K.lF : 0) - 16*kick*S.petK + DG.k*(DG.sw*.7 + 12*Math.sin(s*9)), liftF + 12*kick*S.petK, syF*(1 - .06*kick*S.petK)*(1 + .05*DG.k)); leg('B', legA*sp + (K ? K.lB : 0) + DG.k*(DG.sw*.7 - 12*Math.sin(s*9 + 1.4)), liftB, syB*(1 + .05*DG.k));
+  leg('F', -legA*sp + (K ? K.lF : 0) - 16*kick*S.petK + DG.k*(DG.sw*.7 + 12*Math.sin(s*9)) + TN.legF[0], liftF + 12*kick*S.petK + TN.legF[1], syF*(1 - .06*kick*S.petK)*(1 + .05*DG.k)); leg('B', legA*sp + (K ? K.lB : 0) + DG.k*(DG.sw*.7 - 12*Math.sin(s*9 + 1.4)) + TN.legB[0], liftB + TN.legB[1], syB*(1 + .05*DG.k));
   P('tail', (TN.on ? `translate(318 520) scale(${1 - .75*TN.mT} 1) rotate(${TN.tail}) translate(-318 -520) ` : '') + rot(br*3 + Math.sin(s*1.7)*3*(1 - W) + 6*W*sp + (KT ? KT.tail : 0) + (petLean ? 7*Math.sin(s*13) : 0) + (act === 'feed' && k > 2.1 ? 6*Math.sin(s*14) : 0) + DG.k*(DG.sw*1.2 + 8*Math.sin(s*6)), 318, 520));
   const dn = W > .01 ? Math.min(1, Math.max(0, bob/8)) : 0;      // the body gives a little each time his weight lands
   const kb = K ? K.br : 0, tsy = 1 + br*.012 + .11*Math.max(S.breath, kb) - .03*W*dn, tsx = 1 + .06*Math.max(S.breath, kb) + .018*W*dn;
@@ -487,35 +488,44 @@ const grow = [];
 function growIn(src, map, after){ const n = src.cloneNode(true), c = bctr(src), to = map(c[0], c[1]), k = src === BF[3] ? TF.bs : TF.hs;
   n.removeAttribute('id'); after.after(n); grow.push({ n, to, base:`translate(${map(0, 0)[0]} ${map(0, 0)[1]}) scale(${k}) ${src.getAttribute('transform') || ''}` }); n.style.display = 'none'; return n; }
 growIn(HF[3], mapH, g('blush')); growIn(HF[12], mapH, HC[15]); growIn(BF[3], mapB, TC[5]);
-const TN = { on:false, t0:0, D:400, from:1, face:1, mH:0, mB:0, mT:0, u:0, sq:0, th:0, hy:0, lean:0, head:0, eye:0, tail:0 };
+const TN = { on:false, t0:0, D:560, legF:[0,0], legB:[0,0], arm:0, from:1, face:1, mH:0, mB:0, mT:0, u:0, sq:0, th:0, hy:0, lean:0, head:0, eye:0, tail:0 };
 function TT(key){ const v = MV[key]; if (!TN.on || !v) return ''; const m = TN.mH;
   return `translate(${(v.to[0] - v.c[0])*m} ${(v.to[1] - v.c[1])*m}) translate(${v.c[0]} ${v.c[1]}) scale(${lerp(1, v.sx, m)} ${lerp(1, v.sy, m)}) translate(${-v.c[0]} ${-v.c[1]}) `; }
 // how far each region is into the front view (0 = 3/4, 1 = front): the head gets there first and leaves last
 const peak = (u, w) => ease(Math.min(1, (.5 - Math.abs(u - .5))/w));
 function turnTo(f){ if (f === TN.face && !TN.on) return; if ((S.lie || 0) > .01 || (S.seat || 0) > .01 || RM){ TN.face = f; setFlip(f); return; }
-  if (TN.on){ TN.target = f; return; } TN.on = true; TN.t0 = performance.now(); TN.from = TN.face; TN.target = f; }
+  if (TN.on){ TN.target = f; return; } TN.on = true; TN.t0 = performance.now(); TN.from = TN.face; TN.target = f; TN.hopped = TN.bounced = false; TN.landT = 0; }
 function setFlip(f){ g('flip').setAttribute('transform', f < 0 ? 'translate(600 0) scale(-1 1)' : ''); }
-// One continuous turn in three beats: anticipation (squash, lean back, eyes glance where he's going), a fast eased rotation
-// with a little hop and stretch, then follow-through (landing squash, lean and head overshoot, the tail swings past and settles).
+// One fluid turn: he winds up (squash, lean back, eyes glance ahead), hops into the spin while stepping the near foot around,
+// passes through the front view on a smooth curve, lands with a squash, bounces once more, and settles; the tail, head, and lean
+// follow through on springs after the landing.
 const ioc = x => x < .5 ? 4*x*x*x : 1 - (-2*x + 2)**3/2;
+const sm = x => x <= 0 ? 0 : x >= 1 ? 1 : x*x*(3 - 2*x);
 function turnStep(t){
   if (!TN.on) return;
   const u = Math.min(1, (t - TN.t0)/TN.D); TN.u = u;
-  const A1 = .22, T1 = .62;                                         // anticipation ends, rotation ends
-  const ant = u < A1 ? Math.sin(Math.PI/2*u/A1) : Math.max(0, 1 - (u - A1)/.08);   // wind up, then let go as the turn starts
-  const th = u < A1 ? 0 : u < T1 ? ioc((u - A1)/(T1 - A1)) : 1; TN.th = th;
-  const m = 1 - Math.abs(2*th - 1); TN.mH = TN.mB = TN.mT = m;    // 0 at 3/4, 1 at front: passes straight through, no hold
+  const A1 = .2, T0 = .14, T1 = .66;                                // wind-up ends; spin overlaps the end of the wind-up
+  const ant = u < A1 ? sm(u/A1) : 1 - sm((u - A1)/.16);             // eases in, eases out as he springs off
+  const th = u < T0 ? 0 : u < T1 ? ioc((u - T0)/(T1 - T0)) : 1; TN.th = th;
+  const m = Math.sin(Math.PI*th); TN.mH = TN.mB = TN.mT = m;        // smooth through the front view, no hold and no corner
   const face = th < .5 ? TN.from : -TN.from; if (face !== TN.face){ TN.face = face; setFlip(face); }
-  const st = u > T1 ? (u - T1)/(1 - T1) : 0, ring_ = st ? Math.exp(-4*st)*Math.cos(st*Math.PI*2.6) : 0;   // damped settle
-  TN.sq = .1*ant - .07*Math.sin(Math.PI*th) + .08*ring_;           // squash down, stretch through the turn, squash on landing
-  TN.hy = -14*Math.sin(Math.PI*th);                                 // a small hop as he spins
-  TN.lean = 5*ant - 6*ring_; TN.head = -6*ant + 8*ring_; TN.eye = -.9*ant*(th < .5 ? 1 : 0);
-  TN.tail = 40*Math.sin(Math.PI*Math.min(1, Math.max(0, (u - A1 - .06)/(T1 - A1)))) - 18*ring_;   // the tail lags the body, swings past, and settles
+  if (u >= A1 && !TN.hopped){ TN.hopped = true; S.vy = -420; S.y = -.1; }               // springs up into the spin
+  if (TN.hopped && !TN.landT && u > A1 + .1 && S.y === 0) TN.landT = t;                  // touchdown
+  if (TN.landT && !TN.bounced && t - TN.landT > 70){ TN.bounced = true; S.vy = -190; S.y = -.1; }   // a second, smaller bounce
+  const ls = TN.landT ? (t - TN.landT)/1000 : 0, ring_ = TN.landT ? Math.exp(-6*ls)*Math.cos(ls*20) : 0;   // spring after landing
+  TN.sq = .1*ant - .06*Math.sin(Math.PI*th) + .09*ring_;
+  TN.hy = 0;
+  TN.lean = 6*ant - 8*ring_; TN.head = -7*ant + 10*ring_; TN.eye = -.9*sm(u/A1)*(th < .5 ? 1 : 0);
+  TN.tail = 42*Math.sin(Math.PI*sm((u - A1 + .02)/(T1 - A1 + .1))) - 20*ring_;
+  // the step: the near foot lifts and swings around as he spins, the far foot pivots under him
+  const stp = Math.sin(Math.PI*Math.min(1, Math.max(0, (u - T0)/(T1 - T0 + .06))));
+  TN.legF = [-16*stp, 26*stp]; TN.legB = [8*stp, 6*stp]; TN.arm = 18*stp;
+  TN.D = 560;
   for (const [el, A, B] of TM) el.setAttribute('d', ringPath(A, B, m));
   for (const k of STATIC_MV){ const v = MV[k], m = TN.mH; v.el.setAttribute('transform', `translate(${(v.to[0] - v.c[0])*m} ${(v.to[1] - v.c[1])*m}) translate(${v.c[0]} ${v.c[1]}) scale(${lerp(1, v.sx, m)} ${lerp(1, v.sy, m)}) translate(${-v.c[0]} ${-v.c[1]}) ${v.tr}`); }
   for (const G of grow){ const m = (G.n.parentNode === g('torso') ? TN.mB : TN.mH)**2; G.n.style.display = m > .02 ? '' : 'none'; G.n.setAttribute('transform', `translate(${G.to[0]} ${G.to[1]}) scale(${m}) translate(${-G.to[0]} ${-G.to[1]}) ${G.base}`); }
   g('legBl').children[1].setAttribute('opacity', 1 - TN.mB);   // the far leg's shade fades so both legs match in front
-  if (u >= 1){ TN.on = false; TN.mH = TN.mB = TN.mT = TN.sq = TN.hy = TN.lean = TN.head = TN.eye = TN.tail = 0;
+  if (u >= 1){ TN.on = false; TN.mH = TN.mB = TN.mT = TN.sq = TN.hy = TN.lean = TN.head = TN.eye = TN.tail = TN.arm = 0; TN.legF = [0, 0]; TN.legB = [0, 0];
     for (const [el, , , d] of TM) el.setAttribute('d', d); for (const k of STATIC_MV){ const v = MV[k]; if (v.tr) v.el.setAttribute('transform', v.tr); else v.el.removeAttribute('transform'); }
     for (const G of grow) G.n.style.display = 'none'; g('legBl').children[1].removeAttribute('opacity');
     if (TN.target !== TN.face) turnTo(TN.target); } }
