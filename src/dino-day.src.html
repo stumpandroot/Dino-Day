@@ -1168,7 +1168,7 @@ function frame(now){
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
   const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
-  if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; }
+  if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; if (place() === 'bedroom') drawScene(); }
   const liftPx = rex.inBed ? Math.round(rex.inBed*sc) - panelLift : 0; rexEl.style.bottom = liftPx ? `calc(var(--ground,14%) + ${liftPx}px)` : '';
   const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
   // walking
