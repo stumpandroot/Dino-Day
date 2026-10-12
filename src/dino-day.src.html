@@ -371,6 +371,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .world svg.sfront{z-index:4;pointer-events:none}
 .scene .obj{transform-box:fill-box;transform-origin:50% 100%}
 .scene .obj.wig{animation:wig .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes squish{0%{transform:scale(1,1)}20%{transform:scale(1.18,.78)}45%{transform:scale(.88,1.16) translateY(-6%)}70%{transform:scale(1.05,.95)}100%{transform:scale(1,1)}}
+.scene .obj.squish{animation:squish .6s cubic-bezier(.3,1.6,.5,1)}
+.scene .sw{transform-box:fill-box}
 @keyframes wig{0%{transform:scale(1,1)}25%{transform:scale(1.07,.9)}50%{transform:scale(.96,1.06)}75%{transform:scale(1.02,.98)}100%{transform:scale(1,1)}}
 .scene .obj.sway{animation:sway 1.4s ease-out}
 @keyframes sway{0%{transform:rotate(0)}20%{transform:rotate(1.6deg)}45%{transform:rotate(-1.2deg)}70%{transform:rotate(.6deg)}100%{transform:rotate(0)}}
@@ -895,9 +898,10 @@ function meadowScene(ph){ const L = M2.layout, F = ph === 'day' ? '' : ' filter=
   const front = `${m2Filter(ph)}<g class="layer" data-depth="1.5"${F}>${L.front.map(it => `<g class="obj" data-obj="${it.id}">${m2Img(it)}</g>`).join('')}</g>`;
   return [back, front]; }
 function wiggle(id, kind){ for (const sv of [scene, document.getElementById('sceneFront')]){ const g = sv && sv.querySelector(`[data-obj="${id}"]`); if (g){ const c = kind || 'wig'; g.classList.remove(c); void g.getBBox(); g.classList.add(c); setTimeout(() => g.classList.remove(c), 1500); } } }
+/*__BEDROOM__*/
 const PLACES = {
   meadow: { label:'Meadow', feetY:840, art:{ morning:'meadow_day', day:'meadow_day', golden:'meadow_sunset', dusk:'meadow_dusk', night:'meadow_night' }, bed:.12, ground:{ day:'#8E9A4A', golden:'#6A5420', dusk:'#48462D', night:'#1F404A' } },
-  bedroom:{ label:'Bedroom', feetY:730, art:{ morning:'bedroom_morning', day:'bedroom_day', golden:'bedroom_golden', dusk:'bedroom_dusk', night:'bedroom_night' }, bed:.16, ground:{ morning:'#DFA17E', day:'#E7B481', golden:'#DD8860', dusk:'#BC5428', night:'#383563' } },
+  bedroom:{ label:'Bedroom', feetY:780, art:{ morning:'bedroom_morning', day:'bedroom_day', golden:'bedroom_golden', dusk:'bedroom_dusk', night:'bedroom_night' }, bed:.16, ground:{ morning:'#DFA17E', day:'#E7B481', golden:'#DD8860', dusk:'#BC5428', night:'#383563' } },
 };
 const GRADE = { morning:['#FFE6C2',.12], day:[null,0], golden:[null,0], dusk:['#5C4A86',.22], night:[null,0] };
 // how Rex is lit: [multiply color, strength, rim color, rim strength, key side (-1 left, 1 right), shadow alpha]
@@ -918,6 +922,7 @@ function drawScene(){
   const ph = phase(), L = PLACES[place()], [gc, ga] = GRADE[ph], night = ph==='night', dusk = ph==='dusk';
   const sf = document.getElementById('sceneFront');
   if (place() === 'meadow'){ const [b, f] = meadowScene(ph); scene.innerHTML = b; sf.innerHTML = f; }
+  else if (place() === 'bedroom'){ const [b, f] = bedroomScene(ph); scene.innerHTML = b; sf.innerHTML = f; }
   else { sf.innerHTML = ''; scene.innerHTML = `
   <g class="layer" data-depth="1"><image href="${ENV[L.art[ph]]}" x="-40" y="0" width="1752" height="941" preserveAspectRatio="none"/></g>
   ${gc ? `<rect x="-60" y="0" width="1800" height="941" fill="${gc}" opacity="${ga}" style="mix-blend-mode:${ph==='dusk'?'multiply':'soft-light'}"/>` : ''}
@@ -2005,18 +2010,7 @@ const FX = (() => {
 
   // places: hotspots in art pixels (1672 x 941); sunset bedroom art sits ~25px to the right
   const HOT = {
-    bedroom: [
-      { id:'lamp', x:500, y:340, r:70, label:'the lamp' },
-      { id:'lantern', x:1495, y:185, r:45, label:'the lantern' },
-      { id:'window', box:[745, 55, 1185, 430], label:'the window' },
-      { id:'toybox', box:[1115, 470, 1400, 625], label:'the toy box' },
-      { id:'bed', box:[0, 300, 470, 690], label:'the bed' },
-      { id:'plant', x:1460, y:545, r:70, label:'the plant' },
-      { id:'pothos', x:795, y:420, r:55, label:'the little plant' },
-      { id:'moonlamp', x:110, y:112, r:45, label:'the moon lamp' },
-      { id:'poster', box:[275, 60, 485, 300], label:'the poster' },
-      { id:'bunting', box:[60, 0, 360, 70], label:'the flags' },
-    ],
+    bedroom: bedroomHot(),
     meadow: [   // front corners first, then each object's own box from the layout (front-most first), then the lake and sky
       { id:'fgL', box:[0, 690, 470, 941] }, { id:'fgR', box:[1250, 700, 1672, 941] },
       ...M2.layout.back.filter(it => it.id).reverse().map(it => { const [x, y, w, h] = m2Box(it), pad = it.id === 'tree' ? 0 : 12; return { id:it.id, box:[x - pad, y + h*(it.id === 'tree' ? .02 : .1), x + w + pad, y + h] }; }),
@@ -2025,11 +2019,11 @@ const FX = (() => {
     ],
   };
   const LIGHTS = { // key lights per place/art: [x, y, color, size]
-    bedroom: { day:[[965, 240, '255,214,150', 1]], golden:[[1000, 290, '255,170,90', 1], [520, 345, '255,196,110', .7]], dusk:[[1000, 290, '255,160,90', .8], [520, 345, '255,196,110', .8]], night:[[500, 340, '255,196,110', 1], [1495, 185, '255,180,90', .55], [110, 112, '255,230,180', .35], [1070, 130, '170,190,255', .45]] },
+    bedroom: { day:[[965, 240, '255,214,150', 1]], golden:[[1000, 290, '255,170,90', 1], [522, 400, '255,196,110', .7]], dusk:[[1000, 290, '255,160,90', .8], [522, 400, '255,196,110', .8]], night:[[522, 400, '255,196,110', 1], [1412, 420, '255,180,90', .55], [110, 112, '255,230,180', .35], [1070, 130, '170,190,255', .45]] },
     meadow: { day:[[1238, 170, '255,245,200', 1]], golden:[[1238, 190, '255,170,80', 1.2]], dusk:[[1238, 250, '255,140,90', .6]], night:[[1240, 150, '210,220,255', .6], [1300, 590, '255,200,120', .45]] },
   };
   const artPh = () => { const ph = phase(); return ph === 'morning' ? 'day' : ph; };
-  const dxArt = () => place() === 'bedroom' && ['golden','dusk'].includes(phase()) ? 25 : 0;
+  const dxArt = () => 0;
   const lampOn = () => S.lamp !== false;
 
   function resize(){ dpr = Math.min(2, devicePixelRatio || 1); W = zoom.clientWidth; H = zoom.clientHeight;
@@ -2054,7 +2048,7 @@ const FX = (() => {
     tufts = [];   // the painted foreground layers replace the drawn grass
   }
   function bug(kind, i){ const b = { kind, i, x: Math.random()*W, y: H*(.35 + Math.random()*.4), vx:0, vy:0, t:Math.random()*100, scared:0, home:null };
-    if (kind === 'moth'){ b.home = [500, 330]; }
+    if (kind === 'moth'){ b.home = [522, 395]; }
     if (kind === 'ladybug'){ b.x = sx(760 + Math.random()*400); b.y = sy(438); b.dir = 1; }
     return b; }
 
@@ -2086,6 +2080,7 @@ const FX = (() => {
     act(h.id, x, y); played(); }
 
   function act(id, x, y){ const ph = artPh();
+    if (place() === 'bedroom' && bedroomAct(id, x, y, { goDo, burst, leaves, flick:() => { flick = 1.2; }, seed, sx })) return;
     switch (id){
       case 'lamp': S.lamp = !lampOn(); save(); SFX.pop(); flick = 1; burst(x, y, 14, 'glow'); rex.say(lampOn() ? pick(['Cozy.','Light on!']) : ph === 'night' ? 'Ooh, spooky. I can see the moon better.' : 'Lamp off.', 1800); seed(); break;
       case 'lantern': flick = 1.5; burst(x, y, 18, 'ember'); rex.say(pick(['The lantern flickered!','Warm little light.']), 1500); break;
@@ -2137,8 +2132,8 @@ const FX = (() => {
 
   /* ---------- per-frame ---------- */
   function step(dt, t){
-    if (!W) resize(); mapping();
-    const pl = place(), ph = artPh(), night = ph === 'night', K = (LIGHTS[pl][ph] || []).filter(l => !(pl === 'bedroom' && night && l[0] === 500 && !lampOn()));
+    if (!W) resize(); mapping(); swayStep(dt, t);
+    const pl = place(), ph = artPh(), night = ph === 'night', K = (LIGHTS[pl][ph] || []).filter(l => !(pl === 'bedroom' && night && l[0] === 522 && !lampOn()));
     const rx = rex.x*W, ry = H - parseFloat(getComputedStyle(zoom).getPropertyValue('--ground') || 60);
     gust = Math.max(0, gust - dt*.6); flick = Math.max(0, flick - dt);
     if (ptr){ ptrV.x *= .85; ptrV.y *= .85; }
@@ -2180,7 +2175,7 @@ const FX = (() => {
   }
 
   function beamTest(pl, ph){ // how much a point sits inside a light beam (0..1)
-    if (pl === 'bedroom'){ if (ph === 'night' && lampOn()){ const lx = sx(500), ly = sy(340), R = 260*M.s; return (x, y) => Math.max(0, 1 - Math.hypot(x - lx, y - ly)/R); }
+    if (pl === 'bedroom'){ if (ph === 'night' && lampOn()){ const lx = sx(522), ly = sy(400), R = 260*M.s; return (x, y) => Math.max(0, 1 - Math.hypot(x - lx, y - ly)/R); }
       const wx0 = sx(745 + dxArt()), wx1 = sx(1185 + dxArt()), wy = sy(60), slope = .55; return (x, y) => { if (y < wy) return 0; const sh = (y - wy)*slope; return (x > wx0 - sh && x < wx1 - sh) ? (ph === 'night' ? .25 : .9) : 0; }; }
     const L = (LIGHTS.meadow[ph] || [])[0]; if (!L) return () => 0; const lx = sx(L[0]), ly = sy(L[1]); return (x, y) => Math.max(0, 1 - Math.hypot(x - lx, y - ly)/(700*M.s)) * (ph === 'night' ? .4 : 1); }
 

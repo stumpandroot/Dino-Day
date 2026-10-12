@@ -27,7 +27,7 @@ app = app.replace('window.DINO_BUILD = __BUILD__', 'window.DINO_BUILD = %d' % BU
 import base64 as _b64
 _ic = lambda f: 'data:image/png;base64,' + _b64.b64encode(open(S + 'icons/' + f, 'rb').read()).decode()
 app = app.replace('<head>', '<head><link rel="icon" type="image/png" href="' + _ic('favicon-64.png') + '"><link rel="apple-touch-icon" href="' + _ic('apple-touch-180.png') + '">', 1)
-app = app.replace('__REX__', open(S + 'rex.b64').read()).replace('__ENV__', open(S + 'env.json').read()).replace('__MEADOW__', open(S + 'meadow2.json').read()).replace('__POSES__', open(S + 'poses.json').read())
+app = app.replace('__REX__', open(S + 'rex.b64').read()).replace('__ENV__', open(S + 'env.json').read()).replace('__MEADOW__', open(S + 'meadow2.json').read()).replace('__POSES__', open(S + 'poses.json').read()).replace('/*__BEDROOM__*/', open(S + 'parts/bedroom.js').read().replace('__BEDROOM__', open(S + 'bedroom2.json').read()))
 open(os.path.join(HERE, 'index.html'), 'w').write(app)
 shutil.copy(S + 'supabase.js', os.path.join(HERE, 'supabase.js'))
 # native bundle (iPhone and Mac) and the over-the-air update files
