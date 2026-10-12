@@ -16,7 +16,7 @@ function b2Curtains(){ const C = B2.layout.curtains, open = BR.curtOpen;
 function bedroomScene(ph){ const L = B2.layout, F = ph === 'day' ? '' : ' filter="url(#m2t)"', night = ph === 'night';
   const view = L.back.find(i => i.n === 'view'), shell = L.back.find(i => i.n === 'shell'), rest = L.back.filter(i => i !== view && i !== shell);
   const wall = rest.filter(i => !i.base), floor = rest.filter(i => i.base);
-  const rug = floor.filter(i => i.id === 'rug'), furn = floor.filter(i => i.id !== 'rug');
+  const rug = floor.filter(i => i.id === 'rug'), furn = floor.filter(i => i.id !== 'rug').sort((a, b) => a.y - b.y);   // farther back first, so nearer pieces overlap them
   const piece = it => it.id === 'bed' ? b2Obj(it, b2Img(it, BR.bedMessy ? 'bedm' : 'bed')) : it.id === 'chest' ? b2Obj(it, BR.chestOpen ? b2Img(Object.assign({}, it, { w: it.w*1.09 }), 'chesto') : b2Img(it)) : b2Obj(it);
   const moon = L.back.find(i => i.id === 'moonshelf'), lan = L.back.find(i => i.id === 'lantern'), [mx, my, mw] = b2Box(moon), [lx, ly, lw, lh] = b2Box(lan);
   const back = `${m2Filter(ph)}
