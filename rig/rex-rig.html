@@ -281,6 +281,11 @@ function frame(t){
     K = sampleKeys(keys, k); KH = sampleKeys(keys, k - .07); KT = sampleKeys(keys, k - .14);   // head drags 70 ms, tail 140 ms
     if (K.aF) armF = K.aF.slice(); if (K.aB) armB = K.aB.slice();
     if (K.done && KT.done){ act = null; clearProps(); setFace(base); } }
+  if (PROC[act]){ const f = PROC[act];
+    for (const fc of f.faces || []) if (fc[0] <= k && !fired.has(fc)){ fired.add(fc); setFace(fc[1]); }
+    for (const tt of f.turns || []) if (tt <= k && !fired.has(tt + act)){ fired.add(tt + act); turnTo(-TN.face); }
+    K = f(k); KH = f(Math.max(0, k - .07)); KT = f(Math.max(0, k - .14)); armF = K.aF.slice(); armB = K.aB.slice();
+    if (k > f.dur){ act = null; setFace(base); } }
   if (act === 'pet'){ armF = POSES.pet.F; armB = POSES.pet.B; petLean = 1; } else petLean = 0;
   if (act === 'feed') armsFeed = feedFrame(k, t); else armsFeed = null;
   if (act === 'feedDrag'){ dragFeedFrame(t); armF = [100 - 40*Math.max(0, food.reach || 0), 70 - 120*Math.max(0, food.reach || 0)]; armB = [70, 60]; }
@@ -417,6 +422,43 @@ KEYS.ball = [
   { t:1.24, ls:.86, y:0,  sq:.14,  lean:3,  head:7,   tail:6,  aF:[150,120], aB:[40,60], face:'laughing' },
   { t:1.42, ls:1.03, y:-3, sq:-.03, lean:-1, head:-2, tail:-4, aF:'relaxed', aB:'relaxed' },
   { t:2.2,  ls:1, y:0,    sq:0,    lean:0,  head:0,   tail:0,  aF:'rest', aB:'rest', face:'happy' } ];
+/* ---------- dances: procedural performances on the same channels as the keyframes ----------
+   Each returns the pose at time k (seconds); head and tail sample it a little late, so they drag and follow through.
+   groove: an easy side-to-side sway on the beat, eyes closed and smiling, one arm then the other pushing out front,
+           knees giving on every beat, tail swishing against the lean.
+   excited: wind-up first (crouch, fists in, wide eyes, then a squint), then quick little hops from foot to foot with
+           fists up by his chin and the tail going like mad.
+   shuffle: kick-steps with arms swinging, a turn to face away and kick, a turn back, then a crouch and a star jump. */
+const mixA = (a, b, u) => a.map((v, i) => v + (b[i] - v)*u);
+const BEAT = .46;
+const PROC = {
+  groove: Object.assign(k => { const ph = Math.PI*k/BEAT, s1 = Math.sin(ph), on = Math.min(1, k/.35)*Math.min(1, Math.max(0, (4.3 - k)/.4));
+    const pushF = Math.max(0, s1), pushB = Math.max(0, -s1), dip = Math.abs(Math.sin(ph));
+    return { y: on*5*dip, sq: on*.035*dip, lean: on*7*s1, head: on*6*s1, tail: on*-14*s1, br: 0, ls: 1 - on*.05*dip, shake: 0,
+      lF: on*5*pushF, lB: on*-5*pushB,
+      aF: mixA(POSES.relaxed.F, mixA([118,-38], [62,-6], pushF), on), aB: mixA(POSES.relaxed.B, mixA([70,96], [8,-12], pushB), on), done: k > 4.7 }; },
+    { faces: [[0, 'happy']], dur: 4.7 }),
+  excited: Object.assign(k => { let o;
+    if (k < .55){ const u = Math.min(1, k/.25), v = k > .32 ? Math.sin((k - .32)*60)*.6 : 0;   // wind-up: crouch, fists tight, a buzzing tremble
+      o = { y: 7*u, sq: .13*u, lean: -4*u, head: -5*u + v, tail: 8*u, ls: 1 - .12*u, lF: 4*u, lB: -4*u, shake: k > .32 ? .4 : 0, aF: mixA(POSES.rest.F, [128,-62], u), aB: mixA(POSES.rest.B, [64,-84], u) }; }
+    else if (k < 2.6){ const h = (k - .55)*3.1, hop = Math.abs(Math.sin(Math.PI*h)), side = Math.sign(Math.sin(Math.PI*h/1)) || 1, f = Math.sin(Math.PI*h*2);
+      o = { y: -18*hop + 3*(1 - hop), sq: .1*(1 - hop) - .05*hop, lean: 5*Math.sin(Math.PI*h) , head: 5*Math.sin(Math.PI*h + .8), tail: 16*Math.sin(k*22), ls: 1 + .06*hop,
+        lF: side > 0 ? 14*hop : -3, lB: side < 0 ? -14*hop : 3, shake: 0, aF: [128 + 14*f, -62 - 22*f], aB: [64 - 12*f, -84 + 18*f] }; }
+    else { const u = Math.min(1, (k - 2.6)/.45); o = { y: 0, sq: .05*(1 - u), lean: 0, head: 0, tail: 6*(1 - u)*Math.sin(k*18), ls: 1, lF: 0, lB: 0, shake: 0, aF: mixA([128,-62], POSES.rest.F, u), aB: mixA([64,-84], POSES.rest.B, u) }; }
+    o.br = 0; o.done = k > 3.1; return o; },
+    { faces: [[0, 'surprised'], [.3, 'determined'], [.55, 'excited'], [1.6, 'laughing'], [2.6, 'happy']], dur: 3.1 }),
+  shuffle: Object.assign(k => { const on = Math.min(1, k/.25);
+    if (k < 3.3){ const ph = Math.PI*k/.38, s1 = Math.sin(ph), kick = Math.max(0, Math.sin(ph*.5)), alt = Math.sin(ph*.5) > 0 ? 1 : -1, dip = Math.abs(s1);
+      return { y: on*(4*dip), sq: on*.03*dip, lean: on*4*Math.sin(ph*.5), head: on*4*Math.sin(ph*.5 + .6), tail: on*18*Math.sin(k*13), br: 0, ls: 1 - .04*dip, shake: 0,
+        lF: on*(alt > 0 ? -26*kick : 6), lB: on*(alt < 0 ? 24*kick : -6),
+        aF: mixA(POSES.relaxed.F, [176 + 16*s1, 196 + 20*s1], on), aB: mixA(POSES.relaxed.B, [6 - 16*s1, -8 - 20*s1], on), done: false }; }
+    const j = k - 3.3;   // crouch, launch, star at the top, land, hold the pose
+    const y = j < .22 ? 8*j/.22 : j < .62 ? 8 - 118*Math.sin(Math.PI*(j - .22)/.8) : j < .8 ? 0 : 0;
+    const sq = j < .22 ? .14*j/.22 : j < .3 ? -.1 : j > .62 && j < .8 ? .14*(1 - (j - .62)/.18) : 0, star = Math.min(1, Math.max(0, (j - .2)/.18));
+    return { y, sq, lean: 0, head: -6*star, tail: -10*star, br: 0, ls: j < .22 ? .88 : 1.06 - .06*Math.min(1, j/.9), shake: 0, lF: -16*star*(j < .7), lB: 16*star*(j < .7),
+      aF: mixA([150,120], [222,250], star), aB: mixA([40,60], [-48,-74], star), done: j > 1.5 }; },
+    { faces: [[0, 'happy'], [3.2, 'excited'], [3.75, 'laughing']], turns: [1.15, 2.25], dur: 4.8 }),
+};
 const NUM = ['y','sq','lean','head','tail','br','lF','lB','shake','ls'];
 function sampleKeys(keys, k){ const out = {}; const last = keys[keys.length - 1];
   for (const p of NUM){ let a = null, b = null; for (const key of keys){ if (key[p] === undefined) continue; if (key.t <= k) a = key; else { b = key; break; } }
@@ -778,6 +820,9 @@ const ACTIONS = {
   Think(){ setFace('thinking', 3200); },
   'Turn around'(){ turnTo(-TN.face); },
   'Look around'(){ start('look', 'curious'); },
+  Dance(){ fired.clear(); start('groove'); },
+  Excited(){ fired.clear(); start('excited'); },
+  Boogie(){ fired.clear(); start('shuffle'); },
   Nap(){ act = null; sleeping = !sleeping; base = sleeping ? 'sleeping' : 'neutral'; setFace(sleeping ? 'sleepy' : 'surprised', sleeping ? 1800 : 900); },
 };
 $('#exGrid').innerHTML = Object.keys(EX).filter(k => !EX[k].hide).map(k => `<button class="chip" data-k="${k}" aria-pressed="${k === base}">${LABEL(k)}</button>`).join('');

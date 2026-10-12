@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791828636; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791829616; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1010,6 +1010,11 @@ function frame(t){
     K = sampleKeys(keys, k); KH = sampleKeys(keys, k - .07); KT = sampleKeys(keys, k - .14);   // head drags 70 ms, tail 140 ms
     if (K.aF) armF = K.aF.slice(); if (K.aB) armB = K.aB.slice();
     if (K.done && KT.done){ act = null; clearProps(); setFace(base); } }
+  if (PROC[act]){ const f = PROC[act];
+    for (const fc of f.faces || []) if (fc[0] <= k && !fired.has(fc)){ fired.add(fc); setFace(fc[1]); }
+    for (const tt of f.turns || []) if (tt <= k && !fired.has(tt + act)){ fired.add(tt + act); turnTo(-TN.face); }
+    K = f(k); KH = f(Math.max(0, k - .07)); KT = f(Math.max(0, k - .14)); armF = K.aF.slice(); armB = K.aB.slice();
+    if (k > f.dur){ act = null; setFace(base); } }
   if (act === 'pet'){ armF = POSES.pet.F; armB = POSES.pet.B; petLean = 1; } else petLean = 0;
   if (act === 'feed') armsFeed = feedFrame(k, t); else armsFeed = null;
   if (act === 'feedDrag'){ dragFeedFrame(t); armF = [100 - 40*Math.max(0, food.reach || 0), 70 - 120*Math.max(0, food.reach || 0)]; armB = [70, 60]; }
@@ -1146,6 +1151,43 @@ KEYS.ball = [
   { t:1.24, ls:.86, y:0,  sq:.14,  lean:3,  head:7,   tail:6,  aF:[150,120], aB:[40,60], face:'laughing' },
   { t:1.42, ls:1.03, y:-3, sq:-.03, lean:-1, head:-2, tail:-4, aF:'relaxed', aB:'relaxed' },
   { t:2.2,  ls:1, y:0,    sq:0,    lean:0,  head:0,   tail:0,  aF:'rest', aB:'rest', face:'happy' } ];
+/* ---------- dances: procedural performances on the same channels as the keyframes ----------
+   Each returns the pose at time k (seconds); head and tail sample it a little late, so they drag and follow through.
+   groove: an easy side-to-side sway on the beat, eyes closed and smiling, one arm then the other pushing out front,
+           knees giving on every beat, tail swishing against the lean.
+   excited: wind-up first (crouch, fists in, wide eyes, then a squint), then quick little hops from foot to foot with
+           fists up by his chin and the tail going like mad.
+   shuffle: kick-steps with arms swinging, a turn to face away and kick, a turn back, then a crouch and a star jump. */
+const mixA = (a, b, u) => a.map((v, i) => v + (b[i] - v)*u);
+const BEAT = .46;
+const PROC = {
+  groove: Object.assign(k => { const ph = Math.PI*k/BEAT, s1 = Math.sin(ph), on = Math.min(1, k/.35)*Math.min(1, Math.max(0, (4.3 - k)/.4));
+    const pushF = Math.max(0, s1), pushB = Math.max(0, -s1), dip = Math.abs(Math.sin(ph));
+    return { y: on*5*dip, sq: on*.035*dip, lean: on*7*s1, head: on*6*s1, tail: on*-14*s1, br: 0, ls: 1 - on*.05*dip, shake: 0,
+      lF: on*5*pushF, lB: on*-5*pushB,
+      aF: mixA(POSES.relaxed.F, mixA([118,-38], [62,-6], pushF), on), aB: mixA(POSES.relaxed.B, mixA([70,96], [8,-12], pushB), on), done: k > 4.7 }; },
+    { faces: [[0, 'happy']], dur: 4.7 }),
+  excited: Object.assign(k => { let o;
+    if (k < .55){ const u = Math.min(1, k/.25), v = k > .32 ? Math.sin((k - .32)*60)*.6 : 0;   // wind-up: crouch, fists tight, a buzzing tremble
+      o = { y: 7*u, sq: .13*u, lean: -4*u, head: -5*u + v, tail: 8*u, ls: 1 - .12*u, lF: 4*u, lB: -4*u, shake: k > .32 ? .4 : 0, aF: mixA(POSES.rest.F, [128,-62], u), aB: mixA(POSES.rest.B, [64,-84], u) }; }
+    else if (k < 2.6){ const h = (k - .55)*3.1, hop = Math.abs(Math.sin(Math.PI*h)), side = Math.sign(Math.sin(Math.PI*h/1)) || 1, f = Math.sin(Math.PI*h*2);
+      o = { y: -18*hop + 3*(1 - hop), sq: .1*(1 - hop) - .05*hop, lean: 5*Math.sin(Math.PI*h) , head: 5*Math.sin(Math.PI*h + .8), tail: 16*Math.sin(k*22), ls: 1 + .06*hop,
+        lF: side > 0 ? 14*hop : -3, lB: side < 0 ? -14*hop : 3, shake: 0, aF: [128 + 14*f, -62 - 22*f], aB: [64 - 12*f, -84 + 18*f] }; }
+    else { const u = Math.min(1, (k - 2.6)/.45); o = { y: 0, sq: .05*(1 - u), lean: 0, head: 0, tail: 6*(1 - u)*Math.sin(k*18), ls: 1, lF: 0, lB: 0, shake: 0, aF: mixA([128,-62], POSES.rest.F, u), aB: mixA([64,-84], POSES.rest.B, u) }; }
+    o.br = 0; o.done = k > 3.1; return o; },
+    { faces: [[0, 'surprised'], [.3, 'determined'], [.55, 'excited'], [1.6, 'laughing'], [2.6, 'happy']], dur: 3.1 }),
+  shuffle: Object.assign(k => { const on = Math.min(1, k/.25);
+    if (k < 3.3){ const ph = Math.PI*k/.38, s1 = Math.sin(ph), kick = Math.max(0, Math.sin(ph*.5)), alt = Math.sin(ph*.5) > 0 ? 1 : -1, dip = Math.abs(s1);
+      return { y: on*(4*dip), sq: on*.03*dip, lean: on*4*Math.sin(ph*.5), head: on*4*Math.sin(ph*.5 + .6), tail: on*18*Math.sin(k*13), br: 0, ls: 1 - .04*dip, shake: 0,
+        lF: on*(alt > 0 ? -26*kick : 6), lB: on*(alt < 0 ? 24*kick : -6),
+        aF: mixA(POSES.relaxed.F, [176 + 16*s1, 196 + 20*s1], on), aB: mixA(POSES.relaxed.B, [6 - 16*s1, -8 - 20*s1], on), done: false }; }
+    const j = k - 3.3;   // crouch, launch, star at the top, land, hold the pose
+    const y = j < .22 ? 8*j/.22 : j < .62 ? 8 - 118*Math.sin(Math.PI*(j - .22)/.8) : j < .8 ? 0 : 0;
+    const sq = j < .22 ? .14*j/.22 : j < .3 ? -.1 : j > .62 && j < .8 ? .14*(1 - (j - .62)/.18) : 0, star = Math.min(1, Math.max(0, (j - .2)/.18));
+    return { y, sq, lean: 0, head: -6*star, tail: -10*star, br: 0, ls: j < .22 ? .88 : 1.06 - .06*Math.min(1, j/.9), shake: 0, lF: -16*star*(j < .7), lB: 16*star*(j < .7),
+      aF: mixA([150,120], [222,250], star), aB: mixA([40,60], [-48,-74], star), done: j > 1.5 }; },
+    { faces: [[0, 'happy'], [3.2, 'excited'], [3.75, 'laughing']], turns: [1.15, 2.25], dur: 4.8 }),
+};
 const NUM = ['y','sq','lean','head','tail','br','lF','lB','shake','ls'];
 function sampleKeys(keys, k){ const out = {}; const last = keys[keys.length - 1];
   for (const p of NUM){ let a = null, b = null; for (const key of keys){ if (key[p] === undefined) continue; if (key.t <= k) a = key; else { b = key; break; } }
@@ -1507,6 +1549,9 @@ const ACTIONS = {
   Think(){ setFace('thinking', 3200); },
   'Turn around'(){ turnTo(-TN.face); },
   'Look around'(){ start('look', 'curious'); },
+  Dance(){ fired.clear(); start('groove'); },
+  Excited(){ fired.clear(); start('excited'); },
+  Boogie(){ fired.clear(); start('shuffle'); },
   Nap(){ act = null; sleeping = !sleeping; base = sleeping ? 'sleeping' : 'neutral'; setFace(sleeping ? 'sleepy' : 'surprised', sleeping ? 1800 : 900); },
 };
 /* ---------- pointer ---------- */
@@ -1608,6 +1653,7 @@ const IC = {
   heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.4 3.6 5 7 5c2 0 3.6 1.2 5 3 1.4-1.8 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 16.4 12 21 12 21z" fill="#EE6F68"/></svg>',
   apple:'<svg viewBox="0 0 24 24"><path d="M12 7c-2-1.6-6-1.4-7 2.4-.9 3.4.8 8.2 3.4 10 1.2.8 2.3.6 3.6-.1 1.3.7 2.4.9 3.6.1 2.6-1.8 4.3-6.6 3.4-10C18 5.6 14 5.4 12 7z" fill="#E2614F"/><path d="M12 7c.2-2 1.2-3.4 3-4" stroke="#6B4A2B" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M13 5.2c1.6-.9 3.4-.6 4 .4-1.3.9-3 .9-4-.4z" fill="#7FAF5A"/></svg>',
   ball:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#F2B84B"/><path d="M3.5 10.5c5 1.5 12 1.5 17 0M12 3c-2.5 5-2.5 13 0 18" stroke="#E2614F" stroke-width="2" fill="none"/></svg>',
+  note:'<svg viewBox="0 0 24 24" fill="#D9604A"><path d="M9 17.5a3 3 0 1 1-2-2.83V5.2a1 1 0 0 1 .76-.97l9-2.2A1 1 0 0 1 18 3v11.5a3 3 0 1 1-2-2.83V7.3l-7 1.7z"/></svg>',
   roar:'<svg viewBox="0 0 24 24" fill="none" stroke="#5E7A45" stroke-width="2.2" stroke-linecap="round"><path d="M4 9.5c2 1 2 4 0 5M8 7c3.5 2 3.5 8 0 10"/><path d="M13 8l7-3v14l-7-3z" fill="#8DB07A" stroke="#5E7A45"/></svg>',
   book:'<svg viewBox="0 0 24 24"><path d="M3 6c3-1.5 6-1.5 9 .5v13c-3-2-6-2-9-.5z" fill="#7FA6C9"/><path d="M21 6c-3-1.5-6-1.5-9 .5v13c3-2 6-2 9-.5z" fill="#5E86AB"/></svg>',
   gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
@@ -1929,6 +1975,8 @@ const ACTIONS = [
   { id:'pet', label:'Pet', bg:'var(--rose)', icon:IC.heart, run(){ rex.state='idle'; rex.sq=-.06; rig()?.pet(true); setTimeout(() => rig()?.pet(false), 1500); const b=rexBox(); for(let i=0;i<5;i++) setTimeout(()=>heart(b.x-20+Math.random()*40, b.y+8), i*140); rex.say('Aww, thank you.', 1600); } },
   { id:'feed', label:'Feed', bg:'var(--mint)', icon:IC.apple, run(){ feed(); } },
   { id:'play', label:'Play', bg:'var(--butter)', icon:IC.ball, run(){ ballDrop(); } },
+  { id:'dance', label:'Dance', bg:'var(--rose)', icon:IC.note, run(){ danceRex('Dance', pick(['Dance with me!','Groovy.','La la la!'])); } },
+  { id:'boogie', label:'Boogie', bg:'var(--butter)', icon:IC.star, run(){ danceRex('Boogie', pick(['Watch this!','My best moves!'])); } },
   { id:'roar', label:'Roar', bg:'var(--peach)', icon:IC.roar, run(){ roar(); } },
   { id:'read', label:'Read', bg:'var(--sky)', icon:IC.book, run(){ read(); } },
   { id:'rest', label:'Rest', bg:'var(--lav)', icon:IC.moon, run(){ rest(); } },
@@ -1972,6 +2020,7 @@ function autonomous(){
   if (carry || fall || rex.away) return;
   if (S.asleep){ rex.sleeping = true; rex.sitting = 1; return; }
   if (petting || rex.state==='walk' || rex.chase || rex.reading || props.apple || (rex.busyUntil || 0) > Date.now()) return;
+  if (!S.asleep && Math.random() < .06){ danceRex(Math.random() < .6 ? 'Dance' : 'Boogie'); return; }
   if (place() === 'meadow' && !S.asleep && Math.random() < .22 && typeof FX !== 'undefined' && FX.visit){ FX.visit(); return; }
   const night = phase()==='night';
   if (night && Math.random()<.5){ if (!rex.sleeping){ rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2000); } return; }
@@ -2053,7 +2102,7 @@ function placeDeskCard(){ const st = world.style, c = isDesk() && !app.classList
   const a = AR(), r = c.getBoundingClientRect(), v = [r.left - a.left, r.top - a.top, r.width, r.height].map(n => Math.round(n) + 'px');
   if (st.left !== v[0] || st.top !== v[1] || st.width !== v[2] || st.height !== v[3]) Object.assign(st, { left:v[0], top:v[1], width:v[2], height:v[3], right:'auto', bottom:'auto' }); }
 $('#dkExp').onclick = () => setExpanded(true);
-$('#dkTiles').innerHTML = ['pet','feed','play','read'].map(id => { const x = ACTIONS.find(q => q.id === id); return `<button data-dka="${id}" style="--tb:${x.bg}" aria-label="${x.label}" title="${x.label}">${x.icon}<span>${x.label}</span></button>`; }).join('') + `<button data-dka="more" style="--tb:var(--lav)" aria-label="More ways to play" title="More ways to play">${IC.more}<span>More</span></button>`;
+$('#dkTiles').innerHTML = ['pet','feed','play','dance'].map(id => { const x = ACTIONS.find(q => q.id === id); return `<button data-dka="${id}" style="--tb:${x.bg}" aria-label="${x.label}" title="${x.label}">${x.icon}<span>${x.label}</span></button>`; }).join('') + `<button data-dka="more" style="--tb:var(--lav)" aria-label="More ways to play" title="More ways to play">${IC.more}<span>More</span></button>`;
 $('#dkTiles').onclick = e => { const b = e.target.closest('[data-dka]'); if (!b) return; if (b.dataset.dka === 'more'){ setExpanded(true); return; }
   paintPlaybar(); const t = $('#playbar').querySelector(`[data-a="${b.dataset.dka}"]`); t && t.click(); };
 // switching between the phone and desktop layouts (resizing the window): Rex goes home first so he isn't left floating
@@ -2971,7 +3020,11 @@ bus.on('task_done', t => { if (S.asleep) return;
   if (frog){ snow = 0; setTimeout(() => { rex.hop = 1; rex.say('That was the frog. The rest of today is downhill.', 3000); }, 500); return; }
   if (t.eff === 'e'){ snow++; if (snow === 2){ setTimeout(() => rex.say('Two easy ones down. It\'s rolling now.', 2400), 500); return; } if (snow === 3){ setTimeout(() => rex.say('Three in a row. Keep the snowball going.', 2400), 500); return; } } else snow = 0;
   if (isBig(t) || t.steps.length >= 3){ rex.shake = 1; rex.sq = .12; rex.say(pick(['RAWR! That was a big one!','That was a big one!']), 2200); return; }
-  if (talk(.6)){ rex.hop = 1; const b = rexBox(); heart(b.x, b.y + 10); rex.say(pick(['Nice!','You did it.','One less thing!','Yay!']), 1400); } });
+  if (!openToday().length && todays().length){ setTimeout(() => danceRex('Boogie', 'All done! Dance party!'), 600); return; }
+  if (talk(.6)){ if (Math.random() < .45){ danceRex('Excited', pick(['Ooh! Ooh! You did it!','Yes yes yes!'])); return; } rex.hop = 1; const b = rexBox(); heart(b.x, b.y + 10); rex.say(pick(['Nice!','You did it.','One less thing!','Yay!']), 1400); } });
+// dances: the rig performs; the app keeps him still while he does
+function danceRex(name, line){ if (S.asleep || rex.away) return; rex.state = 'idle'; rex.reading = false; rex.sleeping = false; rex.sitting = 0; rex.chase = false;
+  rex.busyUntil = Date.now() + ({ Dance:5000, Boogie:5000, Excited:3300 }[name] || 4000); rig()?.action(name); if (line) rex.say(line, 1600); }
 bus.on('task_someday', () => { rex.say('Saved it for later.', 1500); });
 bus.on('task_deleted', () => { if (talk(.35)) rex.say('Bye-bye, task.', 1200); });
 
