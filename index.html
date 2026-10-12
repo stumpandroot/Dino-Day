@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791838222; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791838515; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -864,6 +864,17 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .link.danger{color:#B4533A}
 @media (max-width:520px){.tdet{padding-left:14px}.drow{grid-template-columns:1fr;gap:4px}.dl{padding-top:0}.drow.two .dchips{gap:8px}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* scroll bars: thin, rounded, in the app's olive, and only darker while you use them */
+@supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--olive) 35%,transparent) transparent}}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent;margin:14px 0}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--olive) 30%,transparent);border-radius:999px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:color-mix(in srgb,var(--olive) 60%,transparent)}
+::-webkit-scrollbar-corner{background:transparent}
+/* the step bar only shows once a step is done; "0 of 5 steps" already says the rest */
+.task .bar.zero{display:none}
+.app.desk .task .bar{height:3px;max-width:240px}
 </style>
 </head>
 <body>
@@ -2672,7 +2683,7 @@ function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.ste
   return `<div class="trow ${openId === t.id ? 'open' : ''}" data-id="${t.id}" data-flip="t${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
   <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0" aria-expanded="${openId === t.id}">
     ${!opts.bring && !t.done ? `<span class="grip" aria-hidden="true" title="Drag to reorder"><i></i><i></i><i></i><i></i><i></i><i></i></span>` : ''}${opts.bring ? '' : `<button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}"><i>${IC.check}</i></button>`}
-    <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar"><i style="width:${prog*100}%"></i></div>` : ''}</div>
+    <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar ${prog ? '' : 'zero'}"><i style="width:${prog*100}%"></i></div>` : ''}</div>
     ${opts.bring ? `<button class="pill ghost mint" data-bring="${t.id}">Today</button>` : `<button class="more" aria-label="More options for ${esc(t.t)}" data-more="${t.id}">${IC.more}</button>`}
   </div>${openId === t.id && !opts.bring ? detailHTML(t) : ''}${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
 function focusCard(){
