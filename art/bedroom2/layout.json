@@ -28,8 +28,23 @@
    "x": 0,
    "y": 92,
    "w": 250,
-   "id": "moonshelf",
-   "sway": "leaves"
+   "id": "moonshelf"
+  },
+  {
+   "n": "shelfplantL",
+   "x": 0.0,
+   "y": 96.6,
+   "w": 110.3,
+   "id": "shelfplantL",
+   "sway": "hang"
+  },
+  {
+   "n": "shelfplantR",
+   "x": 161.1,
+   "y": 118.9,
+   "w": 88.9,
+   "id": "shelfplantR",
+   "sway": "hang"
   },
   {
    "n": "poster",

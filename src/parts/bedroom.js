@@ -63,7 +63,8 @@ function bedroomAct(id, x, y, H){ const ph = phase(), L = B2.layout, it = L.back
           setTimeout(() => rex.say('Zzz…', 2200), 400); }, 700); }); return true;
     case 'lamp': S.lamp = !(S.lamp !== false); save(); SFX.pop(); wiggle('lamp'); H.flick(); H.seed(); rex.say(S.lamp ? pick(['Cozy.','Light on!']) : 'Lamp off.', 1300); return true;
     case 'moonshelf': if (x < H.sx(b2Box(it)[0] + b2Box(it)[2]*.62) && x > H.sx(b2Box(it)[0] + b2Box(it)[2]*.32)){ BR.moon = !BR.moon; SFX.pop(); b2Redraw(); rex.say(BR.moon ? 'My moon lamp. A tiny moon!' : 'Moon off.', 1500); return true; }
-      swayKick('[data-obj="moonshelf"] [data-sway]', 26); H.leaves(x, y, 5); H.goDo(cx + 140, -1, () => rex.say(pick(['Watering the plants.','Grow, little vines!']), 1500)); return true;
+      swayKick('[data-obj^="shelfplant"] [data-sway]', 26); H.leaves(x, y, 5); H.goDo(cx + 140, -1, () => rex.say(pick(['Watering the plants.','Grow, little vines!']), 1500)); return true;
+    case 'shelfplantL': case 'shelfplantR': swayKick(`[data-obj="${id}"] [data-sway]`, 30); H.leaves(x, y, 6); H.goDo(cx + 140, -1, () => rex.say(pick(['Watering the plants.','Grow, little vines!']), 1500)); return true;
     case 'lantern': BR.lantern = !BR.lantern; SFX.pop(); b2Redraw(); H.flick(); rex.say(BR.lantern ? 'Camping light!' : 'Lantern off.', 1300); return true;
     case 'books': H.goDo(cx - 210, 1, () => { rig()?.face('curious', 1000); rex.say(pick(['This one!','A volcano book.']), 1200); setTimeout(() => { rex.goTo(.5, () => { rex.face = 1; read(); }); }, 900); }); return true;
     case 'desk': H.goDo(cx - 230, 1, () => { rig()?.face('thinking', 1800); rex.say('Drawing you a picture…', 1600); setTimeout(() => { rig()?.hearts(3); rex.say('Done! It\'s you.', 1500); }, 2200); }, 3800); return true;
