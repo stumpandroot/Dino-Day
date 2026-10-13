@@ -907,6 +907,26 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .app[data-phase=night] [data-dcat].dchip:not(.on){background:var(--chip)}
 .app[data-phase=night] .link.danger{color:#F59A80}
 .app[data-phase=night] .imp{color:var(--coral-ink)}
+
+/* place picker */
+.placepick{position:absolute;z-index:40;width:min(300px,calc(100% - 16px));background:var(--card);color:var(--text);border-radius:20px;padding:12px;box-shadow:0 14px 40px rgba(30,25,15,.28);animation:ppIn .32s cubic-bezier(.3,1.4,.5,1) both}
+.placepick.out{animation:ppOut .16s ease-in both}
+@keyframes ppIn{from{opacity:0;transform:scale(.85) translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes ppOut{to{opacity:0;transform:scale(.92)}}
+.pph{font:700 13px var(--display);color:var(--muted);padding:2px 4px 10px}
+.ppgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ppgrid button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:6px;border-radius:14px;background:transparent}
+.ppgrid button:hover{background:var(--chip)}
+.ppgrid button[aria-pressed=true]{background:var(--upnext)}
+.ppimg{position:relative;display:block;width:100%;aspect-ratio:16/10;border-radius:10px;overflow:hidden;margin-bottom:6px;box-shadow:0 0 0 1px var(--line)}
+.ppimg img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s cubic-bezier(.3,1.4,.5,1)}
+.ppgrid button:hover .ppimg img{transform:scale(1.06)}
+.ppok{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:var(--olive);color:#fff;display:grid;place-items:center}
+.ppok svg{width:13px;height:13px}
+.ppgrid b{font:700 14px var(--display);color:var(--ink);padding:0 2px}
+.ppgrid span:not(.ppimg){font-size:12px;color:var(--muted);padding:0 2px 2px}
+.travelOld{position:absolute;inset:0;pointer-events:none;z-index:0}
+#placeChip svg:last-child{transition:transform .25s}
 </style>
 </head>
 <body>
@@ -1331,9 +1351,9 @@ function frame(now){
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
   if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; if (place() === 'bedroom') drawScene(); }
   const liftPx = rex.inBed ? Math.round(rex.inBed*sc) - panelLift : 0; rexEl.style.bottom = liftPx ? `calc(var(--ground,14%) + ${liftPx}px)` : '';
-  const minX = (size/2 + 6)/w; rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx));
+  const minX = (size/2 + 6)/w; if (!rex.travel){ rex.x = Math.max(minX, Math.min(1-minX, rex.x)); rex.tx = Math.max(minX, Math.min(1-minX, rex.tx)); } frame._minX = minX;
   // walking
-  if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt;
+  if (rex.state==='walk'){ const d = rex.tx - rex.x, sp = (app.classList.contains('expanded') ? .16 : .2) * dt * (rex.spd || 1);
     if (Math.abs(d) < .006){ rex.state = 'idle'; const f = rex.after; rex.after = null; f && f(); }
     else { rex.x += Math.sign(d)*Math.min(Math.abs(d), sp); rex.face = Math.sign(d); } }
   // ball chase + physics
@@ -1363,7 +1383,7 @@ function frame(now){
     if (by + bh > h - 8){ by = Math.max(8, h - bh - 8); const side = rex.x < .5 ? 1 : -1; bx = Math.round(Math.max(bw/2 + 8, Math.min(w - bw/2 - 8, rex.x*w + side*(size*.45 + bw/2)))); }   // no room above him (the desktop card): beside him instead
     if (!still || Math.abs(bx - (bubble._x||0)) > 6 || bubble._y !== by){ bubble.style.left = bx + 'px'; bubble.style.bottom = by + 'px'; bubble._x = bx; bubble._y = by; } }
   // parallax follows Rex
-  const off = (rex.x - .5);
+  const off = (Math.max(frame._minX || 0, Math.min(1 - (frame._minX || 0), rex.x)) - .5);   // walking off the edge doesn't drag the scenery with him
   const sfr = document.getElementById('sceneFront'); if (sfr.getAttribute('viewBox') !== scene.getAttribute('viewBox')) sfr.setAttribute('viewBox', scene.getAttribute('viewBox'));
   if (frame._off !== off || frame._scene !== scene.firstElementChild || frame._front !== sfr.firstElementChild){ frame._off = off; frame._scene = scene.firstElementChild; frame._front = sfr.firstElementChild;   // only when Rex moves or the scene redraws: each change repaints the whole scene
     for (const l of [...scene.querySelectorAll('.layer'), ...sfr.querySelectorAll('.layer')]){ const v = `translate(${(-off*70*(+l.dataset.depth || 1)).toFixed(1)} 0)`; if (l._tf !== v){ l._tf = v; l.setAttribute('transform', v); } } }
@@ -1859,6 +1879,7 @@ function myHabits(){ if (!S.habitsOn) return '';
 let dkTab = 'later';
 /*__PROJECTS__*/
 /*__TASKDETAIL__*/
+/*__TRAVEL__*/
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
@@ -2053,9 +2074,9 @@ $('#scroll').addEventListener('click', e => {
   if ((el = q('[data-hdel]'))){ const i = S.myHabits.findIndex(x => x.id === +el.dataset.hdel), h = S.myHabits[i]; S.myHabits.splice(i, 1); save(); render(); snack(`Removed "${h.n}"`, () => S.myHabits.splice(i, 0, h)); return; }
   const st = q('[data-set]');
   if (st){ let v = st.dataset.val; if (v === 'true') v = true; else if (v === 'false') v = false; else if (/^\d+$/.test(v)) v = +v; const key = st.dataset.set;
-    if (key.includes('.')){ const [a, b] = key.split('.'); S[a][b] = v; } else S[key] = v;
+    const prevPlace = S.place; if (key.includes('.')){ const [a, b] = key.split('.'); S[a][b] = v; } else S[key] = v;
     if (key === 'lockDay'){ preview = null; drawScene(); }
-    if (key === 'place'){ clearAllProps(); drawScene(); rex.x = rex.tx = .5; }
+    if (key === 'place'){ S.place = prevPlace; if (v !== prevPlace) travelTo(v); }
     SFX.pop(); save(); render(); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
   const r = q('[data-row]'); if (r && !q('button') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
