@@ -936,6 +936,11 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .rcsw button[aria-pressed=true],.rccustom.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--olive-ink)}
 .rccustom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 @media (max-width:520px){.rcpick{align-items:flex-start;width:100%}.rcsw{justify-content:flex-start;max-width:none}}
+
+.ofrow{flex-wrap:wrap;row-gap:10px}
+.ofpick{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.ofline{display:flex;align-items:center;gap:10px}.ofline>span{font:600 12px var(--display);color:var(--muted);min-width:38px;text-align:right}
+@media (max-width:520px){.ofpick{align-items:flex-start;width:100%}.ofline>span{text-align:left}}
 </style>
 </head>
 <body>
@@ -1985,6 +1990,7 @@ function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div 
   <div class="glabel">Rex</div><div class="group">
     <div class="row"><div><div class="lab">Rex's spot</div><div class="hint">Where he hangs out.</div></div>${seg('place', [['meadow','Meadow'],['bedroom','Bedroom']])}</div>
     ${rexColorRow()}
+    ${outfitRow()}
     <div class="row"><div><div class="lab">Chattiness</div><div class="hint">How often Rex talks and reacts.</div></div>${seg('chat', [['often','Often'],['sometimes','Some'],['quiet','Quiet']])}</div>
     <div class="row"><div><div class="lab">Suggests what's next</div><div class="hint">Rex's pick at the top of Today.</div></div>${seg('suggest', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>

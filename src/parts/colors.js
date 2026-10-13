@@ -50,3 +50,19 @@ $('#scroll').addEventListener('change', e => { if (e.target.id === 'rexColorIn')
 function setRexColor(c){ S.rexColor.base = c.toLowerCase(); save(); applyRexColor(); SFX.pop && SFX.pop(); rig()?.face('happy', 1600); rig()?.hearts(3); rex.hop = 1;
   const p = REX_PRESETS.find(x => x[2] === S.rexColor.base); rex.say(p ? pick([`${p[1]}! I like it.`, `Ooh, ${p[1].toLowerCase()}.`, 'New look!']) : pick(['New look!','Do I look fancy?']), 1600); render(); }
 setTimeout(applyRexColor, 0);
+
+/* ================= Rex's outfit =================
+   Hats, a scarf, and back pieces drawn by ChatGPT, cut into pieces that move on their own (see OFL and outfitStep in the rig). */
+const OUTFIT_ART = __OUTFIT__;
+const OUTFIT_OPTS = { hat:[['none','None'],['beanie','Beanie'],['propcap','Propeller cap']], neck:[['none','None'],['scarf','Scarf']], back:[['none','None'],['cape','Cape'],['backpack','Backpack']] };
+if (!S.outfit || typeof S.outfit !== 'object') S.outfit = { hat:'none', neck:'none', back:'none' };
+let outfitArtSent = false;
+function applyOutfit(){ const R = rig(); if (!R || !R.outfit) return; const sp = {}; for (const k of ['hat','neck','back']) if (S.outfit[k] && S.outfit[k] !== 'none') sp[k] = S.outfit[k];
+  R.outfit(sp, outfitArtSent ? null : OUTFIT_ART); outfitArtSent = true; }
+function outfitRow(){ const o = S.outfit, any = ['hat','neck','back'].some(k => o[k] && o[k] !== 'none');
+  return `<div class="row ofrow"><div><div class="lab">Rex's outfit</div><div class="hint">${any ? 'Pieces swing and bounce as he moves.' : 'Dress him up. Pieces swing and bounce as he moves.'}</div></div>
+    <div class="ofpick">${Object.entries(OUTFIT_OPTS).map(([k, opts]) => `<div class="ofline"><span>${{ hat:'Hat', neck:'Neck', back:'Back' }[k]}</span><div class="seg" role="group" aria-label="${k}">${opts.map(([v, l]) => `<button type="button" data-outfit="${k}:${v}" aria-pressed="${(o[k] || 'none') === v}">${l}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
+$('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-outfit]'); if (!b) return; e.stopImmediatePropagation();
+  const [k, v] = b.dataset.outfit.split(':'); S.outfit[k] = v; save(); applyOutfit(); SFX.pop && SFX.pop(); render();
+  if (v !== 'none'){ rig()?.face('happy', 1600); rex.hop = 1; rex.say(pick({ beanie:['Cozy!','Toasty head.'], propcap:['Wheee, whirly!','Watch it spin!'], scarf:['So snug.','Scarf weather!'], cape:['Super Rex!','To the rescue!'], backpack:['Ready for school!','What\'s in the bag?'] }[v] || ['New look!']), 1600); } }, true);
+setTimeout(applyOutfit, 50);

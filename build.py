@@ -21,7 +21,7 @@ engine = ("<script>\nwindow.REX_OPT = { optLook:true, get optIdle(){ return !(wi
 S = os.path.join(HERE, 'src') + '/'
 app = open(S + 'dino-day.src.html').read()
 app = app.replace('__RIG__', rig).replace('<!--RIG_ENGINE-->', engine)
-app = app.replace('/*__PLATFORM__*/', open(S + 'parts/platform.js').read()).replace('/*__PROJECTS__*/', open(S + 'parts/projects.js').read()).replace('/*__TASKDETAIL__*/', open(S + 'parts/taskdetail.js').read()).replace('/*__TRAVEL__*/', open(S + 'parts/travel.js').read().replace('__PLACETHUMBS__', open(S + 'placethumbs.json').read())).replace('/*__PERF__*/', open(S + 'parts/perf.js').read()).replace('/*__COLORS__*/', open(S + 'parts/colors.js').read())
+app = app.replace('/*__PLATFORM__*/', open(S + 'parts/platform.js').read()).replace('/*__PROJECTS__*/', open(S + 'parts/projects.js').read()).replace('/*__TASKDETAIL__*/', open(S + 'parts/taskdetail.js').read()).replace('/*__TRAVEL__*/', open(S + 'parts/travel.js').read().replace('__PLACETHUMBS__', open(S + 'placethumbs.json').read())).replace('/*__PERF__*/', open(S + 'parts/perf.js').read()).replace('/*__COLORS__*/', open(S + 'parts/colors.js').read().replace('__OUTFIT__', open(S + 'outfit.json').read()))
 BUILD = int(time.time())
 app = app.replace('window.DINO_BUILD = __BUILD__', 'window.DINO_BUILD = %d' % BUILD)
 import base64 as _b64
