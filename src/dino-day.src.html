@@ -1075,7 +1075,7 @@ function meadowScene(ph){ const L = M2.layout, F = ph === 'day' ? '' : ' filter=
     <g class="layer" data-depth=".2"${dark ? '' : F}>${sky}</g>
     <g class="layer" data-depth=".5"${F}>${m2Img(farIt)}</g>
     <g class="layer" data-depth="1"${F}>${rest.map(it => it.id ? `<g class="obj" data-obj="${it.id}">${m2Img(it)}</g>` : m2Img(it)).join('')}</g>`;
-  const front = `${m2Filter(ph)}<g class="layer" data-depth="1.5"${F}>${L.front.map(it => `<g class="obj" data-obj="${it.id}">${m2Img(it)}</g>`).join('')}</g>`;
+  const front = `${m2Filter(ph)}<g class="layer" data-depth="1.5"${F}>${L.front.map(it => `<g class="obj" data-obj="${it.id}"><g class="sw" data-sway="fg" style="transform-origin:${fgOrigin(it.id)}">${m2Img(it)}</g></g>`).join('')}</g>`;
   return [back, front]; }
 function wiggle(id, kind){ for (const sv of [scene, document.getElementById('sceneFront')]){ const g = sv && sv.querySelector(`[data-obj="${id}"]`); if (g){ const c = kind || 'wig'; g.classList.remove(c); void g.getBBox(); g.classList.add(c); setTimeout(() => g.classList.remove(c), 1500); } } }
 /*__BEDROOM__*/
@@ -2295,7 +2295,7 @@ const FX = (() => {
       case 'tree': { wiggle('tree', 'sway'); leaves(x, y - 80*M.s, 12); if (ph !== 'night') bird(x, y - 120*M.s);
         const tr = M2.layout.back.find(i => i.id === 'tree'); goDo(tr.x + 150, -1, () => { rig()?.face('curious', 1400); rex.say(pick(['A bird lives up there.','Shady spot.']), 1500);
           if (Math.random() < .6) setTimeout(() => { rex.face = 1; read(); rex.say('Reading under the tree.', 1500); }, 1700); }, 3000); break; }
-      case 'fgL': case 'fgR': case 'daisy': case 'buttercup': case 'pink': wiggle(id); burst(x, y, 12, 'petal');
+      case 'fgL': case 'fgR': case 'daisy': case 'buttercup': case 'pink': if (id === 'fgL' || id === 'fgR') swayKick(`#sceneFront [data-obj="${id}"] [data-sway]`, 10); else wiggle(id); burst(x, y, 12, 'petal');
         goDo(ax(x), 0, () => { rig()?.face('happy', 1600); rig()?.hearts(2); rex.say(pick(['Smells nice.','Flowers!','Pretty!']), 1400);
           if (ph === 'day') bugs.push(Object.assign(bug('fly', 9), { x, y })); }); break;
       case 'shrub': wiggle('shrub'); leaves(x, y, 6); goDo(ax(x) + 120, -1, () => { rex.say('Rustle rustle…', 1000); setTimeout(() => { wiggle('shrub'); bugs.push(Object.assign(bug('fly', 8), { x, y: y - 20 })); rex.hop = 1; rig()?.face('surprised', 900); rex.say('Oh! A butterfly!', 1500); }, 900); }); break;

@@ -8,7 +8,10 @@ function b2Box(it, n){ n = n || it.n; const w = it.w, h = w*B2.ar[n]; return it.
 function b2Img(it, n){ const [x, y, w, h] = b2Box(it, n); return `<image href="${B2.img[n || it.n]}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="none"/>`; }
 const SWAY_ORIGIN = { leaves:'50% 100%', hang:'50% 0%', top:'50% 0%', curtain:'50% 0%' };
 function b2Obj(it, inner, sway){ inner = inner || b2Img(it); sway = sway || it.sway;
-  return `<g class="obj" data-obj="${it.id || it.n}"><g class="sw"${sway ? ` data-sway="${sway}" style="transform-origin:${SWAY_ORIGIN[sway]}"` : ''}>${inner}</g></g>`; }
+  const org = sway === 'fg' ? fgOrigin(it.id) : SWAY_ORIGIN[sway];
+  return `<g class="obj" data-obj="${it.id || it.n}"><g class="sw"${sway ? ` data-sway="${sway}" style="transform-origin:${org}"` : ''}>${inner}</g></g>`; }
+// foreground plants rock from where they'd be rooted: the bottom outside corner, off screen
+const fgOrigin = id => /L$|left/i.test(id) ? '0% 100%' : '100% 100%';
 function b2Glow(id, x, y, r, col){ return `<circle class="b2glow" data-glow="${id}" cx="${x}" cy="${y}" r="${r}" fill="url(#b2g_${id})" style="mix-blend-mode:screen"/><defs><radialGradient id="b2g_${id}"><stop offset="0" stop-color="${col}" stop-opacity=".75"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient></defs>`; }
 function b2Curtains(){ const C = B2.layout.curtains, open = BR.curtOpen;
   const one = (side) => { const it = C[open ? side : side + 'c']; return `<g class="sw" data-sway="curtain" data-side="${side}" style="transform-origin:50% 0%">${b2Img(it)}</g>`; };
@@ -40,7 +43,10 @@ function swayKick(sel, v){ document.querySelectorAll(sel).forEach(el => { const 
 function swayStep(dt, t){ const els = document.querySelectorAll('#zoom [data-sway]'); if (!els.length) return;
   const dx = swPtr && swPrev ? swPtr.x - swPrev.x : 0; swPrev = swPtr ? { ...swPtr } : null;
   els.forEach((el, i) => { const s = SWS.get(el) || { a:0, v:0 }, type = el.dataset.sway;
-    if (swPtr && Math.abs(dx) > .5){ const r = el.getBoundingClientRect(); if (swPtr.x > r.left && swPtr.x < r.right && swPtr.y > r.top && swPtr.y < r.bottom) s.v += Math.max(-40, Math.min(40, dx))*(type === 'curtain' ? .9 : 1.6); }
+    if (swPtr && Math.abs(dx) > .5){ const r = el.getBoundingClientRect(); if (swPtr.x > r.left && swPtr.x < r.right && swPtr.y > r.top && swPtr.y < r.bottom) s.v += Math.max(-40, Math.min(40, dx))*(type === 'curtain' ? .9 : type === 'fg' ? .35 : 1.6); }
+    if (type === 'fg'){   // big, close, and soft: a slow rock of a degree or two, never a shear
+      const idle = Math.sin(t*.55 + i*1.7)*.7 + Math.sin(t*1.3 + i)*.2; s.v += ((idle - s.a)*9 - s.v*2.6)*dt; s.a += s.v*dt; s.a = Math.max(-4, Math.min(4, s.a)); SWS.set(el, s);
+      el.style.transform = `rotate(${(el.style.transformOrigin.startsWith('0%') ? s.a : -s.a).toFixed(2)}deg)`; return; }
     const idle = type === 'curtain' ? Math.sin(t*.8 + i)*.9 + Math.sin(t*1.9 + i*2)*.3 : type === 'top' ? Math.sin(t*1.1 + i)*.8 : type === 'hang' ? Math.sin(t*.7 + i)*.6 : Math.sin(t*.9 + i)*.25;
     s.v += ((idle - s.a)*22 - s.v*3.2)*dt; s.a += s.v*dt; s.a = Math.max(-12, Math.min(12, s.a)); SWS.set(el, s);
     el.style.transform = `skewX(${(type === 'leaves' ? -s.a : s.a).toFixed(2)}deg)`; }); }
@@ -73,7 +79,7 @@ function bedroomAct(id, x, y, H){ const ph = phase(), L = B2.layout, it = L.back
     case 'bunting': swayKick('[data-obj="bunting"] [data-sway]', 34); H.burst(x, y, 6, 'confetti'); rex.say('Party flags!', 1100); return true;
     case 'hangplant': case 'basket': swayKick(`[data-obj="${id}"] [data-sway]`, 30); H.leaves(x, y, 6); H.goDo(cx + (id === 'basket' ? -150 : 0), id === 'basket' ? 1 : 0, () => rex.say(pick(['Watering the plants.','Does it need water?','Leafy!']), 1400)); return true;
     case 'stand': wiggle('stand'); rex.say(pick(['My secret snack drawer.','Nothing in here. Probably.']), 1500); return true;
-    case 'fgL': case 'fgR': swayKick(`[data-obj="${id}"] [data-sway]`, 36); H.leaves(x, y, 6); return true;
+    case 'fgL': case 'fgR': swayKick(`[data-obj="${id}"] [data-sway]`, 10); H.leaves(x, y, 6); return true;
     case 'rug': return false;
   }
   return false; }

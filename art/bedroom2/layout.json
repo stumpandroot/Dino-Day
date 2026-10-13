@@ -196,7 +196,7 @@
    "y": 600,
    "w": 340,
    "id": "fgL",
-   "sway": "leaves"
+   "sway": "fg"
   },
   {
    "n": "fgR",
@@ -204,7 +204,7 @@
    "y": 630,
    "w": 300,
    "id": "fgR",
-   "sway": "leaves"
+   "sway": "fg"
   }
  ]
 }
