@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791862991; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791896050; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -378,7 +378,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .scene .obj.sway{animation:sway 1.4s ease-out}
 @keyframes sway{0%{transform:rotate(0)}20%{transform:rotate(1.6deg)}45%{transform:rotate(-1.2deg)}70%{transform:rotate(.6deg)}100%{transform:rotate(0)}}
 .fxc.back{z-index:2}
-#wprops{position:relative;z-index:2}
+#wprops{position:absolute;inset:0;z-index:2;pointer-events:none}   /* full-size, so a prop's height above the grass is measured from the grass (it had collapsed to 0 px and the ball fell above the sky) */
 
 /* ================= v8 UI pass: mockup look (logo, soft palette, rounded type) ================= */
 body{color:var(--text);transition:background .8s}
@@ -1154,6 +1154,7 @@ function heart(){ const m = g('marks'); const e = document.createElementNS(NS, '
 const S = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, y:0, vy:0, sq:0, pop:0, aF:[147,51], aB:[28,116], walk:0, ph:0, hb:0, breath:0 };
 const T = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, pose:'rest' };
 const fired = new Set();
+let appWalk = false, walkSpd = 1;
 let act = null, actT0 = 0, lastPtr = 0, ptr = null, nextBlink = 0, blinkT = -1e9, blinkShown = false, nextIdle = performance.now() + 5000, sleeping = false, stage = '';
 const lerp = (a, b, k) => a + (b - a)*k;
 const ease = x => x < 0 ? 0 : x > 1 ? 1 : x*x*(3 - 2*x);
@@ -1175,7 +1176,9 @@ function frame(t){
   // ---- actions ----
   if (act === 'wave'){ armF = [190 - 6*Math.sin(k*10 - .6), -110 + Math.sin(k*10 - .9)*24]; if (k > 2.6) endAct(); }   // hand trails the forearm
   if (act === 'walk'){ walking = k < 4; if (k > 4.4) endAct(); }
-  if (HOOK.walking()) walking = true;
+  if (HOOK.walking() || appWalk) walking = true;
+  // he doesn't keep breathing deeply once he sets off: the breath lets go and his face comes back
+  if (walking && act === 'breath'){ act = null; stage = ''; setFace(base); blinkT = t + 200; nextIdle = t + 6000; }
   if (act === 'look'){ T.lx = Math.sin(k*2.2); T.ly = -.2 + Math.sin(k*1.3)*.3; if (k > 3) endAct(); }
   let K = null, KH = null, KT = null;
   if (KEYS[act]){ const keys = KEYS[act];
@@ -1215,7 +1218,7 @@ function frame(t){
   for (const key of ['bL','bR']) S[key] = [lerp(S[key][0], T[key][0], kk), lerp(S[key][1], T[key][1], kk)];
   // ---- walk cycle: contact, down, pass, up, mirrored; arms swing opposite the legs ----
   S.walk = lerp(S.walk, walking ? 1 : 0, .08); const W = S.walk;
-  if (W > .01) S.ph += dt*5.2; const sp = Math.sin(S.ph), cp = Math.cos(S.ph);
+  if (W > .01) S.ph += dt*5.2*Math.min(2.2, Math.pow(walkSpd, .7)); const sp = Math.sin(S.ph), cp = Math.cos(S.ph);   // faster trips take quicker steps instead of skating
   const legA = 16*W, liftF = 6*W*Math.max(0, cp), liftB = 6*W*Math.max(0, -cp);
   // squash and stretch in the legs: the reaching leg stretches, the swinging leg shortens as it passes (reads as a bent knee),
   // the planted leg gives a little under his weight
@@ -1271,7 +1274,7 @@ function frame(t){
   const zz = g('zzz'); if (zz) zz.setAttribute('transform', `translate(0 ${Math.sin(s*1.5)*6})`);
   const bb = g('bub'); if (bb) bb.setAttribute('transform', `translate(540 180) scale(${.8 + .3*Math.sin(s*1.6)}) translate(-540 -180)`);
   // ---- idle: mostly a slow deep breath, sometimes a mood ----
-  if (on('optIdle') && !act && !untilT && !sleeping && base === 'neutral' && t > nextIdle){
+  if (on('optIdle') && !act && !untilT && !sleeping && !appWalk && base === 'neutral' && t > nextIdle){
     nextIdle = t + 8000 + Math.random()*6000;
     if (Math.random() < .55) ACTIONS['Deep breath'](); else setFace(['happy','curious','thinking','proud','confident'][Math.floor(Math.random()*5)], 2400); }
   requestAnimationFrame(frame);
@@ -1791,6 +1794,7 @@ window.RexRig = {
   swing(v){ DG.swT = Math.max(-30, Math.min(30, v)); },
   drop(){ DG.on = false; DG.swT = 0; setFace('worried'); },
   land(v){ S.sq = Math.min(.22, .06 + v/9000); DG.shakeT = performance.now() + 160; setTimeout(() => { setFace('happy', 1800); blinkT = performance.now() + 900; }, 800); },
+  walking(z, sp){ appWalk = !!z; walkSpd = sp || 1; },
   flip(f){ turnTo(f < 0 ? -1 : 1); }, snapFace(f){ TN.face = f < 0 ? -1 : 1; setFlip(TN.face); },
 };
 setFace('neutral'); requestAnimationFrame(frame);
@@ -1926,9 +1930,11 @@ function bedroomScene(ph){ const L = B2.layout, F = ph === 'day' ? '' : ' filter
   const rug = floor.filter(i => i.id === 'rug'), furn = floor.filter(i => i.id !== 'rug').sort((a, b) => a.y - b.y);   // farther back first, so nearer pieces overlap them
   const piece = it => it.id === 'bed' ? b2Obj(it, b2Img(it, BR.bedMessy ? 'bedm' : 'bed')) : it.id === 'chest' ? b2Obj(it, BR.chestOpen ? b2Img(Object.assign({}, it, { w: it.w*1.09 }), 'chesto') : b2Img(it)) : b2Obj(it);
   const moon = L.back.find(i => i.id === 'moonshelf'), lan = L.back.find(i => i.id === 'lantern'), [mx, my, mw] = b2Box(moon), [lx, ly, lw, lh] = b2Box(lan);
+  // the window's own things (the hanging plant and the lantern on the sill) sit behind the curtains when they're shut
+  const sill = () => `${b2Obj(L.hang, b2Img(L.hang), 'hang')}${lan ? piece(lan) : ''}`;
   const back = `${m2Filter(ph)}
     <g class="layer" data-depth=".35"${F}>${b2Img(view)}${night ? '<rect x="600" y="0" width="700" height="480" fill="#0E1636" opacity=".35"/>' + [[880,300],[905,292],[1010,318],[1060,296],[948,330]].map(([a, b]) => `<rect x="${a}" y="${b}" width="7" height="9" rx="1.5" fill="#FFD27A" opacity=".9"/>`).join('') : ''}</g>
-    <g class="layer" data-depth="1"${F}>${b2Img(shell)}${b2Curtains()}${b2Obj(L.hang, b2Img(L.hang), 'hang')}${wall.map(it => b2Obj(it)).join('')}${rug.map(it => b2Obj(it)).join('')}${furn.map(piece).join('')}</g>
+    <g class="layer" data-depth="1"${F}>${b2Img(shell)}${BR.curtOpen ? b2Curtains() + sill() : sill() + b2Curtains()}${wall.map(it => b2Obj(it)).join('')}${rug.map(it => b2Obj(it)).join('')}${furn.filter(it => it.id !== 'lantern').map(piece).join('')}</g>
     <g class="layer" data-depth="1">${BR.moon || night ? b2Glow('moon', (mx + mw*.47).toFixed(0), (my + mw*.12).toFixed(0), 120, '#FFF1C4') : ''}${BR.lantern ? b2Glow('lantern', (lx + lw/2).toFixed(0), (ly + lh*.55).toFixed(0), 110, '#FFC46A') : ''}</g>`;
   // while Rex is in bed, a copy of the footboard and its posts draws in front of him, so he's in the bed rather than on top of it
   let foot = ''; if (rex.inBed){ const bed = L.back.find(i => i.id === 'bed'), [x, y, w, h] = b2Box(bed, 'bedm'), P = [[0,.31],[.11,.31],[.11,.5],[.55,.55],[.55,.44],[.665,.44],[.665,1],[0,1]];
@@ -2182,6 +2188,7 @@ function sendHome(){ if (!rex.away || carry) return; const b = rexRectApp(); fal
 // The app's Rex brain (walk, hop, roar, sleep, read) drives the rig
 const rgPrev = { hop:0, shake:0, sleeping:false, reading:false, face:1 };
 function rigSync(){ const R = rig(); if (!R) return;
+  R.walking && R.walking(rex.state === 'walk' && !rex.away, rex.spd || 1);   // legs and arms walk while he moves
   if (rex.face !== rgPrev.face){ R.flip(rex.face); rgPrev.face = rex.face; }
   if (rex.hop > rgPrev.hop + .05) R.hop(480); rgPrev.hop = rex.hop;
   if (rex.shake > rgPrev.shake + .05) R.action('Roar'); rgPrev.shake = rex.shake;
@@ -2227,7 +2234,7 @@ function stargaze(){ if (!['dusk','night'].includes(phase())){ rex.say('We need 
 function feed(){ const x = Math.random()<.5 ? .25 : .75; const p = makeProp('apple', IC.apple, x, 34); p.y = Hh()*0.5; p.vy = 0; p.drop = true;
   rex.say('Ooh, a snack!', 1200); setTimeout(()=> rex.goTo(x + (rex.x < x ? -.08 : .08), ()=>{ rex.face = x > rex.x ? 1 : -1; munch(p); }), 500); }
 function munch(p){ rig()?.munch(); let bites = 0; const iv = setInterval(()=>{ bites++; rex.poke(.5); p.el.style.transform = `scale(${1 - bites*.28})`; if (bites>=3){ clearInterval(iv); clearProp('apple'); rex.say(pick(['Yum!','So crunchy.','Thank you!']), 1500); rex.hop = 1; } }, 520); }
-function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), 30); p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
+function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), Math.round(Math.max(30, rexSize()*.36)));   /* sized to Rex, so it reads as his ball at any window size */ p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
 function roar(){ rex.state='idle'; rex.shake = 1; rex.sq = .12; rex.say('RAAAWR!', 1600); if (!RM){ world.animate([{transform:'translate(0,0)'},{transform:'translate(-3px,1px)'},{transform:'translate(3px,-1px)'},{transform:'translate(0,0)'}], {duration:220, iterations:3}); } setTimeout(()=>rex.say('…was that scary?', 1500), 1700); }
 function read(){ rex.state='idle'; rex.reading = true; rex.sitting = 1; rex.say('Story time.', 1400); }
 function rest(){ const go = () => { rex.state='idle'; rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2200); }; if (place()==='bedroom'){ rex.say('Nap time…', 1200); rex.goTo(PLACES.bedroom.bed, go); } else go(); }
@@ -3125,13 +3132,13 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closePlacePicker(); }
 function travelTo(dest){ if (travelling || dest === place()) return; travelling = true; closePlacePicker();
   const dir = dest === 'bedroom' ? 1 : -1, walkable = !rex.sleeping && !S.asleep && !rex.away && !carry && !fall && !reduceMotion.matches;
   bubble.classList.remove('on','btns'); clearAllProps(); rex.busyUntil = Date.now() + 4000;
-  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
+  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 2.4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
     rex.goTo(nx, () => { rex.travel = false; rex.spd = 1; travelling = false; rex.busyUntil = 0; rex.hop = 1;
       rex.say(dest === 'bedroom' ? pick(['Home sweet home.','My room!','Cozy in here.']) : pick(['Fresh air!','Back outside!','Hello, meadow!']), 1600); }); rex.x = dir > 0 ? -.12 : 1.12; };
   const swap = () => { S.place = dest; save(); drawScene(); try { render(); } catch(_){} };
   if (!walkable){ crossfade(swap, () => { travelling = false; rex.busyUntil = 0; rex.x = rex.tx = .5; }); return; }
   // 1. turn and walk off the edge
-  rex.travel = true; rex.spd = 4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
+  rex.travel = true; rex.spd = 2.4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
     // 2. pan: the old place slides out as the new one slides in
     pan(dir, swap, arrive); });
   rex.tx = dir > 0 ? 1.14 : -.14;   // goTo clamps to the screen; the trip goes past the edge
@@ -3677,7 +3684,8 @@ const FX = (() => {
       fc.fillStyle = night ? `rgba(220,230,255,${a*tw*.6})` : ph === 'golden' || ph === 'dusk' ? `rgba(255,214,150,${a*tw})` : `rgba(255,248,225,${a*tw})`;
       fc.beginPath(); fc.arc(d.x, d.y, d.r*d.z, 0, 6.28); fc.fill(); }
     const BEHIND = { ladybug:1, moth:1 }, fcF = fc; fc = bc; bc.setTransform(dpr, 0, 0, dpr, 0, 0); bc.clearRect(0, 0, W, H);
-    for (const b of bugs) if (BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
+    const sillHidden = place() === 'bedroom' && typeof BR !== 'undefined' && !BR.curtOpen;   // the sill ladybug is behind the curtains when they're shut
+    for (const b of bugs) if (BEHIND[b.kind] && !(sillHidden && b.kind === 'ladybug')) drawBug(b, dt, t, rx, ry);
     fc = fcF; for (const b of bugs) if (!BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
     if (bugs[0] && bugs[0].kind === 'fly'){ bfly.x = ax(bugs[0].x); bfly.y = ay(bugs[0].y); }
     for (let i = bits.length - 1; i >= 0; i--){ const b = bits[i]; b.life -= b.decay; if (b.life <= 0){ bits.splice(i, 1); continue; } drawBit(b, dt); }

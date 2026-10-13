@@ -202,6 +202,7 @@ function heart(){ const m = g('marks'); const e = document.createElementNS(NS, '
 const S = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, y:0, vy:0, sq:0, pop:0, aF:[147,51], aB:[28,116], walk:0, ph:0, hb:0, breath:0 };
 const T = { bL:[0,0], bR:[0,0], eyeS:1, head:0, blush:1, lx:0, ly:0, pose:'rest' };
 const fired = new Set();
+let appWalk = false, walkSpd = 1;
 let act = null, actT0 = 0, lastPtr = 0, ptr = null, nextBlink = 0, blinkT = -1e9, blinkShown = false, nextIdle = performance.now() + 5000, sleeping = false, stage = '';
 const lerp = (a, b, k) => a + (b - a)*k;
 const ease = x => x < 0 ? 0 : x > 1 ? 1 : x*x*(3 - 2*x);
@@ -223,7 +224,9 @@ function frame(t){
   // ---- actions ----
   if (act === 'wave'){ armF = [190 - 6*Math.sin(k*10 - .6), -110 + Math.sin(k*10 - .9)*24]; if (k > 2.6) endAct(); }   // hand trails the forearm
   if (act === 'walk'){ walking = k < 4; if (k > 4.4) endAct(); }
-  if (HOOK.walking()) walking = true;
+  if (HOOK.walking() || appWalk) walking = true;
+  // he doesn't keep breathing deeply once he sets off: the breath lets go and his face comes back
+  if (walking && act === 'breath'){ act = null; stage = ''; setFace(base); blinkT = t + 200; nextIdle = t + 6000; }
   if (act === 'look'){ T.lx = Math.sin(k*2.2); T.ly = -.2 + Math.sin(k*1.3)*.3; if (k > 3) endAct(); }
   let K = null, KH = null, KT = null;
   if (KEYS[act]){ const keys = KEYS[act];
@@ -263,7 +266,7 @@ function frame(t){
   for (const key of ['bL','bR']) S[key] = [lerp(S[key][0], T[key][0], kk), lerp(S[key][1], T[key][1], kk)];
   // ---- walk cycle: contact, down, pass, up, mirrored; arms swing opposite the legs ----
   S.walk = lerp(S.walk, walking ? 1 : 0, .08); const W = S.walk;
-  if (W > .01) S.ph += dt*5.2; const sp = Math.sin(S.ph), cp = Math.cos(S.ph);
+  if (W > .01) S.ph += dt*5.2*Math.min(2.2, Math.pow(walkSpd, .7)); const sp = Math.sin(S.ph), cp = Math.cos(S.ph);   // faster trips take quicker steps instead of skating
   const legA = 16*W, liftF = 6*W*Math.max(0, cp), liftB = 6*W*Math.max(0, -cp);
   // squash and stretch in the legs: the reaching leg stretches, the swinging leg shortens as it passes (reads as a bent knee),
   // the planted leg gives a little under his weight
@@ -319,7 +322,7 @@ function frame(t){
   const zz = g('zzz'); if (zz) zz.setAttribute('transform', `translate(0 ${Math.sin(s*1.5)*6})`);
   const bb = g('bub'); if (bb) bb.setAttribute('transform', `translate(540 180) scale(${.8 + .3*Math.sin(s*1.6)}) translate(-540 -180)`);
   // ---- idle: mostly a slow deep breath, sometimes a mood ----
-  if (on('optIdle') && !act && !untilT && !sleeping && base === 'neutral' && t > nextIdle){
+  if (on('optIdle') && !act && !untilT && !sleeping && !appWalk && base === 'neutral' && t > nextIdle){
     nextIdle = t + 8000 + Math.random()*6000;
     if (Math.random() < .55) ACTIONS['Deep breath'](); else setFace(['happy','curious','thinking','proud','confident'][Math.floor(Math.random()*5)], 2400); }
   requestAnimationFrame(frame);
@@ -854,6 +857,7 @@ window.RexRig = {
   swing(v){ DG.swT = Math.max(-30, Math.min(30, v)); },
   drop(){ DG.on = false; DG.swT = 0; setFace('worried'); },
   land(v){ S.sq = Math.min(.22, .06 + v/9000); DG.shakeT = performance.now() + 160; setTimeout(() => { setFace('happy', 1800); blinkT = performance.now() + 900; }, 800); },
+  walking(z, sp){ appWalk = !!z; walkSpd = sp || 1; },
   flip(f){ turnTo(f < 0 ? -1 : 1); }, snapFace(f){ TN.face = f < 0 ? -1 : 1; setFlip(TN.face); },
 };
 setFace('neutral'); requestAnimationFrame(frame);

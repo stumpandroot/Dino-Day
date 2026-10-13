@@ -19,9 +19,11 @@ function bedroomScene(ph){ const L = B2.layout, F = ph === 'day' ? '' : ' filter
   const rug = floor.filter(i => i.id === 'rug'), furn = floor.filter(i => i.id !== 'rug').sort((a, b) => a.y - b.y);   // farther back first, so nearer pieces overlap them
   const piece = it => it.id === 'bed' ? b2Obj(it, b2Img(it, BR.bedMessy ? 'bedm' : 'bed')) : it.id === 'chest' ? b2Obj(it, BR.chestOpen ? b2Img(Object.assign({}, it, { w: it.w*1.09 }), 'chesto') : b2Img(it)) : b2Obj(it);
   const moon = L.back.find(i => i.id === 'moonshelf'), lan = L.back.find(i => i.id === 'lantern'), [mx, my, mw] = b2Box(moon), [lx, ly, lw, lh] = b2Box(lan);
+  // the window's own things (the hanging plant and the lantern on the sill) sit behind the curtains when they're shut
+  const sill = () => `${b2Obj(L.hang, b2Img(L.hang), 'hang')}${lan ? piece(lan) : ''}`;
   const back = `${m2Filter(ph)}
     <g class="layer" data-depth=".35"${F}>${b2Img(view)}${night ? '<rect x="600" y="0" width="700" height="480" fill="#0E1636" opacity=".35"/>' + [[880,300],[905,292],[1010,318],[1060,296],[948,330]].map(([a, b]) => `<rect x="${a}" y="${b}" width="7" height="9" rx="1.5" fill="#FFD27A" opacity=".9"/>`).join('') : ''}</g>
-    <g class="layer" data-depth="1"${F}>${b2Img(shell)}${b2Curtains()}${b2Obj(L.hang, b2Img(L.hang), 'hang')}${wall.map(it => b2Obj(it)).join('')}${rug.map(it => b2Obj(it)).join('')}${furn.map(piece).join('')}</g>
+    <g class="layer" data-depth="1"${F}>${b2Img(shell)}${BR.curtOpen ? b2Curtains() + sill() : sill() + b2Curtains()}${wall.map(it => b2Obj(it)).join('')}${rug.map(it => b2Obj(it)).join('')}${furn.filter(it => it.id !== 'lantern').map(piece).join('')}</g>
     <g class="layer" data-depth="1">${BR.moon || night ? b2Glow('moon', (mx + mw*.47).toFixed(0), (my + mw*.12).toFixed(0), 120, '#FFF1C4') : ''}${BR.lantern ? b2Glow('lantern', (lx + lw/2).toFixed(0), (ly + lh*.55).toFixed(0), 110, '#FFC46A') : ''}</g>`;
   // while Rex is in bed, a copy of the footboard and its posts draws in front of him, so he's in the bed rather than on top of it
   let foot = ''; if (rex.inBed){ const bed = L.back.find(i => i.id === 'bed'), [x, y, w, h] = b2Box(bed, 'bedm'), P = [[0,.31],[.11,.31],[.11,.5],[.55,.55],[.55,.44],[.665,.44],[.665,1],[0,1]];

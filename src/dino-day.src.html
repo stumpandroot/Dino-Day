@@ -378,7 +378,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--coral);outlin
 .scene .obj.sway{animation:sway 1.4s ease-out}
 @keyframes sway{0%{transform:rotate(0)}20%{transform:rotate(1.6deg)}45%{transform:rotate(-1.2deg)}70%{transform:rotate(.6deg)}100%{transform:rotate(0)}}
 .fxc.back{z-index:2}
-#wprops{position:relative;z-index:2}
+#wprops{position:absolute;inset:0;z-index:2;pointer-events:none}   /* full-size, so a prop's height above the grass is measured from the grass (it had collapsed to 0 px and the ball fell above the sky) */
 
 /* ================= v8 UI pass: mockup look (logo, soft palette, rounded type) ================= */
 body{color:var(--text);transition:background .8s}
@@ -1270,6 +1270,7 @@ function sendHome(){ if (!rex.away || carry) return; const b = rexRectApp(); fal
 // The app's Rex brain (walk, hop, roar, sleep, read) drives the rig
 const rgPrev = { hop:0, shake:0, sleeping:false, reading:false, face:1 };
 function rigSync(){ const R = rig(); if (!R) return;
+  R.walking && R.walking(rex.state === 'walk' && !rex.away, rex.spd || 1);   // legs and arms walk while he moves
   if (rex.face !== rgPrev.face){ R.flip(rex.face); rgPrev.face = rex.face; }
   if (rex.hop > rgPrev.hop + .05) R.hop(480); rgPrev.hop = rex.hop;
   if (rex.shake > rgPrev.shake + .05) R.action('Roar'); rgPrev.shake = rex.shake;
@@ -1315,7 +1316,7 @@ function stargaze(){ if (!['dusk','night'].includes(phase())){ rex.say('We need 
 function feed(){ const x = Math.random()<.5 ? .25 : .75; const p = makeProp('apple', IC.apple, x, 34); p.y = Hh()*0.5; p.vy = 0; p.drop = true;
   rex.say('Ooh, a snack!', 1200); setTimeout(()=> rex.goTo(x + (rex.x < x ? -.08 : .08), ()=>{ rex.face = x > rex.x ? 1 : -1; munch(p); }), 500); }
 function munch(p){ rig()?.munch(); let bites = 0; const iv = setInterval(()=>{ bites++; rex.poke(.5); p.el.style.transform = `scale(${1 - bites*.28})`; if (bites>=3){ clearInterval(iv); clearProp('apple'); rex.say(pick(['Yum!','So crunchy.','Thank you!']), 1500); rex.hop = 1; } }, 520); }
-function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), 30); p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
+function ballDrop(){ const p = makeProp('ball', IC.ball, rex.x + (Math.random()<.5?-.25:.25), Math.round(Math.max(30, rexSize()*.36)));   /* sized to Rex, so it reads as his ball at any window size */ p.y = Hh()*0.45; p.vy = 0; p.vx = (Math.random()*2-1)*0.25; p.ball = true; rex.say('Ball!!', 1000); rex.chase = true; }
 function roar(){ rex.state='idle'; rex.shake = 1; rex.sq = .12; rex.say('RAAAWR!', 1600); if (!RM){ world.animate([{transform:'translate(0,0)'},{transform:'translate(-3px,1px)'},{transform:'translate(3px,-1px)'},{transform:'translate(0,0)'}], {duration:220, iterations:3}); } setTimeout(()=>rex.say('…was that scary?', 1500), 1700); }
 function read(){ rex.state='idle'; rex.reading = true; rex.sitting = 1; rex.say('Story time.', 1400); }
 function rest(){ const go = () => { rex.state='idle'; rex.sleeping = true; rex.sitting = 1; rex.say('Zzz…', 2200); }; if (place()==='bedroom'){ rex.say('Nap time…', 1200); rex.goTo(PLACES.bedroom.bed, go); } else go(); }
@@ -2353,7 +2354,8 @@ const FX = (() => {
       fc.fillStyle = night ? `rgba(220,230,255,${a*tw*.6})` : ph === 'golden' || ph === 'dusk' ? `rgba(255,214,150,${a*tw})` : `rgba(255,248,225,${a*tw})`;
       fc.beginPath(); fc.arc(d.x, d.y, d.r*d.z, 0, 6.28); fc.fill(); }
     const BEHIND = { ladybug:1, moth:1 }, fcF = fc; fc = bc; bc.setTransform(dpr, 0, 0, dpr, 0, 0); bc.clearRect(0, 0, W, H);
-    for (const b of bugs) if (BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
+    const sillHidden = place() === 'bedroom' && typeof BR !== 'undefined' && !BR.curtOpen;   // the sill ladybug is behind the curtains when they're shut
+    for (const b of bugs) if (BEHIND[b.kind] && !(sillHidden && b.kind === 'ladybug')) drawBug(b, dt, t, rx, ry);
     fc = fcF; for (const b of bugs) if (!BEHIND[b.kind]) drawBug(b, dt, t, rx, ry);
     if (bugs[0] && bugs[0].kind === 'fly'){ bfly.x = ax(bugs[0].x); bfly.y = ay(bugs[0].y); }
     for (let i = bits.length - 1; i >= 0; i--){ const b = bits[i]; b.life -= b.decay; if (b.life <= 0){ bits.splice(i, 1); continue; } drawBit(b, dt); }

@@ -30,13 +30,13 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closePlacePicker(); }
 function travelTo(dest){ if (travelling || dest === place()) return; travelling = true; closePlacePicker();
   const dir = dest === 'bedroom' ? 1 : -1, walkable = !rex.sleeping && !S.asleep && !rex.away && !carry && !fall && !reduceMotion.matches;
   bubble.classList.remove('on','btns'); clearAllProps(); rex.busyUntil = Date.now() + 4000;
-  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
+  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 2.4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
     rex.goTo(nx, () => { rex.travel = false; rex.spd = 1; travelling = false; rex.busyUntil = 0; rex.hop = 1;
       rex.say(dest === 'bedroom' ? pick(['Home sweet home.','My room!','Cozy in here.']) : pick(['Fresh air!','Back outside!','Hello, meadow!']), 1600); }); rex.x = dir > 0 ? -.12 : 1.12; };
   const swap = () => { S.place = dest; save(); drawScene(); try { render(); } catch(_){} };
   if (!walkable){ crossfade(swap, () => { travelling = false; rex.busyUntil = 0; rex.x = rex.tx = .5; }); return; }
   // 1. turn and walk off the edge
-  rex.travel = true; rex.spd = 4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
+  rex.travel = true; rex.spd = 2.4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
     // 2. pan: the old place slides out as the new one slides in
     pan(dir, swap, arrive); });
   rex.tx = dir > 0 ? 1.14 : -.14;   // goTo clamps to the screen; the trip goes past the edge
