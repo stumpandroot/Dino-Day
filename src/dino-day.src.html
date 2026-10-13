@@ -14,7 +14,7 @@ window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.
 <style>
 /* Layout: Rex's illustrated world on top, a cream task sheet sliding over it; pull the world down to play */
 :root{
-  --page:#F6E4D6; --cream:#FBF1E7; --sheet:#FFF9F2; --card:#FFFFFF; --chip:#F5EEE4; --line:#EFE4D6; --ink:#24453A; --text:#3A4A42; --muted:#7D867C;
+  --page:#F6E4D6; --cream:#FBF1E7; --sheet:#FFF9F2; --card:#FFFFFF; --chip:#F5EEE4; --line:#EFE4D6; --ink:#24453A; --text:#3A4A42; --muted:#69726A;
   --sage:#8DB07A; --olive:#4F7A4F; --olive-ink:#24453A; --coral:#EE7F62; --coral-ink:#fff; --teal:#4F8C80;
   --peach:#FBE3D4; --mint:#E3EDD3; --upnext:#DDE9CB; --sky:#E1ECF4; --lav:#ECE6F5; --rose:#FBE1E1; --butter:#FCEFCB;
   --glass:rgba(255,250,243,.86); --toast:#24453A; --toast-ink:#fff; --shadow:rgba(90,60,30,.10);
@@ -27,7 +27,7 @@ window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.
 .app[data-phase=golden]{ --cream:#FAEBDD; --sheet:#FFF4EA; --chip:#F7EBDD; --line:#F0DFCC; --upnext:#EFE0C2; --mint:#EEE5CC; }
 html[data-phase=dusk]{ --page:#E9DCE3; }
 html[data-phase=night]{ --page:#151A28; }
-.app[data-phase=dusk]{ --page:#E9DCE3; --cream:#F1E6EA; --sheet:#F8F0F1; --card:#FFFBFB; --chip:#EFE5EA; --line:#E6D8DF; --ink:#33364F; --text:#3E4258; --muted:#857F92;
+.app[data-phase=dusk]{ --page:#E9DCE3; --cream:#F1E6EA; --sheet:#F8F0F1; --card:#FFFBFB; --chip:#EFE5EA; --line:#E6D8DF; --ink:#33364F; --text:#3E4258; --muted:#6C667C;
   --mint:#E4E6EE; --upnext:#E3DDEF; --peach:#F5DCD8; --sky:#DDE3F1; --lav:#E5DDF1; --rose:#F5DCE0; --butter:#F3E7CF; --olive:#5A6C8C; --olive-ink:#33364F;
   --glass:rgba(250,243,246,.84); --toast:#33364F; }
 .app[data-phase=night]{ --page:#151A28; --cream:#1C2233; --sheet:#20273A; --card:#2A3248; --chip:#323B53; --line:#363F57; --ink:#F1EADF; --text:#E3DCD2; --muted:#9AA2B6;
@@ -899,6 +899,14 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 /* the sheet slides away under Rex's Space (an older color-fade rule had replaced its slide, so it vanished in one frame) */
 .sheet{transition:top .55s cubic-bezier(.2,.8,.2,1),transform .5s cubic-bezier(.2,.8,.2,1),background-color .8s}
 .app.desk .sheet{transition:background-color .8s}
+
+/* night and dusk: text follows the phase colors (it was inheriting the daytime ink from the page) */
+.app{color:var(--text)}
+.app[data-phase=night]{--muted:#A9B0C2}
+.dchip.on{color:var(--sheet)}
+.app[data-phase=night] [data-dcat].dchip:not(.on){background:var(--chip)}
+.app[data-phase=night] .link.danger{color:#F59A80}
+.app[data-phase=night] .imp{color:var(--coral-ink)}
 </style>
 </head>
 <body>
