@@ -927,6 +927,15 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .travelOld{position:absolute;inset:0;pointer-events:none;z-index:0}
 #placeChip svg:last-child{transition:transform .25s}
 .scene.warm{opacity:.01;pointer-events:none;z-index:-1}
+
+/* Rex's colors */
+.rcrow{flex-wrap:wrap;row-gap:10px}
+.rcpick{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.rcsw{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:340px}
+.rcsw button,.rccustom{width:28px;height:28px;border-radius:50%;background:var(--sw);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);position:relative;cursor:pointer}
+.rcsw button[aria-pressed=true],.rccustom.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--olive-ink)}
+.rccustom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+@media (max-width:520px){.rcpick{align-items:flex-start;width:100%}.rcsw{justify-content:flex-start;max-width:none}}
 </style>
 </head>
 <body>
@@ -1888,6 +1897,7 @@ let dkTab = 'later';
 /*__TASKDETAIL__*/
 /*__TRAVEL__*/
 /*__PERF__*/
+/*__COLORS__*/
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];
@@ -1974,6 +1984,7 @@ function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div 
     <div class="row"><div><div class="lab">Your stats</div><div class="hint">What you've done, sessions, keepsakes. Only here, never on Today.</div></div><button class="pill ghost mint" data-stats>Open</button></div></div>
   <div class="glabel">Rex</div><div class="group">
     <div class="row"><div><div class="lab">Rex's spot</div><div class="hint">Where he hangs out.</div></div>${seg('place', [['meadow','Meadow'],['bedroom','Bedroom']])}</div>
+    ${rexColorRow()}
     <div class="row"><div><div class="lab">Chattiness</div><div class="hint">How often Rex talks and reacts.</div></div>${seg('chat', [['often','Often'],['sometimes','Some'],['quiet','Quiet']])}</div>
     <div class="row"><div><div class="lab">Suggests what's next</div><div class="hint">Rex's pick at the top of Today.</div></div>${seg('suggest', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>
