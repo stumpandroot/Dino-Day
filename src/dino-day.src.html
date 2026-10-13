@@ -781,7 +781,6 @@ h1,h2,.hello h1,.card h2{color:var(--ink)}
 .app.desk.expanded .playbar .tiles{display:grid;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;overflow:visible}
 .app.desk.expanded .spacepill{display:none}
 .app.desk.expanded .chips-r{top:16px;bottom:auto;right:16px}
-.app.desk:not(.expanded) #sceneFront [data-obj="fgL"],.app.desk:not(.expanded) #sceneFront [data-obj="fgR"]{display:none}
 
 /* Pages polish */
 .app.desk .nodesk{display:none}
@@ -1203,8 +1202,13 @@ function shadowVis(v){ rexEl.classList.toggle('lifted', !v); if (v) $('#dropShad
 // While he's held or falling, his shadow waits on the surface below: smaller and fainter the higher he is
 function dropShadowAt(x, y, w, h, s){ const d = $('#dropShadow'), gap = Math.max(0, s.y - (y + h)), k = Math.max(.35, 1 - gap/500), sw = w*.62*k;
   d.style.width = sw + 'px'; d.style.transform = `translate(${x + w*.58 - sw/2}px, ${s.y - 8}px)`; d.style.opacity = (k*.9).toFixed(2); }
-function toLayer(){ const b = rexRectApp(); if (rexEl.parentNode !== rexLayer){ rexLayer.append(rexEl, bubble); rex.away = true; } rexEl.style.left = b.x + 'px'; rexEl.style.top = b.y + 'px'; return b; }
-function toWorld(cx){ const zr = $('#zoom').getBoundingClientRect(), a = AR(); $('#wprops').after(rexEl); rexEl.after(bubble); rexEl.style.top = ''; rex.away = false; rex.perch = null;
+// Moving Rex between the world and the app layer makes the browser redraw him from scratch; for a frame his light overlays
+// (masked to his outline) can show as a flat patch and his lighting filter can drop him. Hide the overlays and re-link the filter so he stays solid.
+function settleMove(move){ const ov = rexEl.querySelectorAll('.tint,.rim'); ov.forEach(o => o.style.visibility = 'hidden'); move();
+  const g = document.getElementById('rexLit'); if (g && g.hasAttribute('filter')){ g.setAttribute('filter', 'none'); void g.getBBox(); g.setAttribute('filter', 'url(#rexFx)'); }
+  requestAnimationFrame(() => requestAnimationFrame(() => ov.forEach(o => o.style.visibility = ''))); }
+function toLayer(){ const b = rexRectApp(); if (rexEl.parentNode !== rexLayer){ settleMove(() => rexLayer.append(rexEl, bubble)); rex.away = true; } rexEl.style.left = b.x + 'px'; rexEl.style.top = b.y + 'px'; return b; }
+function toWorld(cx){ const zr = $('#zoom').getBoundingClientRect(), a = AR(); settleMove(() => { $('#wprops').after(rexEl); rexEl.after(bubble); }); rexEl.style.top = ''; rex.away = false; rex.perch = null;
   rex.x = rex.tx = Math.max(.08, Math.min(.92, (cx + a.left - zr.left)/zr.width)); rex.state = 'idle'; bubble._x = bubble._y = null; if (S.rexSpot){ S.rexSpot = null; save(); } }
 // After a reload, put him back where you left him: on the same spot if something is still there, otherwise he drops onto whatever is below
 function restoreSpot(){ const sp = S.rexSpot; if (!sp || app.classList.contains('expanded')) return; toLayer(); const a = AR(), w = rexEl.offsetWidth, h = rexEl.offsetHeight;
@@ -1346,8 +1350,8 @@ setInterval(autonomous, 4200);
 let last = performance.now(), t = 0; const bfly = { x:836, y:690 };
 function frame(now){
   const dt = Math.min(.05, (now-last)/1000); last = now; t += dt;
-  placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', size+'px');
-  const tall = app.classList.contains('expanded') ? (isDesk() ? h > w*0.9 : app.clientHeight > w*0.9) : isDesk() && h > w*0.9, vb = tall ? [0,170,1672,771] : [0,0,1672,941];
+  placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', (rex.away && app.classList.contains('expanded') ? size*1.04 : size)+'px');   // in Rex's Space the world is zoomed 4%; held or perched outside it, he matches that size so he doesn't pop on pickup or landing
+  const tall = app.classList.contains('expanded') ? (isDesk() ? h > w*0.9 : app.clientHeight > w*0.9) : isDesk() && h > w*0.9, vb = tall ? [48,215,1576,727] : [48,54,1576,887];   // a 48-unit margin on each side stays out of view, so the parallax never shows the art's edges
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
   const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
