@@ -927,6 +927,7 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .ppgrid span:not(.ppimg){font-size:12px;color:var(--muted);padding:0 2px 2px}
 .travelOld{position:absolute;inset:0;pointer-events:none;z-index:0}
 #placeChip svg:last-child{transition:transform .25s}
+.scene.warm{opacity:.01;pointer-events:none;z-index:-1}
 </style>
 </head>
 <body>
@@ -1394,7 +1395,8 @@ function frame(now){
   scene.querySelectorAll('.fly').forEach(f => { const i = +f.dataset.i; f.setAttribute('cx', 120+i*150 + Math.sin(t*.7+i)*45); f.setAttribute('cy', 640+(i%3)*60 + Math.cos(t*.9+i*2)*30); f.setAttribute('opacity', .4 + .6*Math.abs(Math.sin(t*1.5+i))); });
   // zzz
   if (rex.sleeping && Math.random() < dt*0.7){ const b = rexBox(); const z = document.createElement('div'); z.className='fx heart'; z.style.cssText += `left:${b.x+b.w*.25}px;top:${b.y}px;font:700 18px var(--display);color:#fff;width:auto;height:auto`; z.textContent='z'; fxHost().appendChild(z); setTimeout(()=>z.remove(), 1300); }
-  if (typeof FX !== 'undefined') FX.step(dt, t);
+  if (typeof watchFrame === 'function') watchFrame(dt);
+  if (typeof FX !== 'undefined' && (!lite || (frame._odd = !frame._odd))) FX.step(lite ? dt*2 : dt, t);   // light mode: effects at 30 frames a second
   requestAnimationFrame(frame);
 }
 
@@ -1880,6 +1882,7 @@ let dkTab = 'later';
 /*__PROJECTS__*/
 /*__TASKDETAIL__*/
 /*__TRAVEL__*/
+/*__PERF__*/
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
 function deskHabits(){ const wk = weekKeys(), L = ['M','T','W','T','F','S','S'], H = S.myHabits || [];

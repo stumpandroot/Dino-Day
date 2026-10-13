@@ -30,25 +30,30 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closePlacePicker(); }
 function travelTo(dest){ if (travelling || dest === place()) return; travelling = true; closePlacePicker();
   const dir = dest === 'bedroom' ? 1 : -1, walkable = !rex.sleeping && !S.asleep && !rex.away && !carry && !fall && !reduceMotion.matches;
   bubble.classList.remove('on','btns'); clearAllProps(); rex.busyUntil = Date.now() + 4000;
-  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 2.6; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
+  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
     rex.goTo(nx, () => { rex.travel = false; rex.spd = 1; travelling = false; rex.busyUntil = 0; rex.hop = 1;
       rex.say(dest === 'bedroom' ? pick(['Home sweet home.','My room!','Cozy in here.']) : pick(['Fresh air!','Back outside!','Hello, meadow!']), 1600); }); rex.x = dir > 0 ? -.12 : 1.12; };
   const swap = () => { S.place = dest; save(); drawScene(); try { render(); } catch(_){} };
   if (!walkable){ crossfade(swap, () => { travelling = false; rex.busyUntil = 0; rex.x = rex.tx = .5; }); return; }
   // 1. turn and walk off the edge
-  rex.travel = true; rex.spd = 2.6; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
+  rex.travel = true; rex.spd = 4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
     // 2. pan: the old place slides out as the new one slides in
     pan(dir, swap, arrive); });
   rex.tx = dir > 0 ? 1.14 : -.14;   // goTo clamps to the screen; the trip goes past the edge
 }
-function sceneParts(){ const z = $('#zoom'); return [$('#scene'), $('#sceneFront'), ...z.querySelectorAll('.fxc')].filter(Boolean); }
-function freeze(){ const z = $('#zoom'), box = document.createElement('div'); box.className = 'travelOld';
-  for (const el of [$('#scene'), $('#sceneFront')]){ const c = el.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => { if (n.tagName.toLowerCase() !== 'filter') n.removeAttribute('id'); }); box.appendChild(c); }
-  z.querySelectorAll(':scope > .fxc').forEach(cv => { const c = document.createElement('canvas'); c.className = cv.className; c.width = cv.width; c.height = cv.height; try { c.getContext('2d').drawImage(cv, 0, 0); } catch(_){} box.appendChild(c); });   // the light and shade go with it
-  z.insertBefore(box, $('#wprops')); return box; }
-function pan(dir, swap, done){ const old = freeze(); swap(); const parts = sceneParts(), D = 720, E = 'cubic-bezier(.65,0,.35,1)';
-  old.animate([{ transform:'translateX(0)' }, { transform:`translateX(${-dir*100}%)` }], { duration:D, easing:E, fill:'forwards' });
-  parts.forEach(el => el.animate([{ transform:`translateX(${dir*100}%)` }, { transform:'translateX(0)' }], { duration:D, easing:E }));
-  setTimeout(() => { old.remove(); done(); }, D); }
-function crossfade(swap, done){ const old = freeze(); swap(); rex.x = rex.tx = .5;
-  old.animate([{ opacity:1 }, { opacity:0 }], { duration:reduceMotion.matches ? 1 : 650, easing:'ease', fill:'forwards' }).onfinish = () => { old.remove(); done(); }; }
+function sceneParts(){ const z = $('#zoom'); return [$('#scene'), $('#sceneFront'), ...z.querySelectorAll(':scope > .fxc')].filter(Boolean); }
+// the old place slides out and fades, then the new one slides in from the other side: no copies of the art, so it stays light on phones
+function pan(dir, swap, done){ const parts = sceneParts(), OUT = 260, IN = 420;
+  parts.forEach(el => el.animate([{ transform:'none', opacity:1 }, { transform:`translateX(${-dir*30}%)`, opacity:0 }], { duration:OUT, easing:'cubic-bezier(.5,0,.75,0)', fill:'forwards' }));
+  setTimeout(() => { swap(); const now = sceneParts(); now.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.animate([{ transform:`translateX(${dir*30}%)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:IN, easing:'cubic-bezier(.2,.8,.2,1)' }); });
+    setTimeout(done, IN*.55); }, OUT); }
+function crossfade(swap, done){ const parts = sceneParts(), D = reduceMotion.matches ? 1 : 260;
+  parts.forEach(el => el.animate([{ opacity:1 }, { opacity:0 }], { duration:D, easing:'ease-in', fill:'forwards' }));
+  setTimeout(() => { swap(); rex.x = rex.tx = .5; sceneParts().forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.animate([{ opacity:0 }, { opacity:1 }], { duration:D*1.4, easing:'ease-out' }); }); done(); }, D); }
+
+// while Rex walks off, the next place is drawn once, invisibly, so its pictures are decoded before the camera gets there
+function warmUp(dest){ try { const ph = phase(), [b, f] = dest === 'bedroom' ? bedroomScene(ph) : meadowScene(ph), w = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  w.setAttribute('viewBox', scene.getAttribute('viewBox')); w.setAttribute('preserveAspectRatio', 'xMidYMax slice'); w.setAttribute('class', 'scene warm'); w.innerHTML = b + f;
+  w.querySelectorAll('[id]').forEach(n => { if (n.tagName.toLowerCase() !== 'filter' && n.tagName.toLowerCase() !== 'lineargradient') n.removeAttribute('id'); });
+  w.querySelectorAll('image').forEach(im => { const src = im.getAttribute('href'), u = ph !== 'day' && tintCache.get(tintKey(src, ph)); if (u) im.setAttribute('href', u); });
+  $('#zoom').insertBefore(w, $('#scene')); setTimeout(() => w.remove(), 2500); } catch(_){} }

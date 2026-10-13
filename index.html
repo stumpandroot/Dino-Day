@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791860986; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791861581; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -927,6 +927,7 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .ppgrid span:not(.ppimg){font-size:12px;color:var(--muted);padding:0 2px 2px}
 .travelOld{position:absolute;inset:0;pointer-events:none;z-index:0}
 #placeChip svg:last-child{transition:transform .25s}
+.scene.warm{opacity:.01;pointer-events:none;z-index:-1}
 </style>
 </head>
 <body>
@@ -2305,7 +2306,8 @@ function frame(now){
   scene.querySelectorAll('.fly').forEach(f => { const i = +f.dataset.i; f.setAttribute('cx', 120+i*150 + Math.sin(t*.7+i)*45); f.setAttribute('cy', 640+(i%3)*60 + Math.cos(t*.9+i*2)*30); f.setAttribute('opacity', .4 + .6*Math.abs(Math.sin(t*1.5+i))); });
   // zzz
   if (rex.sleeping && Math.random() < dt*0.7){ const b = rexBox(); const z = document.createElement('div'); z.className='fx heart'; z.style.cssText += `left:${b.x+b.w*.25}px;top:${b.y}px;font:700 18px var(--display);color:#fff;width:auto;height:auto`; z.textContent='z'; fxHost().appendChild(z); setTimeout(()=>z.remove(), 1300); }
-  if (typeof FX !== 'undefined') FX.step(dt, t);
+  if (typeof watchFrame === 'function') watchFrame(dt);
+  if (typeof FX !== 'undefined' && (!lite || (frame._odd = !frame._odd))) FX.step(lite ? dt*2 : dt, t);   // light mode: effects at 30 frames a second
   requestAnimationFrame(frame);
 }
 
@@ -3122,28 +3124,87 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closePlacePicker(); }
 function travelTo(dest){ if (travelling || dest === place()) return; travelling = true; closePlacePicker();
   const dir = dest === 'bedroom' ? 1 : -1, walkable = !rex.sleeping && !S.asleep && !rex.away && !carry && !fall && !reduceMotion.matches;
   bubble.classList.remove('on','btns'); clearAllProps(); rex.busyUntil = Date.now() + 4000;
-  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 2.6; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
+  const arrive = () => { const nx = dir > 0 ? .32 : .68; rex.travel = true; rex.spd = 4; rex.x = dir > 0 ? -.12 : 1.12; rex.tx = rex.x; rex.face = dir; rexEl.style.visibility = '';
     rex.goTo(nx, () => { rex.travel = false; rex.spd = 1; travelling = false; rex.busyUntil = 0; rex.hop = 1;
       rex.say(dest === 'bedroom' ? pick(['Home sweet home.','My room!','Cozy in here.']) : pick(['Fresh air!','Back outside!','Hello, meadow!']), 1600); }); rex.x = dir > 0 ? -.12 : 1.12; };
   const swap = () => { S.place = dest; save(); drawScene(); try { render(); } catch(_){} };
   if (!walkable){ crossfade(swap, () => { travelling = false; rex.busyUntil = 0; rex.x = rex.tx = .5; }); return; }
   // 1. turn and walk off the edge
-  rex.travel = true; rex.spd = 2.6; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
+  rex.travel = true; rex.spd = 4; rex.face = dir; rex.goTo(dir > 0 ? 1.14 : -.14, () => { rexEl.style.visibility = 'hidden';
     // 2. pan: the old place slides out as the new one slides in
     pan(dir, swap, arrive); });
   rex.tx = dir > 0 ? 1.14 : -.14;   // goTo clamps to the screen; the trip goes past the edge
 }
-function sceneParts(){ const z = $('#zoom'); return [$('#scene'), $('#sceneFront'), ...z.querySelectorAll('.fxc')].filter(Boolean); }
-function freeze(){ const z = $('#zoom'), box = document.createElement('div'); box.className = 'travelOld';
-  for (const el of [$('#scene'), $('#sceneFront')]){ const c = el.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => { if (n.tagName.toLowerCase() !== 'filter') n.removeAttribute('id'); }); box.appendChild(c); }
-  z.querySelectorAll(':scope > .fxc').forEach(cv => { const c = document.createElement('canvas'); c.className = cv.className; c.width = cv.width; c.height = cv.height; try { c.getContext('2d').drawImage(cv, 0, 0); } catch(_){} box.appendChild(c); });   // the light and shade go with it
-  z.insertBefore(box, $('#wprops')); return box; }
-function pan(dir, swap, done){ const old = freeze(); swap(); const parts = sceneParts(), D = 720, E = 'cubic-bezier(.65,0,.35,1)';
-  old.animate([{ transform:'translateX(0)' }, { transform:`translateX(${-dir*100}%)` }], { duration:D, easing:E, fill:'forwards' });
-  parts.forEach(el => el.animate([{ transform:`translateX(${dir*100}%)` }, { transform:'translateX(0)' }], { duration:D, easing:E }));
-  setTimeout(() => { old.remove(); done(); }, D); }
-function crossfade(swap, done){ const old = freeze(); swap(); rex.x = rex.tx = .5;
-  old.animate([{ opacity:1 }, { opacity:0 }], { duration:reduceMotion.matches ? 1 : 650, easing:'ease', fill:'forwards' }).onfinish = () => { old.remove(); done(); }; }
+function sceneParts(){ const z = $('#zoom'); return [$('#scene'), $('#sceneFront'), ...z.querySelectorAll(':scope > .fxc')].filter(Boolean); }
+// the old place slides out and fades, then the new one slides in from the other side: no copies of the art, so it stays light on phones
+function pan(dir, swap, done){ const parts = sceneParts(), OUT = 260, IN = 420;
+  parts.forEach(el => el.animate([{ transform:'none', opacity:1 }, { transform:`translateX(${-dir*30}%)`, opacity:0 }], { duration:OUT, easing:'cubic-bezier(.5,0,.75,0)', fill:'forwards' }));
+  setTimeout(() => { swap(); const now = sceneParts(); now.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.animate([{ transform:`translateX(${dir*30}%)`, opacity:0 }, { transform:'none', opacity:1 }], { duration:IN, easing:'cubic-bezier(.2,.8,.2,1)' }); });
+    setTimeout(done, IN*.55); }, OUT); }
+function crossfade(swap, done){ const parts = sceneParts(), D = reduceMotion.matches ? 1 : 260;
+  parts.forEach(el => el.animate([{ opacity:1 }, { opacity:0 }], { duration:D, easing:'ease-in', fill:'forwards' }));
+  setTimeout(() => { swap(); rex.x = rex.tx = .5; sceneParts().forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.animate([{ opacity:0 }, { opacity:1 }], { duration:D*1.4, easing:'ease-out' }); }); done(); }, D); }
+
+// while Rex walks off, the next place is drawn once, invisibly, so its pictures are decoded before the camera gets there
+function warmUp(dest){ try { const ph = phase(), [b, f] = dest === 'bedroom' ? bedroomScene(ph) : meadowScene(ph), w = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  w.setAttribute('viewBox', scene.getAttribute('viewBox')); w.setAttribute('preserveAspectRatio', 'xMidYMax slice'); w.setAttribute('class', 'scene warm'); w.innerHTML = b + f;
+  w.querySelectorAll('[id]').forEach(n => { if (n.tagName.toLowerCase() !== 'filter' && n.tagName.toLowerCase() !== 'lineargradient') n.removeAttribute('id'); });
+  w.querySelectorAll('image').forEach(im => { const src = im.getAttribute('href'), u = ph !== 'day' && tintCache.get(tintKey(src, ph)); if (u) im.setAttribute('href', u); });
+  $('#zoom').insertBefore(w, $('#scene')); setTimeout(() => w.remove(), 2500); } catch(_){} }
+
+/* ================= keeping it smooth on phones =================
+   1. Scene tints are baked once into new images instead of running an SVG color filter over the art on every repaint.
+   2. On phones (and anywhere frames run slow), Rex's 14-step lighting filter is swapped for a single GPU-friendly CSS tint,
+      and the dust and light effects update at 30 frames a second. */
+const LITE_DEVICE = matchMedia('(pointer:coarse)').matches;
+let lite = LITE_DEVICE ? 1 : 0;
+function setLite(n){ lite = n; app.classList.toggle('lite', n > 0); const g = document.getElementById('rexLit');
+  if (g){ if (n > 0) g.removeAttribute('filter'); else g.setAttribute('filter', 'url(#rexFx)'); } rexTintLite(); }
+// a multiply tint at strength a is close to darkening by the tint's lightness and warming slightly
+function rexTintLite(){ const svg = document.getElementById('rexSvg'); if (!svg) return; if (!lite){ svg.style.filter = ''; return; }
+  const [tc, ts] = REXLIGHT[place()][phase()] || ['#fff', 0], m = tc.replace('#','').match(/../g).map(h => parseInt(h, 16)/255), l = .3*m[0] + .59*m[1] + .11*m[2];
+  const b = 1 - ts*(1 - l), warm = (m[0] - m[2])*ts; svg.style.filter = ts > .02 ? `brightness(${b.toFixed(3)}) sepia(${Math.max(0, warm*.6).toFixed(3)}) saturate(${(1 - ts*.25).toFixed(3)})` : ''; }
+// frame-time watch: if a desktop or tablet can't keep up for a few seconds, it drops to the light mode too
+const fpsWatch = { ema:16, n:0 };
+function watchFrame(dt){ if (lite) return; fpsWatch.ema += (dt*1000 - fpsWatch.ema)*.05; if (++fpsWatch.n > 240 && fpsWatch.ema > 26){ setLite(1); } }
+
+const tintCache = new Map(), tintBusy = new Set();
+function tintKey(src, ph){ return ph + '|' + src.length + '|' + src.slice(-48); }
+function bakeTint(src, ph){ const k = tintKey(src, ph); if (tintCache.has(k) || tintBusy.has(k)) return; tintBusy.add(k);
+  const [r, g, b] = M2TINT[ph] || [1,1,1], im = new Image();
+  im.onload = () => { try { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d');
+      x.drawImage(im, 0, 0); x.globalCompositeOperation = 'multiply'; x.fillStyle = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`; x.fillRect(0, 0, c.width, c.height);
+      x.globalCompositeOperation = 'destination-in'; x.drawImage(im, 0, 0);   // keep the original transparency
+      if (blobOK) c.toBlob(bl => { tintBusy.delete(k); if (bl){ tintCache.set(k, URL.createObjectURL(bl)); applyBakedSoon(); } bakeNext(); }, 'image/png');
+      else { tintCache.set(k, c.toDataURL('image/png')); tintBusy.delete(k); applyBakedSoon(); bakeNext(); } } catch(_){ tintBusy.delete(k); bakeNext(); } };   // a data URL works everywhere the original art does
+  im.onerror = () => { tintBusy.delete(k); bakeNext(); }; bakeQ.push(() => { im.src = src; }); if (!bakeOn) bakeNext(); }
+// one image at a time, between frames, so baking never stalls an animation
+const bakeQ = []; let bakeOn = false, applyT = 0;
+function bakeNext(){ const f = bakeQ.shift(); bakeOn = !!f; if (f) setTimeout(f, 40); }
+function applyBakedSoon(){ clearTimeout(applyT); applyT = setTimeout(applyBaked, 30); }
+// swap in baked images; a layer loses its filter once every image in it is baked
+function applyBaked(){ const ph = phase(); if (ph === 'day') return;
+  document.querySelectorAll('#scene [filter="url(#m2t)"], #sceneFront [filter="url(#m2t)"]').forEach(gr => { let all = true;
+    gr.querySelectorAll('image').forEach(im => { const src = im.dataset.src || im.getAttribute('href'); if (!im.dataset.src) im.dataset.src = src; const u = tintCache.get(tintKey(src, ph));
+      if (u){ if (im.getAttribute('href') !== u) im.setAttribute('href', u); } else { all = false; bakeTint(src, ph); } });
+    if (all) gr.removeAttribute('filter'); }); }
+const _drawScene = drawScene;
+drawScene = function(){ _drawScene(); try { applyBaked(); rexTintLite(); if (typeof prebake === 'function') setTimeout(prebake, 800); } catch(_){} };
+setLite(lite);
+// bake both places for the current light ahead of time, while nothing is moving, so a trip never waits on it
+let prebaked = '';
+function prebake(){ const ph = phase(); if (ph === 'day' || prebaked === ph) return; prebaked = ph;
+  const srcs = [...Object.values(M2.img || {}), ...Object.values(B2.img || {})].filter(s => typeof s === 'string');
+  const go = () => srcs.forEach(s => bakeTint(s, ph)); 'requestIdleCallback' in window ? requestIdleCallback(go, { timeout:3000 }) : setTimeout(go, 1500); }
+setTimeout(prebake, 2500); setInterval(prebake, 60e3);
+// The scene art ships as data URLs; each new copy of a scene re-reads and re-decodes those long strings.
+// Where the page allows blob: images, they're turned into short object URLs once, so the browser decodes each picture one time.
+let blobOK = false;
+function toBlobURL(d){ const i = d.indexOf(','), mime = d.slice(5, d.indexOf(';')), bin = atob(d.slice(i + 1)), u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k); return URL.createObjectURL(new Blob([u8], { type:mime })); }
+(function blobify(){ try { const test = toBlobURL('data:image/gif;base64,R0lGODlhAQABAAAAACw='), im = new Image();
+  im.onload = () => { blobOK = true; const step = (list) => { const job = list.shift(); if (!job) { drawScene(); return; } const [o, k] = job; if (typeof o[k] === 'string' && o[k].startsWith('data:')) o[k] = toBlobURL(o[k]); setTimeout(() => step(list), 0); };
+    step([...Object.keys(M2.img || {}).map(k => [M2.img, k]), ...Object.keys(B2.img || {}).map(k => [B2.img, k])]); };
+  im.src = test; } catch(_){} })();
 
 // Desktop Habits tab: Rex's own routines as toggles, then your weekly grid
 const REXHABS = [['water','Water',IC.drop,'Drinks a glass in the morning'],['lunch','Lunch',IC.fork,'Asks you to eat with him'],['stretch','Stretch',IC.heart,'After a focus session'],['plants','Plants',IC.sun,'Waters his plant in the afternoon'],['walk','Walk',IC.star,'Invites you out late afternoon'],['winddown','Wind-down',IC.moonB,'Gets sleepy at 9 PM']];
