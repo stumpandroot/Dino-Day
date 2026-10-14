@@ -28,6 +28,11 @@ out['cap_blades'] = { 'dy':-121.12, 'svg':ss(cap[0:2]) }
 out['cap_stem'] = { 'dy':-121.12, 'svg':s(cap[2]) }
 out['cap_body'] = { 'dy':-121.12, 'svg':ss(cap[3:9]) }
 out['cap_button'] = { 'dy':-121.12, 'svg':s(cap[9]) }
+# baseball cap, v2 (composite Rex is 55 lower)
+_, k = load('svg/rex_with_bcap.svg')
+out['bcap_under'] = { 'dy':-55, 'svg':ss(k[0:2]) }          # the brim's underside, behind his head
+out['bcap_shade'] = { 'dy':-55, 'svg':s(k[3]) }             # the cap's shadow on his head (his own color)
+out['bcap_body'] = { 'dy':-55, 'svg':s(k[4]) }
 # beanie (composite Rex is 185.44 lower)
 _, k = load('svg/rex_with_hat.svg'); hat = list(k[2])
 out['beanie_under'] = { 'dy':-185.44, 'svg':s(k[0]) }

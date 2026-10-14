@@ -858,11 +858,11 @@ function buildOutfit(){ const sp = OF.spec || {}, key = JSON.stringify(sp); if (
   if (!OF.spikes){ OF.spikes = [...g('head').children].filter(e => e.tagName === 'path' && /29544b/i.test(e.getAttribute('style') || e.getAttribute('fill') || '')).slice(0, 2); }
   OF.spikes.forEach(e => { if (sp.hat) e.setAttribute('display', 'none'); else e.removeAttribute('display'); });
   if (sp.hat === 'beanie'){ hb += ofV('beanie_under'); h += `<g id="ofPom">${ofV('beanie_pom')}</g>${ofV('beanie_body')}`; }
-  if (sp.hat === 'cap' || sp.hat === 'propcap'){ hb += ofV('cap_under'); h += ofV('cap_body');
-    if (sp.hat === 'propcap') h += `${ofV('cap_stem')}<g id="ofProp">${ofV('cap_blades')}</g>${ofV('cap_button')}`; }
+  if (sp.hat === 'cap'){ hb += ofV('bcap_under'); h += ofV('bcap_body'); }
+  if (sp.hat === 'propcap'){ hb += ofV('cap_under'); h += ofV('cap_body') + `${ofV('cap_stem')}<g id="ofProp">${ofV('cap_blades')}</g>${ofV('cap_button')}`; }
   back.innerHTML = b; bagL.innerHTML = bg; neck.innerHTML = n; headBack.innerHTML = hb; hat.innerHTML = h; front.innerHTML = f;
   // the cap's shadow on his head is his own color, so it goes in unprotected and follows his color
-  let sh = g('ofCapShade'); if (sh) sh.remove(); if (sp.hat === 'cap' || sp.hat === 'propcap'){ sh = document.createElementNS(NS, 'g'); sh.id = 'ofCapShade'; sh.innerHTML = ofV('cap_shade'); g('head').insertBefore(sh, hat); }
+  let sh = g('ofCapShade'); if (sh) sh.remove(); if (sp.hat === 'cap' || sp.hat === 'propcap'){ sh = document.createElementNS(NS, 'g'); sh.id = 'ofCapShade'; sh.innerHTML = ofV(sp.hat === 'cap' ? 'bcap_shade' : 'cap_shade'); g('head').insertBefore(sh, hat); }
   OF.st = { pom:{ a:0, v:0 }, prop:{ ang:0, spd:0 }, tl:[0,0,0].map(() => ({ a:0, v:0 })), ts:[0,0].map(() => ({ a:0, v:0 })), cape:{ a:0, v:0, b:0, vb:0 }, charm:{ a:0, v:0 } };
   window.dispatchEvent(new Event('rex-outfit')); }
 const spring = (o, target, k, damp, dt) => { o.v += ((target - o.a)*k - o.v*damp)*dt; o.a += o.v*dt; return o.a; };
