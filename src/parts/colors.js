@@ -50,6 +50,18 @@ $('#scroll').addEventListener('change', e => { if (e.target.id === 'rexColorIn')
 function setRexColor(c){ S.rexColor.base = c.toLowerCase(); save(); applyRexColor(); SFX.pop && SFX.pop(); rig()?.face('happy', 1600); rig()?.hearts(3); rex.hop = 1;
   const p = REX_PRESETS.find(x => x[2] === S.rexColor.base); rex.say(p ? pick([`${p[1]}! I like it.`, `Ooh, ${p[1].toLowerCase()}.`, 'New look!']) : pick(['New look!','Do I look fancy?']), 1600); render(); }
 setTimeout(applyRexColor, 0);
+// Rex's face and some poses are drawn on the fly (closed eyes, mouths, morphing legs); recolor whatever appears or changes, so nothing stays green
+let rcBusy = false;
+function recolorNode(n){ if (n.nodeType !== 1) return; rcBusy = true; try { recolorSvg(n.parentNode || n, S.rexColor); } finally { rcBusy = false; } }
+setTimeout(() => { const root = document.getElementById('rexSvg'); if (!root || !window.MutationObserver) return;
+  new MutationObserver(ms => { if (rcBusy) return; const isClassic = S.rexColor.base.toLowerCase() === '#4d8b7f' && S.rexColor.belly !== 'tint'; if (isClassic) return;
+    rcBusy = true; try { for (const m of ms){
+      if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) recolorSvg(n.parentNode || n, S.rexColor); });
+      else if (m.type === 'attributes'){ const el = m.target, an = m.attributeName, v = el.getAttribute(an) || '';
+        if (an === 'style'){ if (!/#[0-9a-f]{6}/i.test(v)) continue; const want = el.dataset.c0style ? el.dataset.c0style.replace(/#[0-9a-f]{6}/gi, h => rexMap(h, S.rexColor) || h) : null; if (v === want) continue; delete el.dataset.c0style; }
+        else { const k = 'c0' + an.replace('-', ''), o = el.dataset[k]; if (!/^#[0-9a-f]{6}$/i.test(v) || (o && v === (rexMap(o, S.rexColor) || o))) continue; delete el.dataset[k]; }
+        recolorSvg(el.parentNode, S.rexColor); } } } finally { rcBusy = false; } })
+    .observe(root, { subtree:true, childList:true, attributes:true, attributeFilter:['fill','stroke','style'] }); }, 0);
 
 /* ================= Rex's outfit =================
    Hats, a scarf, and back pieces drawn by ChatGPT, cut into pieces that move on their own (see OFL and outfitStep in the rig). */
