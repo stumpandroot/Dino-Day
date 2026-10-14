@@ -71,9 +71,26 @@ if (!S.outfit || typeof S.outfit !== 'object') S.outfit = { hat:'none', neck:'no
 let outfitArtSent = false;
 function applyOutfit(){ const R = rig(); if (!R || !R.outfit) return; const sp = {}; for (const k of ['hat','neck','back']) if (S.outfit[k] && S.outfit[k] !== 'none') sp[k] = S.outfit[k];
   R.outfit(sp, outfitArtSent ? null : OUTFIT_ART, outfitArtSent ? null : OUTFIT_VEC); outfitArtSent = true; }
+// hat colors: each hat's main fabric (not its brim trim, cuff, or propeller) takes a new hue, keeping its own shading
+const HATC = { cap:{ base:'#f37062', fam:o => (o.h < 20 || o.h > 340) && o.s > .3 }, beanie:{ base:'#e9b544', fam:o => o.h > 36 && o.h < 46 && o.l < .65 && o.s > .5 }, propcap:{ base:'#5c968c', fam:o => o.h > 160 && o.h < 180 } };
+const HAT_SW = [['Blue','#5b8fd6'],['Green','#6fae6a'],['Purple','#9a72c9'],['Pink','#ef8fb4'],['Orange','#f2994a'],['Yellow','#f2c94c'],['Navy','#3e4f86']];
+if (!S.outfit.hatc) S.outfit.hatc = {};
+function applyHatColor(){ const hat = S.outfit.hat, cfg = HATC[hat], col = (S.outfit.hatc || {})[hat];
+  ['ofHat', 'ofHeadBack'].forEach(id => { const gr = document.getElementById(id); if (!gr) return;
+    gr.querySelectorAll('[fill]').forEach(el => { if (el.closest('#ofProp')) return; if (!el.dataset.hc0) el.dataset.hc0 = el.getAttribute('fill'); const o0 = el.dataset.hc0; let v = o0;
+      if (cfg && col && /^#[0-9a-f]{6}$/i.test(o0)){ const o = hexHsl(o0); if (cfg.fam(o)){ const b = hexHsl(cfg.base), tc = hexHsl(col); v = hslHex({ h:tc.h, s:tc.s*(o.s/Math.max(.05, b.s)), l:tc.l + (o.l - b.l) }); } }
+      if (el.getAttribute('fill') !== v) el.setAttribute('fill', v); }); }); }
+window.addEventListener('rex-outfit', applyHatColor);
+function hatColorLine(){ const hat = S.outfit.hat; if (!HATC[hat]) return ''; const cur = ((S.outfit.hatc || {})[hat] || '').toLowerCase(), base = HATC[hat].base, known = !cur || HAT_SW.some(x => x[1] === cur);
+  return `<div class="ofline"><span>Color</span><div class="rcsw hatsw"><button type="button" data-hatcolor="" aria-label="Original" title="Original" aria-pressed="${!cur}" style="--sw:${base}"></button>${HAT_SW.map(([l, c]) => `<button type="button" data-hatcolor="${c}" aria-label="${l}" title="${l}" aria-pressed="${c === cur}" style="--sw:${c}"></button>`).join('')}<label class="rccustom ${known ? '' : 'on'}" title="Custom color" style="--sw:${known ? 'conic-gradient(#e8574a,#d6ae3f,#6f8f3e,#4f86b8,#7a5ca8,#d8749a,#e8574a)' : cur}"><input type="color" id="hatColorIn" value="${cur || base}" aria-label="Custom hat color"></label></div></div>`; }
+function setHatColor(c){ const hat = S.outfit.hat; if (!HATC[hat]) return; S.outfit.hatc = S.outfit.hatc || {}; if (c) S.outfit.hatc[hat] = c.toLowerCase(); else delete S.outfit.hatc[hat]; save(); applyHatColor(); SFX.pop && SFX.pop(); render();
+  rig()?.face('happy', 1400); rex.hop = 1; rex.say(pick(['Ooh, new hat!','Do I look sharp?','I like this one.']), 1400); }
+$('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-hatcolor]'); if (!b) return; e.stopImmediatePropagation(); setHatColor(b.dataset.hatcolor); }, true);
+$('#scroll').addEventListener('input', e => { if (e.target.id === 'hatColorIn'){ const hat = S.outfit.hat; if (HATC[hat]){ (S.outfit.hatc = S.outfit.hatc || {})[hat] = e.target.value; applyHatColor(); } } });
+$('#scroll').addEventListener('change', e => { if (e.target.id === 'hatColorIn') setHatColor(e.target.value); });
 function outfitRow(){ const o = S.outfit, any = ['hat','neck','back'].some(k => o[k] && o[k] !== 'none');
   return `<div class="row ofrow"><div><div class="lab">Rex's outfit</div><div class="hint">${any ? 'Pieces swing and bounce as he moves.' : 'Dress him up. Pieces swing and bounce as he moves.'}</div></div>
-    <div class="ofpick">${Object.entries(OUTFIT_OPTS).map(([k, opts]) => `<div class="ofline"><span>${{ hat:'Hat', neck:'Neck', back:'Back' }[k]}</span><div class="seg" role="group" aria-label="${k}">${opts.map(([v, l]) => `<button type="button" data-outfit="${k}:${v}" aria-pressed="${(o[k] || 'none') === v}">${l}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
+    <div class="ofpick">${Object.entries(OUTFIT_OPTS).map(([k, opts]) => (k === 'neck' ? hatColorLine() : '') + `<div class="ofline"><span>${{ hat:'Hat', neck:'Neck', back:'Back' }[k]}</span><div class="seg" role="group" aria-label="${k}">${opts.map(([v, l]) => `<button type="button" data-outfit="${k}:${v}" aria-pressed="${(o[k] || 'none') === v}">${l}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
 $('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-outfit]'); if (!b) return; e.stopImmediatePropagation();
   const [k, v] = b.dataset.outfit.split(':'); S.outfit[k] = v; save(); applyOutfit(); SFX.pop && SFX.pop(); render(); if (v === 'none') pvReact();
   if (v !== 'none'){ rig()?.face('happy', 1600); rex.hop = 1; rex.say(pick({ beanie:['Cozy!','Toasty head.'], propcap:['Wheee, whirly!','Watch it spin!'], cap:['Cap on!','Looking sporty.'], scarf:['So snug.','Scarf weather!'], capetie:['Tied and ready.','Fancy!'], cape:['Super Rex!','To the rescue!'], backpack:['Ready for school!','What\'s in the bag?'] }[v] || ['New look!']), 1600); } }, true);

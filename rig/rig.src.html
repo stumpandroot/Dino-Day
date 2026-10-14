@@ -829,7 +829,7 @@ const OFL = {
   cape:{ at:[2, 340.5, .9], pivot:[250, 345] },
   tie:{ at:[174.6, 325.2, .6] },
   charm:{ chain:[111.3, 430, .34], star:[103.5, 475.6, .42], pivot:[128, 430] },
-  pom:[200, -65], hub:[226.53, -74.71], bladeTilt:-18.5, bladeK:.3 };
+  pom:[200, -65], hub:[220.58, -62.78], bladeTilt:-18.5, bladeK:.3 };
 function ofImg(n, x, y, w){ const a = OF.art && OF.art[n]; if (!a) return ''; return `<image href="${a.src}" x="${x}" y="${y}" width="${w}" height="${(w*a.h/a.w).toFixed(1)}" preserveAspectRatio="none"/>`; }
 const ofH = (n, w) => { const a = OF.art && OF.art[n]; return a ? w*a.h/a.w : 0; };
 const ofV = n => { const v = OF.vec && OF.vec[n]; return v ? (v.dy ? `<g transform="translate(0 ${v.dy})">${v.svg}</g>` : v.svg) : ''; };   // a piece drawn on Rex
