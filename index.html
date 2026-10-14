@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791990979; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791991175; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1000,8 +1000,9 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .app.desk .rexwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;align-items:start}
 .app.desk .rexpv{order:0;margin:0;position:sticky;top:12px}
 .app.desk .pvstage{height:230px}.app.desk .pvrex{height:148px;bottom:14px}.app.desk .pvstage .pvsh{bottom:14px}
-@media (max-width:1180px){.app.desk .setpage{grid-template-columns:minmax(0,1fr);gap:0}.app.desk .setpage .ssnav{flex-direction:row;overflow-x:auto;scrollbar-width:none;position:sticky;top:-24px;z-index:3;background:var(--cream);margin:-24px calc(-1*var(--m)) 0;padding:12px var(--m) 10px}.app.desk .setpage .ssnav button{flex:none;white-space:nowrap}}
-@media (max-width:1000px){.app.desk .rexwrap{grid-template-columns:minmax(0,1fr) 250px}.app.desk .setpage .row{grid-template-columns:minmax(130px,170px) minmax(0,1fr);gap:20px}}
+@media (max-width:1180px){.app.desk .setpage{grid-template-columns:minmax(0,1fr);gap:0}.app.desk .setpage .ssnav{flex-direction:row;overflow-x:auto;scrollbar-width:none;position:sticky;top:-24px;z-index:3;background:var(--cream);margin:0 calc(-1*var(--m)) 8px;padding:10px var(--m);box-shadow:0 1px 0 var(--line)}.app.desk .setpage .ssnav button{flex:none;white-space:nowrap}}
+.app.desk .setpage .ssrex .row{grid-template-columns:minmax(140px,180px) minmax(0,1fr);gap:24px}
+@media (max-width:1000px){.app.desk .rexwrap{grid-template-columns:minmax(0,1fr) 250px}.app.desk .setpage .row{grid-template-columns:minmax(160px,200px) minmax(0,1fr);gap:20px}.app.desk .setpage .ssrex .row{grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:16px}}
 </style>
 </head>
 <body>
@@ -3558,7 +3559,7 @@ let pvPop = false;
 
 function rexPreviewHTML(){ setTimeout(() => { pvPop = false; }, 0); const on = S.suggest !== false, nx = on ? (pickThree()[0] || { t:'Reply to Sam about Friday' }) : null, c = CHAT_PV[S.chat] || CHAT_PV.sometimes;
   return `<aside class="rexpv" aria-label="Preview of your choices">
-    <div class="pvstage" style="background-image:url('${thumbFor(S.place)}')"><div class="pvbub ${Date.now() < pvUntil ? 'on keep' : ''}" aria-hidden="true">${esc(Date.now() < pvUntil ? pvText : '')}</div><div class="pvsh"></div><svg class="pvrex" viewBox="0 0 536 688" aria-hidden="true"><use href="#rexHit"/></svg></div>
+    <div class="pvstage" style="background-image:url('${thumbFor(S.place)}')"><div class="pvbub ${Date.now() < pvUntil ? 'on keep' : ''}" aria-hidden="true">${esc(Date.now() < pvUntil ? pvText : '')}</div><div class="pvsh"></div><svg class="pvrex" viewBox="0 0 536 688" aria-hidden="true"><use href="#rexLit"/></svg></div>
     <div class="pvsec"><div class="pvk">How he talks</div><div class="pvchat"><span class="pvdots" data-lvl="${S.chat}"><i></i><i></i><i></i></span>${c[0]}</div></div>
     <div class="pvsec"><div class="pvk">Top of Today</div>${on ? `<div class="pvcard ${pvPop ? 'pop' : ''}"><div class="k">Up next</div><div class="ft1">${esc(nx.t)}</div>${pose('wave', 34, 'pvpose')}</div>` : `<div class="pvcard off ${pvPop ? 'pop' : ''}">Rex won't pick. Today starts with your list.</div>`}</div></aside>`; }
 let pvNext = 0, pvLvl = '', pvI = 0, pvText = '', pvUntil = 0;
