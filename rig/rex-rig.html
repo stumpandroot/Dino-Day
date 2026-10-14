@@ -894,7 +894,7 @@ function buildOutfit(){ const sp = OF.spec || {}, key = JSON.stringify(sp); if (
   if (headBack !== g('head').firstChild) g('head').insertBefore(headBack, g('head').firstChild);
   [back, bagL, neck, headBack, hat, front].forEach(e => e.setAttribute('data-norc', ''));   // clothes keep their colors when Rex changes his
   let b = '', bg = '', n = '', hb = '', h = '', f = '';
-  if (sp.back === 'cape'){ bg += `<g id="ofCape">${ofAt('cape', OFL.cape.at)}</g>`;   /* over his tail, under his body */ n += ofAt('cape_tie', OFL.tie.at); }
+  if (sp.back === 'cape'){ bg += `<g id="ofCape">${ofAt('cape', OFL.cape.at)}</g>`;   /* over his tail, under his body */ }
   if (sp.back === 'backpack'){
     bg += `<defs><clipPath id="ofBagClip">${ofV('bag')}</clipPath><clipPath id="ofFrontClip"><rect x="-200" y="368" width="1000" height="600"/></clipPath></defs>
       <g id="ofBag">${ofV('bag')}<g id="ofCharm">${ofAt('chain', OFL.charm.chain)}${ofAt('star', OFL.charm.star)}</g></g>
@@ -903,6 +903,10 @@ function buildOutfit(){ const sp = OF.spec || {}, key = JSON.stringify(sp); if (
   if (sp.neck === 'scarf'){ const L = OFL.scarf, chain = (list, id) => { let x = L.knot[0], out = '', close = ''; list.forEach(([nm, w], i) => { out += `<g id="${id}${i}" data-x="${x}">${ofImg('scarf_' + nm, x - w/2, 0, w)}<g transform="translate(0 ${(ofH('scarf_' + nm, w) - 10).toFixed(1)})">`; close += '</g></g>'; }); return out + close; };
     b += `<g id="ofTailS" transform="translate(${22} ${L.knot[1] - 4})">${chain(L.short, 'ofTS')}</g><g id="ofTailL" transform="translate(0 ${L.knot[1]})">${chain(L.long, 'ofTL')}</g>`;
     n += ofImg('scarf_wrap', ...L.wrap); }
+  if (sp.neck === 'capetie') n += ofAt('cape_tie', OFL.tie.at);
+  // the two spikes on top of his head would poke out from under a hat, so they hide while he wears one
+  if (!OF.spikes){ OF.spikes = [...g('head').children].filter(e => e.tagName === 'path' && /29544b/i.test(e.getAttribute('style') || e.getAttribute('fill') || '')).slice(0, 2); }
+  OF.spikes.forEach(e => { if (sp.hat) e.setAttribute('display', 'none'); else e.removeAttribute('display'); });
   if (sp.hat === 'beanie'){ hb += ofV('beanie_under'); h += `<g id="ofPom">${ofV('beanie_pom')}</g>${ofV('beanie_body')}`; }
   if (sp.hat === 'cap' || sp.hat === 'propcap'){ hb += ofV('cap_under'); h += ofV('cap_body');
     if (sp.hat === 'propcap') h += `${ofV('cap_stem')}<g id="ofProp">${ofV('cap_blades')}</g>${ofV('cap_button')}`; }

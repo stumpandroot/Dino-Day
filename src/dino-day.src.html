@@ -952,6 +952,8 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 @media (max-width:1100px){.app.desk.expanded .playbar .mood{display:none}}
 
 /* ---------- Profile: desktop settings layout and Rex preview ---------- */
+/* the preview copies Rex with <use> while the room is hidden; clip shapes would inherit that hidden state and clip his pupils away */
+#rexSvg clipPath,#rexSvg clipPath *{visibility:visible}
 .setpage .ssnav{display:none}
 .rexwrap{display:flex;flex-direction:column}
 .app:not(.desk) .pvstage{display:none}.app:not(.desk) .rexpv .pvsec:first-of-type{border-top:0}
@@ -2046,6 +2048,7 @@ function seg(key, opts, obj = S){ return `<div class="seg" role="group">${opts.m
 const CHAT_PV = { often:['Chimes in on most things you do.', 3200], sometimes:['Reacts now and then.', 6500], quiet:['Mostly quiet. Speaks up for the big moments.', 15000] };
 const PV_LINES = ['Nice!','On the list!','You did it.','Ooh, new spot.','Hmm hmm hm…','One less thing!','Okay!','I like it here.'];
 let pvPop = false;
+
 function rexPreviewHTML(){ setTimeout(() => { pvPop = false; }, 0); const on = S.suggest !== false, nx = on ? (pickThree()[0] || { t:'Reply to Sam about Friday' }) : null, c = CHAT_PV[S.chat] || CHAT_PV.sometimes;
   return `<aside class="rexpv" aria-label="Preview of your choices">
     <div class="pvstage" style="background-image:url('${thumbFor(S.place)}')"><div class="pvbub ${Date.now() < pvUntil ? 'on keep' : ''}" aria-hidden="true">${esc(Date.now() < pvUntil ? pvText : '')}</div><div class="pvsh"></div><svg class="pvrex" viewBox="0 0 536 688" aria-hidden="true"><use href="#rexHit"/></svg></div>
