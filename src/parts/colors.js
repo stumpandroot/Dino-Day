@@ -18,7 +18,7 @@ function rexMap(hex, rc){ const o = hexHsl(hex), t = hexHsl(rc.base);
   if (isBelly(o) && rc.belly === 'tint') return hslHex({ h:t.h, s:Math.min(.6, t.s*.9 + .1), l:o.l + (o.l > .86 ? 0 : -.02) });
   return null; }
 function recolorSvg(root, rc){ if (!root) return; const classic = rc.base.toLowerCase() === '#4d8b7f' && rc.belly !== 'tint';
-  root.querySelectorAll('[fill],[stroke],[stop-color],[style*="fill"],[style*="stroke"]').forEach(el => {
+  root.querySelectorAll('[fill],[stroke],[stop-color],[style*="fill"],[style*="stroke"]').forEach(el => { if (el.closest('[data-norc]')) return;   // clothes keep their own colors
     for (const a of ['fill', 'stroke', 'stop-color']){ const k = 'c0' + a.replace('-', ''); if (!el.dataset[k]){ const v = el.getAttribute(a); if (!v || !/^#[0-9a-f]{6}$/i.test(v)) continue; el.dataset[k] = v; }
       const orig = el.dataset[k]; el.setAttribute(a, classic ? orig : (rexMap(orig, rc) || orig)); }
     // colors set in the style attribute: change only the fill and stroke properties, so the rig's own style changes (show and hide) are left alone
@@ -65,17 +65,16 @@ setTimeout(() => { const root = document.getElementById('rexSvg'); if (!root || 
 
 /* ================= Rex's outfit =================
    Hats, a scarf, and back pieces drawn by ChatGPT, cut into pieces that move on their own (see OFL and outfitStep in the rig). */
-const OUTFIT_ART = __OUTFIT__;
-const OUTFIT_OPTS = { hat:[['none','None'],['beanie','Beanie'],['propcap','Propeller cap']], neck:[['none','None'],['scarf','Scarf']], back:[['none','None'],['cape','Cape']] };
+const OUTFIT_ART = __OUTFIT__, OUTFIT_VEC = __OUTFITSVG__;
+const OUTFIT_OPTS = { hat:[['none','None'],['beanie','Beanie'],['cap','Cap'],['propcap','Propeller']], neck:[['none','None'],['scarf','Scarf']], back:[['none','None'],['cape','Cape'],['backpack','Backpack']] };
 if (!S.outfit || typeof S.outfit !== 'object') S.outfit = { hat:'none', neck:'none', back:'none' };
-if (S.outfit.back === 'backpack') S.outfit.back = 'none';   // the backpack is out until Tim's own art is ready
 let outfitArtSent = false;
 function applyOutfit(){ const R = rig(); if (!R || !R.outfit) return; const sp = {}; for (const k of ['hat','neck','back']) if (S.outfit[k] && S.outfit[k] !== 'none') sp[k] = S.outfit[k];
-  R.outfit(sp, outfitArtSent ? null : OUTFIT_ART); outfitArtSent = true; }
+  R.outfit(sp, outfitArtSent ? null : OUTFIT_ART, outfitArtSent ? null : OUTFIT_VEC); outfitArtSent = true; }
 function outfitRow(){ const o = S.outfit, any = ['hat','neck','back'].some(k => o[k] && o[k] !== 'none');
   return `<div class="row ofrow"><div><div class="lab">Rex's outfit</div><div class="hint">${any ? 'Pieces swing and bounce as he moves.' : 'Dress him up. Pieces swing and bounce as he moves.'}</div></div>
     <div class="ofpick">${Object.entries(OUTFIT_OPTS).map(([k, opts]) => `<div class="ofline"><span>${{ hat:'Hat', neck:'Neck', back:'Back' }[k]}</span><div class="seg" role="group" aria-label="${k}">${opts.map(([v, l]) => `<button type="button" data-outfit="${k}:${v}" aria-pressed="${(o[k] || 'none') === v}">${l}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
 $('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-outfit]'); if (!b) return; e.stopImmediatePropagation();
   const [k, v] = b.dataset.outfit.split(':'); S.outfit[k] = v; save(); applyOutfit(); SFX.pop && SFX.pop(); render();
-  if (v !== 'none'){ rig()?.face('happy', 1600); rex.hop = 1; rex.say(pick({ beanie:['Cozy!','Toasty head.'], propcap:['Wheee, whirly!','Watch it spin!'], scarf:['So snug.','Scarf weather!'], cape:['Super Rex!','To the rescue!'], backpack:['Ready for school!','What\'s in the bag?'] }[v] || ['New look!']), 1600); } }, true);
+  if (v !== 'none'){ rig()?.face('happy', 1600); rex.hop = 1; rex.say(pick({ beanie:['Cozy!','Toasty head.'], propcap:['Wheee, whirly!','Watch it spin!'], cap:['Cap on!','Looking sporty.'], scarf:['So snug.','Scarf weather!'], cape:['Super Rex!','To the rescue!'], backpack:['Ready for school!','What\'s in the bag?'] }[v] || ['New look!']), 1600); } }, true);
 setTimeout(applyOutfit, 50);

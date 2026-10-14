@@ -872,50 +872,67 @@ const ACTIONS = {
 /* ---------- outfit: hats, scarf, cape, backpack. Each moving piece is a small spring driven by his walk, hops, and dances ---------- */
 // Layout is in rig units (the 536 x 688 viewBox). Pieces live in three places so they layer correctly:
 // behind his body (cape, backpack), between his torso and head (scarf, cape collar), and on his head (hats).
-const OF = { spec:{}, art:null, built:'', st:null, py:0, pvy:0, t0:0 };
+const OF = { spec:{}, art:null, vec:null, built:'', st:null, py:0, pvy:0, t0:0 };
+// Tim's vector pieces come placed on the rig's own Rex (his "Rex with ..." drawings); loose pieces (cape, tie, charm) are placed here
 const OFL = {
-  beanie:{ hat:[134, -58, 322], pom:[254, -150, 104], pomStem:[282, -86, 50], pivot:[307, -50] },
-  propcap:{ cap:[128, -56, 344], stem:[291, -102, 28], propTop:[220, -121, 170], propSide:[220, -114, 170], hub:[305, -100] },
   scarf:{ wrap:[136, 296, 300], knot:[150, 340], long:[['longA', 70], ['longB', 62], ['longC', 68]], short:[['shortA', 64], ['shortB', 62]] },
-  cape:{ collar:[160, 300, 210], upper:[-34, 340, 320], lower:[-56, 486, 340], pivot:[230, 350], lowPivot:[150, 492] },
-  backpack:{ bag:[-26, 300, 230], strap:[184, 318, 72], ring:[-14, 412, 28], star:[-30, 452, 60], ringPivot:[0, 416] } };
+  cape:{ at:[2, 340.5, .9], pivot:[250, 345] },
+  tie:{ at:[174.6, 325.2, .6] },
+  charm:{ chain:[111.3, 430, .34], star:[103.5, 475.6, .42], pivot:[128, 430] },
+  pom:[200, -65], hub:[226.53, -74.71], bladeTilt:-18.5, bladeK:.3 };
 function ofImg(n, x, y, w){ const a = OF.art && OF.art[n]; if (!a) return ''; return `<image href="${a.src}" x="${x}" y="${y}" width="${w}" height="${(w*a.h/a.w).toFixed(1)}" preserveAspectRatio="none"/>`; }
 const ofH = (n, w) => { const a = OF.art && OF.art[n]; return a ? w*a.h/a.w : 0; };
+const ofV = n => { const v = OF.vec && OF.vec[n]; return v ? (v.dy ? `<g transform="translate(0 ${v.dy})">${v.svg}</g>` : v.svg) : ''; };   // a piece drawn on Rex
+const ofAt = (n, [x, y, k]) => { const v = OF.vec && OF.vec[n]; return v ? `<g transform="translate(${x} ${y}) scale(${k})">${v.svg}</g>` : ''; };   // a loose piece, placed and scaled
 function ofGroup(id, parent, before){ let el = g(id); if (!el){ el = document.createElementNS(NS, 'g'); el.id = id; if (before) parent.insertBefore(el, before); else parent.appendChild(el); } return el; }
 function buildOutfit(){ const sp = OF.spec || {}, key = JSON.stringify(sp); if (key === OF.built || !OF.art) return; OF.built = key;
   const top = n => { let e = g(n); while (e && e.parentNode !== g('root')) e = e.parentNode; return e; };   // the wrapper of that part that sits directly in root
-  const back = ofGroup('ofBack', g('root'), top('armB')), neck = ofGroup('ofNeck', g('root'), top('head')), hat = ofGroup('ofHat', g('head'));
-  let b = '', n = '', h = '';
-  if (sp.back === 'cape'){ const L = OFL.cape; b += `<g id="ofCape"><g id="ofCapeLow">${ofImg('cape_lower', ...L.lower)}</g>${ofImg('cape_upper', ...L.upper)}</g>`; n += ofImg('cape_collar', ...L.collar); }
-  if (sp.back === 'backpack'){ const L = OFL.backpack; b += `<g id="ofBag">${ofImg('backpack_bag', ...L.bag)}<g id="ofCharm">${ofImg('backpack_ring', ...L.ring)}${ofImg('backpack_star', ...L.star)}</g></g>`; n += `<g id="ofStrap">${ofImg('backpack_strapSide', ...L.strap)}</g>`; }
+  // layers, back to front: behind everything (cape, scarf tails) · over the tail (backpack, with his back leg and arm redrawn over it) ·
+  // under the head (scarf wrap, cape tie) · behind the head (hat undersides) · on the head (hats) · under the front arm (front strap)
+  const back = ofGroup('ofBack', g('root'), top('armB')), bagL = ofGroup('ofBagL', g('root'), top('torso')), neck = ofGroup('ofNeck', g('root'), top('head')),
+    headBack = ofGroup('ofHeadBack', g('head'), g('head').firstChild), hat = ofGroup('ofHat', g('head')), front = ofGroup('ofFront', g('root'), top('armF'));
+  if (headBack !== g('head').firstChild) g('head').insertBefore(headBack, g('head').firstChild);
+  [back, bagL, neck, headBack, hat, front].forEach(e => e.setAttribute('data-norc', ''));   // clothes keep their colors when Rex changes his
+  let b = '', bg = '', n = '', hb = '', h = '', f = '';
+  if (sp.back === 'cape'){ bg += `<g id="ofCape">${ofAt('cape', OFL.cape.at)}</g>`;   /* over his tail, under his body */ n += ofAt('cape_tie', OFL.tie.at); }
+  if (sp.back === 'backpack'){
+    bg += `<defs><clipPath id="ofBagClip">${ofV('bag')}</clipPath><clipPath id="ofFrontClip"><rect x="-200" y="368" width="1000" height="600"/></clipPath></defs>
+      <g id="ofBag">${ofV('bag')}<g id="ofCharm">${ofAt('chain', OFL.charm.chain)}${ofAt('star', OFL.charm.star)}</g></g>
+      <g clip-path="url(#ofBagClip)" data-rc><use href="#${top('legB').id}"/><use href="#${top('armB').id}"/></g>${ofV('strap_back')}`;
+    f += `<g clip-path="url(#ofFrontClip)">${ofV('strap_front')}</g>`; }
   if (sp.neck === 'scarf'){ const L = OFL.scarf, chain = (list, id) => { let x = L.knot[0], out = '', close = ''; list.forEach(([nm, w], i) => { out += `<g id="${id}${i}" data-x="${x}">${ofImg('scarf_' + nm, x - w/2, 0, w)}<g transform="translate(0 ${(ofH('scarf_' + nm, w) - 10).toFixed(1)})">`; close += '</g></g>'; }); return out + close; };
-    b += `<g id="ofTailS" transform="translate(${22} ${L.knot[1] - 4})">${chain(L.short, 'ofTS')}</g><g id="ofTailL" transform="translate(0 ${L.knot[1]})">${chain(L.long, 'ofTL')}</g>`;   // the tails hang down his back and stream out behind him
+    b += `<g id="ofTailS" transform="translate(${22} ${L.knot[1] - 4})">${chain(L.short, 'ofTS')}</g><g id="ofTailL" transform="translate(0 ${L.knot[1]})">${chain(L.long, 'ofTL')}</g>`;
     n += ofImg('scarf_wrap', ...L.wrap); }
-  if (sp.hat === 'beanie'){ const L = OFL.beanie; h += `<g id="ofPom">${ofImg('beanie_pomStem', ...L.pomStem)}${ofImg('beanie_pom', ...L.pom)}</g>${ofImg('beanie_hat', ...L.hat)}`; }
-  if (sp.hat === 'propcap'){ const L = OFL.propcap; h += `${ofImg('propcap_stem', ...L.stem)}${ofImg('propcap_cap', ...L.cap)}<g id="ofProp"><g id="ofPropTop">${ofImg('propcap_propTop', ...L.propTop)}</g><g id="ofPropSide">${ofImg('propcap_propSide', ...L.propSide)}</g></g>`; }
-  back.innerHTML = b; neck.innerHTML = n; hat.innerHTML = h;
-  OF.st = { pom:{ a:0, v:0, s:0, sv:0 }, prop:{ ang:0, spd:0 }, tl:[0,0,0].map(() => ({ a:0, v:0 })), ts:[0,0].map(() => ({ a:0, v:0 })), cape:{ a:0, v:0, b:0, vb:0 }, charm:{ a:0, v:0 } }; }
+  if (sp.hat === 'beanie'){ hb += ofV('beanie_under'); h += `<g id="ofPom">${ofV('beanie_pom')}</g>${ofV('beanie_body')}`; }
+  if (sp.hat === 'cap' || sp.hat === 'propcap'){ hb += ofV('cap_under'); h += ofV('cap_body');
+    if (sp.hat === 'propcap') h += `${ofV('cap_stem')}<g id="ofProp">${ofV('cap_blades')}</g>${ofV('cap_button')}`; }
+  back.innerHTML = b; bagL.innerHTML = bg; neck.innerHTML = n; headBack.innerHTML = hb; hat.innerHTML = h; front.innerHTML = f;
+  // the cap's shadow on his head is his own color, so it goes in unprotected and follows his color
+  let sh = g('ofCapShade'); if (sh) sh.remove(); if (sp.hat === 'cap' || sp.hat === 'propcap'){ sh = document.createElementNS(NS, 'g'); sh.id = 'ofCapShade'; sh.innerHTML = ofV('cap_shade'); g('head').insertBefore(sh, hat); }
+  OF.st = { pom:{ a:0, v:0 }, prop:{ ang:0, spd:0 }, tl:[0,0,0].map(() => ({ a:0, v:0 })), ts:[0,0].map(() => ({ a:0, v:0 })), cape:{ a:0, v:0, b:0, vb:0 }, charm:{ a:0, v:0 } };
+  window.dispatchEvent(new Event('rex-outfit')); }
 const spring = (o, target, k, damp, dt) => { o.v += ((target - o.a)*k - o.v*damp)*dt; o.a += o.v*dt; return o.a; };
 function outfitStep(t, W, sp, cp){ if (!OF.st) return; const dt = Math.min(.05, OF.t0 ? (t - OF.t0)/1000 : .016); OF.t0 = t; if (dt <= 0) return;
   const y = S.y + (S.hb || 0), vy = (y - OF.py)/dt, ay = Math.max(-6000, Math.min(6000, (vy - OF.pvy)/dt)); OF.py = y; OF.pvy = vy;
   const dancing = act === 'groove' || act === 'shuffle' || act === 'excited', step = W*sp, st = OF.st, s = t/1000;
   // pom-pom: bobs on each step, flies up when he lands, leans back while he walks
   if (g('ofPom')){ const a = spring(st.pom, -10*W + 7*step + (dancing ? 9*Math.sin(s*9) : 0) + ay*.004, 120, 7, dt);
-    const L = OFL.beanie.pivot; g('ofPom').setAttribute('transform', `rotate(${(-a).toFixed(2)} ${L[0]} ${L[1]})`); }
+    const L = OFL.pom; g('ofPom').setAttribute('transform', `rotate(${(-a).toFixed(2)} ${L[0]} ${L[1]})`); }
   // propeller: idles slowly, spins up while he walks, whirs when he dances or hops
-  if (g('ofProp')){ const pr = st.prop, target = 1.2 + 16*W + (dancing ? 22 : 0) + Math.min(20, Math.abs(vy)*.02); pr.spd += (target - pr.spd)*Math.min(1, dt*2.5); pr.ang += pr.spd*dt;
-    const c = Math.cos(pr.ang), H = OFL.propcap.hub, edge = Math.abs(c) < .22; g('ofPropTop').style.display = edge ? 'none' : ''; g('ofPropSide').style.display = edge ? '' : 'none';
-    g('ofPropTop').setAttribute('transform', `translate(${H[0]} ${H[1]}) scale(${Math.max(.08, Math.abs(c)).toFixed(3)} 1) translate(${-H[0]} ${-H[1]})`); }
+  if (g('ofProp')){ const pr = st.prop, target = 1.2 + 16*W + (dancing ? 22 : 0) + Math.min(20, Math.abs(vy)*.02); pr.spd += (target - pr.spd)*Math.min(1, dt*2.5); pr.ang = (pr.ang + pr.spd*dt) % 6.2832;
+    // the blades lie in the cap's tilted, foreshortened plane: unsquash, turn, squash back
+    const [hx, hy] = OFL.hub, T = OFL.bladeTilt, k = OFL.bladeK, deg = pr.ang*57.2958;
+    g('ofProp').setAttribute('transform', `translate(${hx} ${hy}) rotate(${T}) scale(1 ${k}) rotate(${deg.toFixed(1)}) scale(1 ${(1/k).toFixed(4)}) rotate(${-T}) translate(${-hx} ${-hy})`); }
   // scarf tails: trail behind while he walks, swing with each step, flick up on hops; each segment lags the one above it
   const chain = (list, id, len) => { list.forEach((o, i) => { const lag = Math.sin(s*9.5 - i*.9)*W*(6 + i*4), tgt = 15*W*(1 + i*.25) + lag + (dancing ? 10*Math.sin(s*8 - i) : 0) - ay*.003*(1 + i*.5);
       spring(o, tgt, 70 - i*12, 6, dt); const el = g(id + i); if (el){ const x = +el.dataset.x; el.setAttribute('transform', `rotate(${o.a.toFixed(2)} ${x} 0)`); } }); };
   if (g('ofTailL')){ chain(st.tl, 'ofTL'); chain(st.ts, 'ofTS'); }
   // cape: billows back while walking, lifts on hops, the hem lags behind
-  if (g('ofCape')){ const c = st.cape, tgt = 16*W + 3*Math.sin(s*1.3) + (dancing ? 8*Math.sin(s*6) : 0) - ay*.004; spring(c, tgt, 60, 6, dt); const lo = { a:c.b, v:c.vb }; spring(lo, c.a*.7 + 5*W*Math.sin(s*9.5 - 1), 45, 5, dt); c.b = lo.a; c.vb = lo.v;
-    const P0 = OFL.cape.pivot, P1 = OFL.cape.lowPivot; g('ofCape').setAttribute('transform', `rotate(${c.a.toFixed(2)} ${P0[0]} ${P0[1]})`); g('ofCapeLow').setAttribute('transform', `rotate(${c.b.toFixed(2)} ${P1[0]} ${P1[1]})`); }
+  if (g('ofCape')){ const c = st.cape, tgt = 12*W + 2*Math.sin(s*1.3) + (dancing ? 7*Math.sin(s*6) : 0) - ay*.003; spring(c, tgt, 60, 6, dt); const lo = { a:c.b, v:c.vb }; spring(lo, 10*W*Math.sin(s*9.5 - 1) + c.a*.4, 45, 5, dt); c.b = lo.a; c.vb = lo.v;
+    const P = OFL.cape.pivot; g('ofCape').setAttribute('transform', `rotate(${c.a.toFixed(2)} ${P[0]} ${P[1]}) translate(${P[0]} ${P[1]}) skewX(${(c.b*.6).toFixed(2)}) translate(${-P[0]} ${-P[1]})`); }   // swings from the neck; the hem ripples
   // backpack charm: a pendulum on its ring
-  if (g('ofBag')){ const bob = 3*W*Math.abs(Math.sin(s*9.5)) - ay*.0015; g('ofBag').setAttribute('transform', `translate(0 ${bob.toFixed(2)}) rotate(${(2*W*Math.sin(s*9.5)).toFixed(2)} 120 360)`); if (g('ofStrap')) g('ofStrap').setAttribute('transform', `translate(0 ${(bob*.5).toFixed(2)})`); }
-  if (g('ofCharm')){ const a = spring(st.charm, 14*step + 6*W + (dancing ? 14*Math.sin(s*7) : 0) - ay*.003, 90, 3.2, dt); const R = OFL.backpack.ringPivot; g('ofCharm').setAttribute('transform', `rotate(${a.toFixed(2)} ${R[0]} ${R[1]})`); }
+  if (g('ofBag')){ const bob = 3*W*Math.abs(Math.sin(s*9.5)) - ay*.0015; g('ofBag').setAttribute('transform', `translate(0 ${bob.toFixed(2)}) rotate(${(1.5*W*Math.sin(s*9.5)).toFixed(2)} 250 330)`); }
+  if (g('ofCharm')){ const a = spring(st.charm, 14*step + 6*W + (dancing ? 14*Math.sin(s*7) : 0) - ay*.003, 90, 3.2, dt); const R = OFL.charm.pivot; g('ofCharm').setAttribute('transform', `rotate(${a.toFixed(2)} ${R[0]} ${R[1]})`); }
 }
 
 $('#exGrid').innerHTML = Object.keys(EX).filter(k => !EX[k].hide).map(k => `<button class="chip" data-k="${k}" aria-pressed="${k === base}">${LABEL(k)}</button>`).join('');
@@ -958,7 +975,7 @@ window.RexRig = {
   drop(){ DG.on = false; DG.swT = 0; setFace('worried'); },
   land(v){ S.sq = Math.min(.22, .06 + v/9000); DG.shakeT = performance.now() + 160; setTimeout(() => { setFace('happy', 1800); blinkT = performance.now() + 900; }, 800); },
   walking(z, sp){ appWalk = !!z; walkSpd = sp || 1; },
-  outfit(spec, art){ if (art) OF.art = art; OF.spec = spec || {}; buildOutfit(); },
+  outfit(spec, art, vec){ if (art) OF.art = art; if (vec) OF.vec = vec; OF.spec = spec || {}; OF.built = ''; buildOutfit(); },
   flip(f){ turnTo(f < 0 ? -1 : 1); }, snapFace(f){ TN.face = f < 0 ? -1 : 1; setFlip(TN.face); },
 };
 setFace('neutral'); requestAnimationFrame(frame);
