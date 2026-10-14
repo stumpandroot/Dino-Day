@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791993381; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791993736; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1005,10 +1005,11 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 @media (max-width:1000px){.app.desk .rexwrap{grid-template-columns:minmax(0,1fr) 250px}.app.desk .setpage .row{grid-template-columns:minmax(160px,200px) minmax(0,1fr);gap:20px}.app.desk .setpage .ssrex .row{grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:16px}}
 
 /* rollover prompt: a small note tucked under the task's title, buttons kept together */
-.park{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin:-6px 12px 12px var(--parkL,56px);padding:7px 7px 7px 12px;border-radius:12px;background:var(--butter);color:var(--text);font-size:12.5px;line-height:1.35}
+.park{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:2px 14px 16px var(--parkL,56px);padding:10px 10px 10px 14px;border-radius:14px;background:var(--butter);color:var(--text);font-size:12.5px;line-height:1.35}
 .park>span:first-child{flex:1 1 180px;min-width:0}
 .parkb{display:flex;gap:6px;flex:none}.parkb .pill{padding:5px 12px;font-size:12.5px;min-height:0}
 .app.desk .park{--parkL:73px;margin-right:var(--in)}
+.trow:has(.park) .task{padding-bottom:8px}
 /* timeline strip: room for the hour labels under the line, and every marker sits on a ring so the line never looks broken */
 .tline.mini{padding-bottom:22px}
 .tlmini .tle{top:26px;line-height:1}
