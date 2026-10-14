@@ -21,8 +21,9 @@ function recolorSvg(root, rc){ if (!root) return; const classic = rc.base.toLowe
   root.querySelectorAll('[fill],[stroke],[stop-color],[style*="fill"],[style*="stroke"]').forEach(el => {
     for (const a of ['fill', 'stroke', 'stop-color']){ const k = 'c0' + a.replace('-', ''); if (!el.dataset[k]){ const v = el.getAttribute(a); if (!v || !/^#[0-9a-f]{6}$/i.test(v)) continue; el.dataset[k] = v; }
       const orig = el.dataset[k]; el.setAttribute(a, classic ? orig : (rexMap(orig, rc) || orig)); }
-    const st = el.getAttribute('style'); if (st && /#[0-9a-f]{6}/i.test(st)){ if (!el.dataset.c0style) el.dataset.c0style = st;
-      el.setAttribute('style', classic ? el.dataset.c0style : el.dataset.c0style.replace(/#[0-9a-f]{6}/gi, m => rexMap(m, rc) || m)); } }); }
+    // colors set in the style attribute: change only the fill and stroke properties, so the rig's own style changes (show and hide) are left alone
+    for (const prop of ['fill', 'stroke']){ const k = 'c0s' + prop; if (!el.dataset[k]){ const m = (el.getAttribute('style') || '').match(new RegExp(prop + '\\s*:\\s*(#[0-9a-f]{6})', 'i')); if (!m) continue; el.dataset[k] = m[1]; }
+      const o = el.dataset[k]; el.style.setProperty(prop, classic ? o : (rexMap(o, rc) || o)); } }); }
 // pose pictures: recolor green and cream pixels in a canvas
 const POSE0 = Object.assign({}, POSE), poseCache = {};
 function recolorPoses(rc, done){ const key = rc.base + rc.belly; if (rc.base.toLowerCase() === '#4d8b7f' && rc.belly !== 'tint'){ Object.keys(POSE0).forEach(k => POSE[k] = POSE0[k]); done && done(); return; }
@@ -54,14 +55,13 @@ setTimeout(applyRexColor, 0);
 let rcBusy = false;
 function recolorNode(n){ if (n.nodeType !== 1) return; rcBusy = true; try { recolorSvg(n.parentNode || n, S.rexColor); } finally { rcBusy = false; } }
 setTimeout(() => { const root = document.getElementById('rexSvg'); if (!root || !window.MutationObserver) return;
-  new MutationObserver(ms => { if (rcBusy) return; const isClassic = S.rexColor.base.toLowerCase() === '#4d8b7f' && S.rexColor.belly !== 'tint'; if (isClassic) return;
-    rcBusy = true; try { for (const m of ms){
+  new MutationObserver(ms => { if (rcBusy) return; const isClassic = S.rexColor.base.toLowerCase() === '#4d8b7f' && S.rexColor.belly !== 'tint'; rcBusy = true; try { for (const m of ms){
       if (m.type === 'childList') m.addedNodes.forEach(n => { if (n.nodeType === 1) recolorSvg(n.parentNode || n, S.rexColor); });
       else if (m.type === 'attributes'){ const el = m.target, an = m.attributeName, v = el.getAttribute(an) || '';
         if (an === 'style'){ if (!/#[0-9a-f]{6}/i.test(v)) continue; const want = el.dataset.c0style ? el.dataset.c0style.replace(/#[0-9a-f]{6}/gi, h => rexMap(h, S.rexColor) || h) : null; if (v === want) continue; delete el.dataset.c0style; }
-        else { const k = 'c0' + an.replace('-', ''), o = el.dataset[k]; if (!/^#[0-9a-f]{6}$/i.test(v) || (o && v === (rexMap(o, S.rexColor) || o))) continue; delete el.dataset[k]; }
+        else { const k = 'c0' + an.replace('-', ''), o = el.dataset[k]; const cl = S.rexColor.base.toLowerCase() === '#4d8b7f' && S.rexColor.belly !== 'tint'; if (!/^#[0-9a-f]{6}$/i.test(v) || (o && v.toLowerCase() === (cl ? o : (rexMap(o, S.rexColor) || o)).toLowerCase())) continue; delete el.dataset[k]; }
         recolorSvg(el.parentNode, S.rexColor); } } } finally { rcBusy = false; } })
-    .observe(root, { subtree:true, childList:true, attributes:true, attributeFilter:['fill','stroke','style'] }); }, 0);
+    .observe(root, { subtree:true, childList:true, attributes:true, attributeFilter:['fill','stroke'] }); }, 0);
 
 /* ================= Rex's outfit =================
    Hats, a scarf, and back pieces drawn by ChatGPT, cut into pieces that move on their own (see OFL and outfitStep in the rig). */
