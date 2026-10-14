@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791991175; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791993381; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1003,6 +1003,17 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 @media (max-width:1180px){.app.desk .setpage{grid-template-columns:minmax(0,1fr);gap:0}.app.desk .setpage .ssnav{flex-direction:row;overflow-x:auto;scrollbar-width:none;position:sticky;top:-24px;z-index:3;background:var(--cream);margin:0 calc(-1*var(--m)) 8px;padding:10px var(--m);box-shadow:0 1px 0 var(--line)}.app.desk .setpage .ssnav button{flex:none;white-space:nowrap}}
 .app.desk .setpage .ssrex .row{grid-template-columns:minmax(140px,180px) minmax(0,1fr);gap:24px}
 @media (max-width:1000px){.app.desk .rexwrap{grid-template-columns:minmax(0,1fr) 250px}.app.desk .setpage .row{grid-template-columns:minmax(160px,200px) minmax(0,1fr);gap:20px}.app.desk .setpage .ssrex .row{grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:16px}}
+
+/* rollover prompt: a small note tucked under the task's title, buttons kept together */
+.park{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin:-6px 12px 12px var(--parkL,56px);padding:7px 7px 7px 12px;border-radius:12px;background:var(--butter);color:var(--text);font-size:12.5px;line-height:1.35}
+.park>span:first-child{flex:1 1 180px;min-width:0}
+.parkb{display:flex;gap:6px;flex:none}.parkb .pill{padding:5px 12px;font-size:12.5px;min-height:0}
+.app.desk .park{--parkL:73px;margin-right:var(--in)}
+/* timeline strip: room for the hour labels under the line, and every marker sits on a ring so the line never looks broken */
+.tline.mini{padding-bottom:22px}
+.tlmini .tle{top:26px;line-height:1}
+.tlmini .tlic{box-shadow:0 0 0 1.5px var(--line)}.tlmini .nowm{z-index:2}
+.app.desk .tlmini .nowm{width:9px;height:9px;top:5px;bottom:auto;margin:4px 0 0 -4.5px}
 </style>
 </head>
 <body>
@@ -2911,7 +2922,7 @@ function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.ste
     ${!opts.bring && !t.done ? `<span class="grip" aria-hidden="true" title="Drag to reorder"><i></i><i></i><i></i><i></i><i></i><i></i></span>` : ''}${opts.bring ? '' : `<button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}"><i>${IC.check}</i></button>`}
     <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar ${prog ? '' : 'zero'}"><i style="width:${prog*100}%"></i></div>` : ''}</div>
     ${opts.bring ? `<button class="pill ghost mint" data-bring="${t.id}">Today</button>` : `<button class="more" aria-label="More options for ${esc(t.t)}" data-more="${t.id}">${IC.more}</button>`}
-  </div>${openId === t.id && !opts.bring ? detailHTML(t) : ''}${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
+  </div>${openId === t.id && !opts.bring ? detailHTML(t) : ''}${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park"><span>This one keeps rolling over. Park it in Someday?</span><span class="parkb"><button class="pill ghost" data-park="${t.id}">Park it</button><button class="pill ghost mint" data-keep="${t.id}">Keep it</button></span></div>` : ''}</div>`; }
 function focusCard(){
   if (picking){ const three = pickThree(); return `<div class="fcard pickc" data-flip="pick"><div class="k">Rex is holding up three. Which one first?</div><div class="stickies">${three.map((t, i) => `<button class="sticky s${i}" data-pick="${t.id}">${esc(t.t)}</button>`).join('')}</div><button class="link" data-cancelpick>Never mind</button></div>`; }
   const [f, why] = focused(); if (!f) return '';
