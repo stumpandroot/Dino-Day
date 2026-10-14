@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791988800; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1791989229; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -941,6 +941,15 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .ofpick{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 .ofline{display:flex;align-items:center;gap:10px}.ofline>span{font:600 12px var(--display);color:var(--muted);min-width:38px;text-align:right}
 @media (max-width:520px){.ofpick{align-items:flex-start;width:100%}.ofline>span{text-align:left}}
+
+/* Rex's Space on a wide screen: one compact strip, so most of the room stays visible and Rex walks on the floor */
+.app.desk.expanded .playbar{display:flex;align-items:center;gap:14px;bottom:16px;width:min(1180px,calc(100% - 32px));margin-left:calc(min(1180px,calc(100% - 32px))/-2);padding:10px 12px;border-radius:24px}
+.app.desk.expanded .playbar .mood{padding:0 4px;flex:0 0 auto;max-width:190px}
+.app.desk.expanded .playbar .mood span span,.app.desk.expanded .playbar .mood div span{display:none}
+.app.desk.expanded .playbar .tiles{flex:1;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px}
+.app.desk.expanded .playbar .tiles button{height:64px;border-radius:16px;gap:3px;font-size:12px}
+.app.desk.expanded .playbar .tiles button svg{width:20px;height:20px}
+@media (max-width:1100px){.app.desk.expanded .playbar .mood{display:none}}
 </style>
 </head>
 <body>
@@ -1791,9 +1800,9 @@ const OF = { spec:{}, art:null, vec:null, built:'', st:null, py:0, pvy:0, t0:0 }
 // Tim's vector pieces come placed on the rig's own Rex (his "Rex with ..." drawings); loose pieces (cape, tie, charm) are placed here
 const OFL = {
   scarf:{ wrap:[136, 296, 300], knot:[150, 340], long:[['longA', 70], ['longB', 62], ['longC', 68]], short:[['shortA', 64], ['shortB', 62]] },
-  cape:{ at:[27.4, 333.8, .85], pivot:[262, 338] },
+  cape:{ at:[2, 340.5, .9], pivot:[250, 345] },
   tie:{ at:[174.6, 325.2, .6] },
-  charm:{ chain:[158.3, 405, .34], star:[150.5, 450.2, .42], pivot:[175, 405] },
+  charm:{ chain:[111.3, 430, .34], star:[103.5, 475.6, .42], pivot:[128, 430] },
   pom:[200, -65], hub:[226.53, -74.71], bladeTilt:-18.5, bladeK:.3 };
 function ofImg(n, x, y, w){ const a = OF.art && OF.art[n]; if (!a) return ''; return `<image href="${a.src}" x="${x}" y="${y}" width="${w}" height="${(w*a.h/a.w).toFixed(1)}" preserveAspectRatio="none"/>`; }
 const ofH = (n, w) => { const a = OF.art && OF.art[n]; return a ? w*a.h/a.w : 0; };
@@ -1809,7 +1818,7 @@ function buildOutfit(){ const sp = OF.spec || {}, key = JSON.stringify(sp); if (
   if (headBack !== g('head').firstChild) g('head').insertBefore(headBack, g('head').firstChild);
   [back, bagL, neck, headBack, hat, front].forEach(e => e.setAttribute('data-norc', ''));   // clothes keep their colors when Rex changes his
   let b = '', bg = '', n = '', hb = '', h = '', f = '';
-  if (sp.back === 'cape'){ b += `<g id="ofCape">${ofAt('cape', OFL.cape.at)}</g>`; n += ofAt('cape_tie', OFL.tie.at); }
+  if (sp.back === 'cape'){ bg += `<g id="ofCape">${ofAt('cape', OFL.cape.at)}</g>`;   /* over his tail, under his body */ n += ofAt('cape_tie', OFL.tie.at); }
   if (sp.back === 'backpack'){
     bg += `<defs><clipPath id="ofBagClip">${ofV('bag')}</clipPath><clipPath id="ofFrontClip"><rect x="-200" y="368" width="1000" height="600"/></clipPath></defs>
       <g id="ofBag">${ofV('bag')}<g id="ofCharm">${ofAt('chain', OFL.charm.chain)}${ofAt('star', OFL.charm.star)}</g></g>
@@ -2360,7 +2369,9 @@ function frame(now){
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', (rex.away && app.classList.contains('expanded') ? size*1.04 : size)+'px');   // in Rex's Space the world is zoomed 4%; held or perched outside it, he matches that size so he doesn't pop on pickup or landing
   const tall = app.classList.contains('expanded') ? (isDesk() ? h > w*0.9 : app.clientHeight > w*0.9) : isDesk() && h > w*0.9, vb = tall ? [48,215,1576,727] : [48,54,1576,887];   // a 48-unit margin on each side stays out of view, so the parallax never shows the art's edges
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), floorPx = Math.round((vb[1] + vb[3] - PLACES[place()].feetY)*sc),
+    // Rex's Space on a wide screen: the play panel covers the bottom of the room, so he walks on the floor just above it (not floating higher)
+    panelLift = isDesk() && app.classList.contains('expanded') ? Math.max(0, Math.round(z.getBoundingClientRect().bottom - $('#playbar').getBoundingClientRect().top) + 6 - floorPx) : 0, groundPx = floorPx + panelLift; z.style.setProperty('--ground', groundPx+'px');
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
   if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; if (place() === 'bedroom') drawScene(); }
   const liftPx = rex.inBed ? Math.round(rex.inBed*sc) - panelLift : 0; rexEl.style.bottom = liftPx ? `calc(var(--ground,14%) + ${liftPx}px)` : '';

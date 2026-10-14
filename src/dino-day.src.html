@@ -941,6 +941,15 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .ofpick{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 .ofline{display:flex;align-items:center;gap:10px}.ofline>span{font:600 12px var(--display);color:var(--muted);min-width:38px;text-align:right}
 @media (max-width:520px){.ofpick{align-items:flex-start;width:100%}.ofline>span{text-align:left}}
+
+/* Rex's Space on a wide screen: one compact strip, so most of the room stays visible and Rex walks on the floor */
+.app.desk.expanded .playbar{display:flex;align-items:center;gap:14px;bottom:16px;width:min(1180px,calc(100% - 32px));margin-left:calc(min(1180px,calc(100% - 32px))/-2);padding:10px 12px;border-radius:24px}
+.app.desk.expanded .playbar .mood{padding:0 4px;flex:0 0 auto;max-width:190px}
+.app.desk.expanded .playbar .mood span span,.app.desk.expanded .playbar .mood div span{display:none}
+.app.desk.expanded .playbar .tiles{flex:1;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px}
+.app.desk.expanded .playbar .tiles button{height:64px;border-radius:16px;gap:3px;font-size:12px}
+.app.desk.expanded .playbar .tiles button svg{width:20px;height:20px}
+@media (max-width:1100px){.app.desk.expanded .playbar .mood{display:none}}
 </style>
 </head>
 <body>
@@ -1367,7 +1376,9 @@ function frame(now){
   placeDeskCard(); const z = $('#zoom'), w = W(), h = z.clientHeight, size = rexSize(); rexEl.style.setProperty('--rexW', (rex.away && app.classList.contains('expanded') ? size*1.04 : size)+'px');   // in Rex's Space the world is zoomed 4%; held or perched outside it, he matches that size so he doesn't pop on pickup or landing
   const tall = app.classList.contains('expanded') ? (isDesk() ? h > w*0.9 : app.clientHeight > w*0.9) : isDesk() && h > w*0.9, vb = tall ? [48,215,1576,727] : [48,54,1576,887];   // a 48-unit margin on each side stays out of view, so the parallax never shows the art's edges
   const vbs = vb.join(' '); if (scene.getAttribute('viewBox') !== vbs) scene.setAttribute('viewBox', vbs);
-  const sc = Math.max(w/vb[2], h/vb[3]), panelLift = isDesk() && app.classList.contains('expanded') ? Math.round(($('#playbar').offsetHeight || 190)*.75) : 0, groundPx = Math.round((941 - PLACES[place()].feetY)*sc) + panelLift; z.style.setProperty('--ground', groundPx+'px');
+  const sc = Math.max(w/vb[2], h/vb[3]), floorPx = Math.round((vb[1] + vb[3] - PLACES[place()].feetY)*sc),
+    // Rex's Space on a wide screen: the play panel covers the bottom of the room, so he walks on the floor just above it (not floating higher)
+    panelLift = isDesk() && app.classList.contains('expanded') ? Math.max(0, Math.round(z.getBoundingClientRect().bottom - $('#playbar').getBoundingClientRect().top) + 6 - floorPx) : 0, groundPx = floorPx + panelLift; z.style.setProperty('--ground', groundPx+'px');
   // in bed: he lies on the mattress (measured from the floor, so the play panel's lift doesn't apply); once he's awake he hops back down
   if (rex.inBed && (!rex.sleeping || place() !== 'bedroom' || rex.away)){ rex.inBed = 0; rex.hop = 1; if (place() === 'bedroom') drawScene(); }
   const liftPx = rex.inBed ? Math.round(rex.inBed*sc) - panelLift : 0; rexEl.style.bottom = liftPx ? `calc(var(--ground,14%) + ${liftPx}px)` : '';
