@@ -66,8 +66,9 @@ setTimeout(() => { const root = document.getElementById('rexSvg'); if (!root || 
 /* ================= Rex's outfit =================
    Hats, a scarf, and back pieces drawn by ChatGPT, cut into pieces that move on their own (see OFL and outfitStep in the rig). */
 const OUTFIT_ART = __OUTFIT__;
-const OUTFIT_OPTS = { hat:[['none','None'],['beanie','Beanie'],['propcap','Propeller cap']], neck:[['none','None'],['scarf','Scarf']], back:[['none','None'],['cape','Cape'],['backpack','Backpack']] };
+const OUTFIT_OPTS = { hat:[['none','None'],['beanie','Beanie'],['propcap','Propeller cap']], neck:[['none','None'],['scarf','Scarf']], back:[['none','None'],['cape','Cape']] };
 if (!S.outfit || typeof S.outfit !== 'object') S.outfit = { hat:'none', neck:'none', back:'none' };
+if (S.outfit.back === 'backpack') S.outfit.back = 'none';   // the backpack is out until Tim's own art is ready
 let outfitArtSent = false;
 function applyOutfit(){ const R = rig(); if (!R || !R.outfit) return; const sp = {}; for (const k of ['hat','neck','back']) if (S.outfit[k] && S.outfit[k] !== 'none') sp[k] = S.outfit[k];
   R.outfit(sp, outfitArtSent ? null : OUTFIT_ART); outfitArtSent = true; }
