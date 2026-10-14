@@ -75,6 +75,6 @@ function outfitRow(){ const o = S.outfit, any = ['hat','neck','back'].some(k => 
   return `<div class="row ofrow"><div><div class="lab">Rex's outfit</div><div class="hint">${any ? 'Pieces swing and bounce as he moves.' : 'Dress him up. Pieces swing and bounce as he moves.'}</div></div>
     <div class="ofpick">${Object.entries(OUTFIT_OPTS).map(([k, opts]) => `<div class="ofline"><span>${{ hat:'Hat', neck:'Neck', back:'Back' }[k]}</span><div class="seg" role="group" aria-label="${k}">${opts.map(([v, l]) => `<button type="button" data-outfit="${k}:${v}" aria-pressed="${(o[k] || 'none') === v}">${l}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
 $('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-outfit]'); if (!b) return; e.stopImmediatePropagation();
-  const [k, v] = b.dataset.outfit.split(':'); S.outfit[k] = v; save(); applyOutfit(); SFX.pop && SFX.pop(); render();
+  const [k, v] = b.dataset.outfit.split(':'); S.outfit[k] = v; save(); applyOutfit(); SFX.pop && SFX.pop(); render(); if (v === 'none') pvReact();
   if (v !== 'none'){ rig()?.face('happy', 1600); rex.hop = 1; rex.say(pick({ beanie:['Cozy!','Toasty head.'], propcap:['Wheee, whirly!','Watch it spin!'], cap:['Cap on!','Looking sporty.'], scarf:['So snug.','Scarf weather!'], cape:['Super Rex!','To the rescue!'], backpack:['Ready for school!','What\'s in the bag?'] }[v] || ['New look!']), 1600); } }, true);
 setTimeout(applyOutfit, 50);

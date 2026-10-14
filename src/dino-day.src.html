@@ -950,6 +950,55 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .app.desk.expanded .playbar .tiles button{height:64px;border-radius:16px;gap:3px;font-size:12px}
 .app.desk.expanded .playbar .tiles button svg{width:20px;height:20px}
 @media (max-width:1100px){.app.desk.expanded .playbar .mood{display:none}}
+
+/* ---------- Profile: desktop settings layout and Rex preview ---------- */
+.setpage .ssnav{display:none}
+.rexwrap{display:flex;flex-direction:column}
+.app:not(.desk) .pvstage{display:none}.app:not(.desk) .rexpv .pvsec:first-of-type{border-top:0}
+.rexpv{order:1;margin:-4px 0 14px;background:var(--card);border-radius:20px;box-shadow:0 1px 0 var(--line),0 4px 14px var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.pvstage{position:relative;height:190px;background-size:cover;background-position:50% 100%;overflow:hidden}
+.pvstage::after{content:"";position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(transparent,rgba(0,0,0,.06));pointer-events:none}
+.pvrex{position:absolute;left:50%;bottom:10px;height:124px;width:auto;transform:translateX(-50%);overflow:visible;z-index:1}
+.pvstage .pvsh{position:absolute;left:50%;bottom:10px;width:70px;height:10px;margin-left:-35px;border-radius:50%;background:rgba(40,40,20,.22);filter:blur(3px)}
+.pvbub{position:absolute;left:50%;top:12px;z-index:2;transform:translateX(-50%) scale(.6);transform-origin:50% 100%;opacity:0;background:var(--card);color:var(--ink);font:600 13px/1.3 var(--display);padding:7px 12px;border-radius:14px;max-width:86%;width:max-content;text-align:center;box-shadow:0 4px 14px rgba(40,40,20,.15);transition:opacity .2s,transform .3s cubic-bezier(.3,1.6,.5,1)}
+.pvbub::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;margin-left:-5px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.pvbub.on{opacity:1;transform:translateX(-50%) scale(1)}.pvbub.keep{transition:none}
+.pvsec{padding:12px 16px 14px;border-top:1px solid var(--line)}
+.pvk{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.pvchat{display:flex;gap:10px;align-items:center;font-size:13px;line-height:1.35;color:var(--text)}
+.pvdots{display:flex;gap:4px;flex:none}.pvdots i{width:8px;height:8px;border-radius:50%;background:var(--chip);transition:background-color .3s,transform .3s cubic-bezier(.3,1.6,.5,1)}
+.pvdots[data-lvl=often] i,.pvdots[data-lvl=sometimes] i:nth-child(-n+2),.pvdots[data-lvl=quiet] i:first-child{background:var(--coral);transform:scale(1.1)}
+.pvcard{position:relative;background:var(--upnext);border-radius:14px;padding:10px 54px 10px 12px;min-height:56px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.pvcard .k{font:700 10.5px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--olive)}
+.app .rexpv .pvcard .ft1{font:600 14.5px/1.25 var(--display);color:var(--text)}
+.pvcard .pvpose{position:absolute;right:8px;bottom:4px;width:38px;height:auto}
+.pvcard.off{background:transparent;border:1.5px dashed var(--line);color:var(--muted);font-size:13px;padding:10px 12px}
+.pvcard.pop{animation:popIn .45s cubic-bezier(.3,1.6,.5,1)}
+.app.desk .scroll:has(.setpage){max-width:1180px}
+.app.desk .setpage{display:grid;grid-template-columns:176px minmax(0,1fr);gap:44px;align-items:start}
+.app.desk .setpage .ssnav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0;margin:0;padding-top:4px}
+.ssnav button{text-align:left;padding:8px 12px;border-radius:12px;font:600 14px var(--display);color:var(--muted);transition:background-color .2s,color .2s}
+.ssnav button:hover{background:var(--chip);color:var(--text)}
+.ssnav button[aria-current=true]{background:var(--upnext);color:var(--olive-ink)}
+.app.desk .setpage .profile{margin:0 0 6px}
+.app.desk .setpage .sset{padding:26px 0 8px;scroll-margin-top:12px}
+.app.desk .setpage .glabel{font:600 20px/1.2 var(--display);letter-spacing:0;text-transform:none;color:var(--text);margin:0 0 12px}
+.app.desk .setpage .group{padding:6px 26px;margin:0}
+.app.desk .setpage .row{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);gap:28px;align-items:start;justify-items:start;padding:18px 0}
+.app.desk .setpage .row>div:first-child{padding-top:5px}
+.app.desk .setpage .row:has(> .danger:only-child),.app.desk .setpage .unl .row{grid-template-columns:1fr}
+.app.desk .setpage .row:last-child{border-bottom:0}
+.app.desk .setpage .row input[type=text]{width:min(100%,320px)}
+.app.desk .setpage .rcpick,.app.desk .setpage .ofpick{align-items:flex-start}
+.app.desk .setpage .rcsw{justify-content:flex-start;max-width:none}
+.app.desk .setpage .ofline>span{text-align:left}
+.app.desk .setpage .rowr{justify-content:flex-start}
+.app.desk .setpage .hint.pad.deskonly{margin:0;padding:0}
+.app.desk .rexwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;align-items:start}
+.app.desk .rexpv{order:0;margin:0;position:sticky;top:12px}
+.app.desk .pvstage{height:230px}.app.desk .pvrex{height:148px;bottom:14px}.app.desk .pvstage .pvsh{bottom:14px}
+@media (max-width:1180px){.app.desk .setpage{grid-template-columns:minmax(0,1fr);gap:0}.app.desk .setpage .ssnav{flex-direction:row;overflow-x:auto;scrollbar-width:none;position:sticky;top:-24px;z-index:3;background:var(--cream);margin:-24px calc(-1*var(--m)) 0;padding:12px var(--m) 10px}.app.desk .setpage .ssnav button{flex:none;white-space:nowrap}}
+@media (max-width:1000px){.app.desk .rexwrap{grid-template-columns:minmax(0,1fr) 250px}.app.desk .setpage .row{grid-template-columns:minmax(130px,170px) minmax(0,1fr);gap:20px}}
 </style>
 </head>
 <body>
@@ -1157,6 +1206,7 @@ const W = () => $('#zoom').clientWidth, Hh = () => world.clientHeight;
 const rex = {
   x: 0.5, tx: 0.5, face: 1, state:'idle', until:0, sq:0, sqv:0, hop:0, shake:0, busy:0, sitting:0, sleeping:false, reading:false,
   say(t, ms=1800, buttons){
+    if (!(buttons && buttons.length) && typeof pvShow === 'function') pvShow(t, ms);
     if (buttons && buttons.length && typeof isDesk === 'function' && (isDesk() || tab === 'today') && !app.classList.contains('expanded') && !rex.away){
       const k = 'say' + Date.now(); nudges = nudges.filter(n => !n.ask); nudges.unshift({ k, ask:true, text:t, buttons:buttons.map(([l, fn, g]) => [l, fn, g]) });
       try { render(); } catch(_){} t = pick(['Psst!','Hey, look!','Over here!']); buttons = null; ms = 1400; }
@@ -1985,7 +2035,7 @@ function render(){
       ${later.length ? `<div class="section"><span>Coming up</span></div><div class="list">${later.map(t => row(t, { bring:true }).replace('class="meta">', `class="meta"><span class="mt when">${labelDay(t.when)}</span>`)).join('')}</div>` : ''}
       <div class="section"><span>Someday</span><button class="link" data-import>Paste a list</button></div><div class="list">${sd.length ? sd.map(t => row(t, { bring:true })).join('') : '<div class="empty">Your Someday box is empty.</div>'}</div>
       ${rest.length ? `<div class="section"><span>Resting until their day</span></div><div class="list">${rest.map(t => row(t, { bring:true })).join('')}</div>` : ''}`;
-  } else if (tab === 'settings'){ sc.innerHTML = settingsHTML();
+  } else if (tab === 'settings'){ sc.innerHTML = settingsHTML(); requestAnimationFrame(() => sc.dispatchEvent(new Event('scroll')));
   } else if (tab === 'stats'){ sc.innerHTML = statsHTML(); }
   if (desk && tab !== 'today') sc.insertAdjacentHTML('afterbegin', `<button class="dkback" data-tab="today">${IC.chev}Today</button>`);
   dScroll.forEach(([id, top]) => { const e = document.getElementById(id); if (e) e.scrollTop = top; });
@@ -1993,47 +2043,75 @@ function render(){
   sc.scrollTop = keepScroll; sessionTick(); paintQuick();
 }
 function seg(key, opts, obj = S){ return `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-set="${key}" data-val="${v}" aria-pressed="${String(key.includes('.') ? key.split('.').reduce((o, k) => o && o[k], S) : obj[key]) === String(v)}">${l}</button>`).join('')}</div>`; }
+const CHAT_PV = { often:['Chimes in on most things you do.', 3200], sometimes:['Reacts now and then.', 6500], quiet:['Mostly quiet. Speaks up for the big moments.', 15000] };
+const PV_LINES = ['Nice!','On the list!','You did it.','Ooh, new spot.','Hmm hmm hm…','One less thing!','Okay!','I like it here.'];
+let pvPop = false;
+function rexPreviewHTML(){ setTimeout(() => { pvPop = false; }, 0); const on = S.suggest !== false, nx = on ? (pickThree()[0] || { t:'Reply to Sam about Friday' }) : null, c = CHAT_PV[S.chat] || CHAT_PV.sometimes;
+  return `<aside class="rexpv" aria-label="Preview of your choices">
+    <div class="pvstage" style="background-image:url('${thumbFor(S.place)}')"><div class="pvbub ${Date.now() < pvUntil ? 'on keep' : ''}" aria-hidden="true">${esc(Date.now() < pvUntil ? pvText : '')}</div><div class="pvsh"></div><svg class="pvrex" viewBox="0 0 536 688" aria-hidden="true"><use href="#rexHit"/></svg></div>
+    <div class="pvsec"><div class="pvk">How he talks</div><div class="pvchat"><span class="pvdots" data-lvl="${S.chat}"><i></i><i></i><i></i></span>${c[0]}</div></div>
+    <div class="pvsec"><div class="pvk">Top of Today</div>${on ? `<div class="pvcard ${pvPop ? 'pop' : ''}"><div class="k">Up next</div><div class="ft1">${esc(nx.t)}</div>${pose('wave', 34, 'pvpose')}</div>` : `<div class="pvcard off ${pvPop ? 'pop' : ''}">Rex won't pick. Today starts with your list.</div>`}</div></aside>`; }
+let pvNext = 0, pvLvl = '', pvI = 0, pvText = '', pvUntil = 0;
+function pvBub(t, ms){ pvText = t; pvUntil = Date.now() + ms; const b = document.querySelector('.rexpv .pvbub'); if (!b) return;
+  b.textContent = t; b.classList.remove('on', 'keep'); void b.offsetWidth; b.classList.add('on'); }
+function pvShow(t, ms = 1700){ if (tab !== 'settings' || !isDesk() || /^(Psst!|Hey, look!|Over here!)$/.test(t)) return; pvNext = Date.now() + (CHAT_PV[S.chat] || CHAT_PV.sometimes)[1]; pvBub(t, Math.max(1500, ms)); }
+function pvSay(force){ if (!document.querySelector('.rexpv .pvbub')) return; const now = Date.now();
+  if (pvUntil && now > pvUntil){ pvUntil = 0; document.querySelector('.rexpv .pvbub').classList.remove('on', 'keep'); }
+  if (S.chat !== pvLvl){ const first = !pvLvl; pvLvl = S.chat; if (!first) force = true; }
+  if (!force && now < pvNext) return; pvNext = now + (CHAT_PV[S.chat] || CHAT_PV.sometimes)[1]; pvBub(PV_LINES[pvI++ % PV_LINES.length], 1700); }
+setInterval(() => { if (tab === 'settings' && !document.hidden) pvSay(false); }, 250);
+function pvReact(key){ if (tab !== 'settings') return; if (!isDesk()){ if (key === 'chat') rex.say(S.chat === 'quiet' ? '…' : PV_LINES[pvI++ % PV_LINES.length], 1500); return; } requestAnimationFrame(() => pvSay(true)); try { rig()?.hop(300); } catch(_){} }
+const SS_NAV = [['you','You'],['rex','Rex'],['habits',"Rex's habits"],['features','Features'],['focus','Focus'],['time','Time with Rex'],['swipe','Swipe'],['tasks','Tasks'],['account','Account'],['data','Data'],['proto','Prototype']];
 function settingsHTML(){ const H = S.habits; const hrow = (k, l, hint) => `<div class="row nodesk"><div><div class="lab">${l}</div><div class="hint">${hint}</div></div>${seg('habits.'+k, [[true,'On'],[false,'Off']])}</div>`;
-  return `<div class="tophead nodesk">${logoHTML()}</div><div class="profile"><span class="pav">${IC.person}</span><div><h1>${esc(S.name || 'Friend')}</h1><div class="date">Profile and settings. Make Dino Day yours.</div></div></div>
-  <div class="glabel">You</div><div class="group">
+  const sec = (id, title, body, cls = '') => `<section class="sset ${cls}" id="ss-${id}" data-ss="${id}"><h2 class="glabel">${title}</h2>${body}</section>`;
+  const acct = accountRows().replace('<div class="glabel">Account</div>', '');
+  return `<div class="tophead nodesk">${logoHTML()}</div><div class="setpage"><nav class="ssnav deskonly" aria-label="Settings sections">${SS_NAV.map(([k, l], i) => `<button type="button" data-ssnav="${k}" ${i === 0 ? 'aria-current="true"' : ''}>${l}</button>`).join('')}</nav><div class="ssbody">
+  <div class="profile"><span class="pav">${IC.person}</span><div><h1>${esc(S.name || 'Friend')}</h1><div class="date">Profile and settings. Make Dino Day yours.</div></div></div>
+  ${sec('you', 'You', `<div class="group">
     <div class="row"><div><div class="lab">Your name</div><div class="hint">Rex uses it to greet you.</div></div><input type="text" id="setName" value="${esc(S.name)}" aria-label="Your name" autocomplete="given-name"></div>
-    <div class="row"><div><div class="lab">Your stats</div><div class="hint">What you've done, sessions, keepsakes. Only here, never on Today.</div></div><button class="pill ghost mint" data-stats>Open</button></div></div>
-  <div class="glabel">Rex</div><div class="group">
+    <div class="row"><div><div class="lab">Your stats</div><div class="hint">What you've done, sessions, keepsakes. Only here, never on Today.</div></div><button class="pill ghost mint" data-stats>Open</button></div></div>`)}
+  ${sec('rex', 'Rex', `<div class="rexwrap"><div class="group">
     <div class="row"><div><div class="lab">Rex's spot</div><div class="hint">Where he hangs out.</div></div>${seg('place', [['meadow','Meadow'],['bedroom','Bedroom']])}</div>
     ${rexColorRow()}
     ${outfitRow()}
     <div class="row"><div><div class="lab">Chattiness</div><div class="hint">How often Rex talks and reacts.</div></div>${seg('chat', [['often','Often'],['sometimes','Some'],['quiet','Quiet']])}</div>
     <div class="row"><div><div class="lab">Suggests what's next</div><div class="hint">Rex's pick at the top of Today.</div></div>${seg('suggest', [[true,'On'],[false,'Off']])}</div>
-    <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>
-  <div class="glabel">Rex's habits</div><div class="hint pad deskonly">Turn them on and off in the Habits tab on Today.</div><div class="group">
+    <div class="row"><div><div class="lab">Day and night</div><div class="hint">${S.asleep ? 'Rex is asleep.' : 'Rex is awake.'}</div></div><button class="pill ghost mint" data-daybtn>${S.asleep ? 'Start my day' : 'Bedtime'}</button></div></div>${rexPreviewHTML()}</div>`, 'ssrex')}
+  ${sec('habits', "Rex's habits", `<div class="hint pad deskonly">Turn them on and off in the Habits tab on Today.</div><div class="group nodesk">
     ${hrow('water','Water','He drinks a glass in the morning and asks if you want one.')}
     <div class="row"><div><div class="lab">Lunch</div><div class="hint">He asks you to eat with him.</div></div><div class="rowr"><input type="time" id="lunchAt" value="${H.lunchAt||'12:30'}" aria-label="Lunch time">${seg('habits.lunch', [[true,'On'],[false,'Off']])}</div></div>
     ${hrow('stretch','Stretch','After a focus session.')}
     ${hrow('plants','Plants','He waters his plant in the afternoon.')}
     ${hrow('walk','Walk','He invites you out in the late afternoon.')}
-    ${hrow('winddown','Wind-down','At 9 PM he gets sleepy and helps you wrap up.')}</div>
-  <div class="glabel">Features</div><div class="group">
+    ${hrow('winddown','Wind-down','At 9 PM he gets sleepy and helps you wrap up.')}</div>`)}
+  <section class="sset" id="ss-features" data-ss="features"><h2 class="glabel">Features</h2><div class="group">
     <div class="row"><div><div class="lab">My habits</div><div class="hint">A simple weekly check-off grid on Today.</div></div>${seg('habitsOn', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Your day timeline</div><div class="hint">Timed tasks and habits from 7 AM to 11 PM.</div></div>${seg('timeline', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Sounds</div><div class="hint">Soft chimes when you add and finish things.</div></div>${seg('sound', [[true,'On'],[false,'Off']])}</div>
     <div class="row"><div><div class="lab">Time of day</div><div class="hint">Follow your clock, or keep it sunny.</div></div>${seg('lockDay', [[false,'My clock'],[true,'Always day']])}</div></div>
-  <div class="glabel">Focus</div><div class="group">
+  </section><section class="sset" id="ss-focus" data-ss="focus"><h2 class="glabel">Focus</h2><div class="group">
     <div class="row"><div><div class="lab">Session length</div><div class="hint">How long "Start with Rex" runs.</div></div>${seg('sessionMin', [[5,'5 min'],[15,'15'],[25,'25']])}</div>
     <div class="row"><div><div class="lab">Background sound</div><div class="hint">Plays during focus sessions. More unlock as you spend time together.</div></div><select class="swsel" id="ambSel" aria-label="Background sound">${AMBIENTS.map(([k, l]) => { const ok = k === 'off' || unlocked('amb_'+k); return `<option value="${k}" ${S.ambient===k?'selected':''} ${ok?'':'disabled'}>${l}${ok?'':' (locked)'}</option>`; }).join('')}</select></div>
     <div class="row"><div><div class="lab">Smarter steps</div><div class="hint">Make it smaller asks Claude to break the task down. The task's text is sent to Claude and uses your Claude usage. Off uses Rex's built-in steps.</div></div>${seg('aiSteps', [[true,'On'],[false,'Off']])}</div></div>
-  <div class="glabel">Time with Rex</div><div class="group unl">${(() => { const g = together(); return `<div class="hint pad">You've spent ${g.days} ${g.days===1?'day':'days'} together, done ${g.sessions} focus ${g.sessions===1?'session':'sessions'}, and played ${g.plays} ${g.plays===1?'time':'times'}. New things come from time together, not from tasks finished.</div>` + UNLOCKS.map(u => { const ok = unlocked(u.id); return `<div class="row"><div><div class="lab">${ok ? '' : '🔒 '}${esc(u.name)}</div><div class="hint">${u.kind} · ${ok ? 'Unlocked' : NEED_TXT(u.need)}</div></div></div>`; }).join(''); })()}</div>
-  <div class="glabel">Swipe on a task</div><div class="group">
+  </section><section class="sset" id="ss-time" data-ss="time"><h2 class="glabel">Time with Rex</h2><div class="group unl">${(() => { const g = together(); return `<div class="hint pad">You've spent ${g.days} ${g.days===1?'day':'days'} together, done ${g.sessions} focus ${g.sessions===1?'session':'sessions'}, and played ${g.plays} ${g.plays===1?'time':'times'}. New things come from time together, not from tasks finished.</div>` + UNLOCKS.map(u => { const ok = unlocked(u.id); return `<div class="row"><div><div class="lab">${ok ? '' : '🔒 '}${esc(u.name)}</div><div class="hint">${u.kind} · ${ok ? 'Unlocked' : NEED_TXT(u.need)}</div></div></div>`; }).join(''); })()}</div>
+  </section><section class="sset" id="ss-swipe" data-ss="swipe"><h2 class="glabel">Swipe on a task</h2><div class="group">
     <div class="row"><div><div class="lab">Swipe right</div><div class="hint">Pull a task to the right.</div></div><select class="swsel" id="swR" aria-label="Swipe right action">${SWIPE_OPTS.map(([v, l]) => `<option value="${v}" ${S.swipeR===v?'selected':''}>${l}</option>`).join('')}</select></div>
     <div class="row"><div><div class="lab">Swipe left</div><div class="hint">Pull a task to the left.</div></div><select class="swsel" id="swL" aria-label="Swipe left action">${SWIPE_OPTS.map(([v, l]) => `<option value="${v}" ${S.swipeL===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
-  <div class="glabel">Tasks</div><div class="group">
+  </section><section class="sset" id="ss-tasks" data-ss="tasks"><h2 class="glabel">Tasks</h2><div class="group">
     <div class="row"><div><div class="lab">Sort today's list</div><div class="hint">Tag effort and pick today's frog.</div></div><button class="pill ghost mint" data-sort>Sort</button></div>
     <div class="row"><div><div class="lab">Import tasks</div><div class="hint">Paste a list from anywhere.</div></div><button class="pill ghost mint" data-import>Paste</button></div>
     <div class="row"><div><div class="lab">Format for AI</div><div class="hint">Copy instructions so any AI writes a list Rex can read.</div></div><button class="pill ghost mint" data-copyfmt>Copy</button></div></div>
-  ${accountRows()}<div class="glabel">Data</div><div class="group">
+  </section>${sec('account', 'Account', acct)}<section class="sset" id="ss-data" data-ss="data"><h2 class="glabel">Data</h2><div class="group">
     <div class="row"><div><div class="lab">Backup</div><div class="hint">Copies everything as text you can keep.</div></div><div class="rowr"><button class="pill ghost mint" data-backup>Copy</button><button class="pill ghost mint" data-restore>Restore</button></div></div>
     <div class="row"><button class="danger" id="resetBtn">${S._confirmReset ? 'Tap again to replace everything with the examples' : 'Start over with example tasks'}</button></div></div>
-  <div class="glabel">Prototype tools</div><div class="group">
-    <div class="row"><div><div class="lab">Try it now</div><div class="hint">Skip ahead to see how Rex behaves.</div></div><div class="rowr wrapb"><button class="pill ghost mint" data-sim="stall">A stall</button><button class="pill ghost mint" data-sim="wrap">Evening</button><button class="pill ghost mint" data-sim="day">Next day</button><button class="pill ghost mint" data-sim="onb">Intro</button></div></div></div>`; }
+  </section><section class="sset" id="ss-proto" data-ss="proto"><h2 class="glabel">Prototype tools</h2><div class="group">
+    <div class="row"><div><div class="lab">Try it now</div><div class="hint">Skip ahead to see how Rex behaves.</div></div><div class="rowr wrapb"><button class="pill ghost mint" data-sim="stall">A stall</button><button class="pill ghost mint" data-sim="wrap">Evening</button><button class="pill ghost mint" data-sim="day">Next day</button><button class="pill ghost mint" data-sim="onb">Intro</button></div></div></div></section></div></div>`; }
+$('#scroll').addEventListener('click', e => { const b = e.target.closest('[data-ssnav]'); if (!b) return; const sc = $('#scroll'), t = document.getElementById('ss-' + b.dataset.ssnav); if (!t) return;
+  sc.scrollTo({ top: sc.scrollTop + t.getBoundingClientRect().top - sc.getBoundingClientRect().top - (getComputedStyle(b.parentNode).flexDirection === 'row' ? 56 : 8), behavior:'smooth' }); });
+$('#scroll').addEventListener('scroll', () => { if (tab !== 'settings' || !isDesk()) return; const sc = $('#scroll'), top = sc.getBoundingClientRect().top + 90; let cur = 'you';
+  sc.querySelectorAll('.sset').forEach(x => { if (x.getBoundingClientRect().top <= top) cur = x.dataset.ss; });
+  if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) cur = sc.querySelector('.sset:last-of-type')?.dataset.ss || cur;
+  sc.querySelectorAll('[data-ssnav]').forEach(b => b.setAttribute('aria-current', String(b.dataset.ssnav === cur))); }, { passive:true });
 function statsHTML(){ const log = S.log || {}, wk = weekKeys(); const week = wk.reduce((a, k) => a + (log[k]||0), 0);
   const tile = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
   return `<div class="hello"><div><h1>Your stats</h1><div class="date">Just for you. Rex doesn't keep score.</div></div><button class="pill ghost mint" data-tab="settings">Back</button></div>
@@ -2113,7 +2191,7 @@ $('#scroll').addEventListener('click', e => {
     const prevPlace = S.place; if (key.includes('.')){ const [a, b] = key.split('.'); S[a][b] = v; } else S[key] = v;
     if (key === 'lockDay'){ preview = null; drawScene(); }
     if (key === 'place'){ S.place = prevPlace; if (v !== prevPlace) travelTo(v); }
-    SFX.pop(); save(); render(); return; }
+    if (key === 'suggest') pvPop = true; SFX.pop(); save(); render(); if (['chat','suggest','place'].includes(key)) pvReact(key); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
   const r = q('[data-row]'); if (r && !q('button') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
 });
