@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1791993736; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1792075018; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -4179,14 +4179,22 @@ const OTA_BASE = ACCT && ACCT.url ? ACCT.url + '/storage/v1/object/public/app/' 
 let LAST_UPD = '';
 const updReady = () => { try { const o = JSON.parse(localStorage.getItem('dinoday.ota') || 'null'); return !!(o && o.v > (window.DINO_BUILD || 0)); } catch(_){ return false; } };
 function updText(){ const b = new Date((window.DINO_BUILD || 0)*1000).toLocaleString([], { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
-  return updReady() ? 'A new version is downloaded. Restart to use it.' : (LAST_UPD === 'big' ? 'A bigger update is out. It needs a fresh install. ' : LAST_UPD === 'error' ? 'Couldn’t reach the update server. ' : LAST_UPD === 'none' ? 'You’re on the newest version. ' : '') + 'Build from ' + b + '.'; }
+  return updReady() ? 'A new version is downloaded. Restart to use it.' : (LAST_UPD === 'big' ? 'A bigger update is out. It needs a fresh install. ' : LAST_UPD === 'error' ? 'Couldn’t reach the update server. ' : LAST_UPD === 'space' ? 'Couldn’t save the update on this device. ' : LAST_UPD === 'none' ? 'You’re on the newest version. ' : '') + 'Build from ' + b + '.'; }
+// The full page is too big for localStorage on iPhone (WebKit allows about 2.6 million characters), so it lives in IndexedDB.
+// localStorage holds only the small bridge page (the bucket's index.html), which swaps the full page in at launch.
+function otaIdb(){ return new Promise((res, rej) => { const r = indexedDB.open('dinoday', 1); r.onupgradeneeded = () => r.result.createObjectStore('ota'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function otaPut(rec){ const db = await otaIdb(); await new Promise((res, rej) => { const t = db.transaction('ota', 'readwrite'); t.objectStore('ota').put(rec, 'page'); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
 async function otaCheck(quiet){
   if (!window.IS_APP || !OTA_BASE) return 'web';
-  try { const r = await fetch(OTA_BASE + 'version.json?t=' + Date.now(), { cache:'no-store' }); if (!r.ok) return 'error'; const v = await r.json(), cur = window.DINO_BUILD || 0;
+  try { const get = async f => { const r = await fetch(OTA_BASE + f + '?t=' + Date.now(), { cache:'no-store' }); if (!r.ok) throw 'error'; return r; };
+    const v = await (await get('version.json')).json(), cur = window.DINO_BUILD || 0;
     if (updReady()) return 'ready'; if (!(v.v > cur)) return 'none';
     if (v.packs !== window.DINO_PACKV) return 'big';
-    const h = await fetch(OTA_BASE + 'index.html?t=' + Date.now(), { cache:'no-store' }); if (!h.ok) return 'error'; const html = await h.text(); if (!/<\/html>\s*$/i.test(html.trim())) return 'error';
-    localStorage.setItem('dinoday.ota', JSON.stringify({ v:v.v, packs:v.packs, html })); if (quiet) toast('Update ready. It arrives next time you open the app.'); return 'ready'; }
+    const html = await (await get('page.html')).text(); if (!/<\/html>\s*$/i.test(html.trim())) return 'error';
+    const bridge = await (await get('index.html')).text(); if (!/<\/html>\s*$/i.test(bridge.trim()) || bridge.length > 200000) return 'error';
+    try { await otaPut({ v:v.v, html }); } catch(_){ return 'space'; }
+    try { localStorage.setItem('dinoday.ota', JSON.stringify({ v:v.v, packs:v.packs, html:bridge })); } catch(_){ return 'space'; }
+    if (quiet) toast('Update ready. It arrives next time you open the app.'); return 'ready'; }
   catch(_){ return 'error'; } }
 setTimeout(() => otaCheck(true).then(s => { LAST_UPD = s; }), 8000);
 

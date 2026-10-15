@@ -36,6 +36,10 @@ for f in ('index.html', 'supabase.js'): shutil.copy(os.path.join(HERE, f), W)
 pet = open(S + 'pet.src.html').read().replace('__RIG__', rig).replace('<!--RIG_ENGINE-->', engine)
 open(os.path.join(W, 'pet.html'), 'w').write(pet)   # the Mac desk pet
 O = os.path.join(HERE, 'dist', 'ota'); os.makedirs(O, exist_ok=True)
-shutil.copy(os.path.join(HERE, 'index.html'), O)
+# the full page goes up as page.html; index.html is the small bridge the apps keep in localStorage (see src/ota-bridge.html)
+shutil.copy(os.path.join(HERE, 'index.html'), os.path.join(O, 'page.html'))
+import re as _re
+_base = _re.search(r'DINO_ACCOUNT = \{ url: "([^"]+)"', app).group(1) + '/storage/v1/object/public/app/'
+open(os.path.join(O, 'index.html'), 'w').write(open(S + 'ota-bridge.html').read().replace('__OTA_V__', str(BUILD)).replace('__OTA_BASE__', _base))
 json.dump({ 'v': BUILD, 'packs': 'rig1' }, open(os.path.join(O, 'version.json'), 'w'))
 print('index.html', len(app))
