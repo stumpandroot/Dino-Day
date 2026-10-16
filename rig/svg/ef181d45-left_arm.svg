@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 143.41 179.41">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #528e82;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 70px;
+      }
+
+      .cls-2 {
+        fill: #2d554e;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <path id="left_arm" data-name="left arm" class="cls-1" d="M108.41,35c-24.15,11.41-48.67,27.92-73.41,47.44,6.66,22.38,23.37,40.69,46.31,56.47"/>
+      <path id="left_hand" data-name="left hand" class="cls-2" d="M106.51,115.53c-3.49-2.92-7.88-4.6-12.44-4.58-6.55.02-16.9,1.92-30.18,10.45-23.72,15.25-18.59,37.27-18.59,37.27,0,0,20.09,38.12,61.27,11.01,32.86-21.63,10.36-45.43-.06-54.15Z"/>
+    </g>
+  </g>
+</svg>

@@ -320,7 +320,7 @@ function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.ste
     <div class="tt"><div class="title">${t.high ? '<span class="imp" aria-label="Important">!</span>' : ''}${esc(t.t)}</div><div class="meta">${meta(t)}</div>${t.steps.length && !t.done ? `<div class="bar"><i style="width:${prog*100}%"></i></div>` : ''}</div>
     ${opts.bring ? `<button class="pill ghost mint" data-bring="${t.id}">Today</button>` : `<button class="more" aria-label="More options for ${esc(t.t)}" data-more="${t.id}">${IC.more}</button>
     <button class="check" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.t)}" data-check="${t.id}">${IC.check}</button>`}
-  </div>${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park">This one keeps rolling over. Park it in Someday? <button class="pill ghost" data-park="${t.id}">Park it</button><button class="link" data-keep="${t.id}">Keep it</button></div>` : ''}</div>`; }
+  </div>${!t.done && !opts.bring && (t.carry||0) >= 4 && t.parkDay !== today() ? `<div class="park"><span>This one keeps rolling over. Park it in Someday?</span><span class="parkb"><button class="pill ghost" data-park="${t.id}">Park it</button><button class="pill ghost mint" data-keep="${t.id}">Keep it</button></span></div>` : ''}</div>`; }
 function focusCard(){
   if (picking){ const three = pickThree(); return `<div class="fcard pickc"><div class="k">Rex is holding up three. Which one first?</div><div class="stickies">${three.map((t, i) => `<button class="sticky s${i}" data-pick="${t.id}">${esc(t.t)}</button>`).join('')}</div><button class="link" data-cancelpick>Never mind</button></div>`; }
   const [f, why] = focused(); if (!f) return '';

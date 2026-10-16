@@ -1,4 +1,45 @@
-# Builds index.html from src/: python3 build.py
-s = open('src/dino-day.src.html').read()
-s = s.replace('__REX__', open('src/rex.b64').read()).replace('__ENV__', open('src/env.json').read())
-open('index.html', 'w').write(s)
+# Builds index.html: python3 build.py
+# 1. rig/compose.py assembles Rex's rig from rig/parts.json (made from Tim's SVGs in rig/svg by rig/parts.py)
+#    and writes the rig test page (rig/rex-rig.html) plus the fragments the app embeds.
+# 2. The app source gets the rig, its engine script, Rex's onboarding image, and the scene art inlined.
+import json, os, subprocess, sys, time, shutil
+HERE = os.path.dirname(os.path.abspath(__file__))
+R = os.path.join(HERE, 'rig') + '/'
+subprocess.run([sys.executable, R + 'compose.py'], check=True, stdout=subprocess.DEVNULL)
+rig = open(R + 'rig_frag.svg').read()
+parts = open(R + 'rig_parts.json').read()
+src = open(R + 'rig.src.html').read()
+js = src[src.index('<script>') + 8: src.rindex('</script>')]
+def cut(s, a, b):
+    i = s.index(a); j = s.index(b, i); return s[:i] + s[j:]
+js = cut(js, "$('#exGrid').innerHTML", "/* ---------- pointer ---------- */")          # rig test-page controls
+js = cut(js, "g('rexHit').addEventListener('pointerdown'", "/* ---------- API for the app")   # the app owns tap, hold, and drag
+js = js.replace("const svg = $('#svg')", "const svg = document.getElementById('rexSvg')", 1).replace('__PARTS__', parts)
+engine = ("<script>\nwindow.REX_OPT = { optLook:true, get optIdle(){ return !(window.__rexBusy && window.__rexBusy()); } };\n"
+          "window.REX_HOOK = { walking: () => !!(window.__rexWalking && window.__rexWalking()) };\n"
+          "(() => {\n" + js + "\n})();\n</script>\n")
+S = os.path.join(HERE, 'src') + '/'
+app = open(S + 'dino-day.src.html').read()
+app = app.replace('__RIG__', rig).replace('<!--RIG_ENGINE-->', engine)
+app = app.replace('/*__PLATFORM__*/', open(S + 'parts/platform.js').read()).replace('/*__PROJECTS__*/', open(S + 'parts/projects.js').read()).replace('/*__LINKS__*/', open(S + 'parts/links.js').read()).replace('/*__TASKDETAIL__*/', open(S + 'parts/taskdetail.js').read()).replace('/*__TRAVEL__*/', open(S + 'parts/travel.js').read().replace('__PLACETHUMBS__', open(S + 'placethumbs.json').read())).replace('/*__PERF__*/', open(S + 'parts/perf.js').read()).replace('/*__COLORS__*/', open(S + 'parts/colors.js').read().replace('__OUTFIT__', open(S + 'outfit.json').read()).replace('__OUTFITSVG__', open(S + 'outfit_svg.json').read()))
+BUILD = int(time.time())
+app = app.replace('window.DINO_BUILD = __BUILD__', 'window.DINO_BUILD = %d' % BUILD)
+import base64 as _b64
+_ic = lambda f: 'data:image/png;base64,' + _b64.b64encode(open(S + 'icons/' + f, 'rb').read()).decode()
+app = app.replace('<head>', '<head><link rel="icon" type="image/png" href="' + _ic('favicon-64.png') + '"><link rel="apple-touch-icon" href="' + _ic('apple-touch-180.png') + '">', 1)
+app = app.replace('__REX__', open(S + 'rex.b64').read()).replace('__ENV__', open(S + 'env.json').read()).replace('__MEADOW__', open(S + 'meadow2.json').read()).replace('__POSES__', open(S + 'poses.json').read()).replace('/*__BEDROOM__*/', open(S + 'parts/bedroom.js').read().replace('__BEDROOM__', open(S + 'bedroom2.json').read()))
+open(os.path.join(HERE, 'index.html'), 'w').write(app)
+shutil.copy(S + 'supabase.js', os.path.join(HERE, 'supabase.js'))
+# native bundle (iPhone and Mac) and the over-the-air update files
+W = os.path.join(HERE, 'dist', 'www'); os.makedirs(W, exist_ok=True)
+for f in ('index.html', 'supabase.js'): shutil.copy(os.path.join(HERE, f), W)
+pet = open(S + 'pet.src.html').read().replace('__RIG__', rig).replace('<!--RIG_ENGINE-->', engine)
+open(os.path.join(W, 'pet.html'), 'w').write(pet)   # the Mac desk pet
+O = os.path.join(HERE, 'dist', 'ota'); os.makedirs(O, exist_ok=True)
+# the full page goes up as page.html; index.html is the small bridge the apps keep in localStorage (see src/ota-bridge.html)
+shutil.copy(os.path.join(HERE, 'index.html'), os.path.join(O, 'page.html'))
+import re as _re
+_base = _re.search(r'DINO_ACCOUNT = \{ url: "([^"]+)"', app).group(1) + '/storage/v1/object/public/app/'
+open(os.path.join(O, 'index.html'), 'w').write(open(S + 'ota-bridge.html').read().replace('__OTA_V__', str(BUILD)).replace('__OTA_BASE__', _base))
+json.dump({ 'v': BUILD, 'packs': 'rig1' }, open(os.path.join(O, 'version.json'), 'w'))
+print('index.html', len(app))

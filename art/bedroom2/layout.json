@@ -1,0 +1,210 @@
+{
+ "feetY": 780,
+ "rexW": 230,
+ "back": [
+  {
+   "n": "view",
+   "x": 640,
+   "y": 40,
+   "w": 610,
+   "id": "window"
+  },
+  {
+   "n": "shell",
+   "x": 0,
+   "y": 0,
+   "w": 1672
+  },
+  {
+   "n": "bunting",
+   "x": 55,
+   "y": -4,
+   "w": 300,
+   "id": "bunting",
+   "sway": "top"
+  },
+  {
+   "n": "moonshelf",
+   "x": 0,
+   "y": 92,
+   "w": 250,
+   "id": "moonshelf"
+  },
+  {
+   "n": "shelfplantL",
+   "x": 0.0,
+   "y": 96.6,
+   "w": 110.3,
+   "id": "shelfplantL",
+   "sway": "hang"
+  },
+  {
+   "n": "shelfplantR",
+   "x": 161.1,
+   "y": 118.9,
+   "w": 88.9,
+   "id": "shelfplantR",
+   "sway": "hang"
+  },
+  {
+   "n": "poster",
+   "x": 278,
+   "y": 62,
+   "w": 210,
+   "id": "poster"
+  },
+  {
+   "n": "printT",
+   "x": 522,
+   "y": 108,
+   "w": 72,
+   "id": "printT"
+  },
+  {
+   "n": "printM",
+   "x": 522,
+   "y": 210,
+   "w": 76,
+   "id": "printM"
+  },
+  {
+   "n": "cactus",
+   "x": 1588,
+   "y": 160,
+   "w": 72,
+   "id": "cactus"
+  },
+  {
+   "n": "books",
+   "x": 1430,
+   "y": 655,
+   "w": 290,
+   "base": true,
+   "id": "books"
+  },
+  {
+   "n": "lantern",
+   "x": 1040,
+   "y": 457,
+   "w": 46,
+   "base": true,
+   "id": "lantern"
+  },
+  {
+   "n": "stand",
+   "x": 545,
+   "y": 641,
+   "w": 165,
+   "base": true,
+   "id": "stand"
+  },
+  {
+   "n": "lamp",
+   "x": 532,
+   "y": 500,
+   "w": 100,
+   "base": true,
+   "id": "lamp"
+  },
+  {
+   "n": "dino",
+   "x": 604,
+   "y": 502,
+   "w": 64,
+   "base": true,
+   "id": "dino"
+  },
+  {
+   "n": "bed",
+   "x": 170,
+   "y": 791,
+   "w": 520,
+   "base": true,
+   "id": "bed"
+  },
+  {
+   "n": "chest",
+   "x": 1150,
+   "y": 642,
+   "w": 260,
+   "base": true,
+   "id": "chest"
+  },
+  {
+   "n": "basket",
+   "x": 1318,
+   "y": 692,
+   "w": 118,
+   "base": true,
+   "id": "basket",
+   "sway": "leaves"
+  },
+  {
+   "n": "desk",
+   "x": 1610,
+   "y": 792,
+   "w": 320,
+   "base": true,
+   "id": "desk"
+  },
+  {
+   "n": "rug",
+   "x": 860,
+   "y": 808,
+   "w": 900,
+   "base": true,
+   "id": "rug"
+  }
+ ],
+ "curtains": {
+  "L": {
+   "n": "curtL",
+   "x": 612,
+   "y": 20,
+   "w": 196
+  },
+  "R": {
+   "n": "curtR",
+   "x": 1078,
+   "y": 20,
+   "w": 196
+  },
+  "Lc": {
+   "n": "curtLc",
+   "x": 612,
+   "y": 20,
+   "w": 335
+  },
+  "Rc": {
+   "n": "curtRc",
+   "x": 939,
+   "y": 20,
+   "w": 335
+  }
+ },
+ "hang": {
+  "n": "hangplant",
+  "x": 752,
+  "y": 403,
+  "w": 100,
+  "id": "hangplant"
+ },
+ "front": [
+  {
+   "n": "fgL",
+   "x": -40,
+   "y": 600,
+   "w": 340,
+   "id": "fgL",
+   "sway": "fg"
+  },
+  {
+   "n": "fgR",
+   "x": 1392,
+   "y": 630,
+   "w": 300,
+   "id": "fgR",
+   "sway": "fg"
+  }
+ ]
+}

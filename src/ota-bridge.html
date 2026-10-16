@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<style>html,body{margin:0;height:100%;background:#f6efe2;font:600 16px/1.4 -apple-system,system-ui,sans-serif;color:#2f4a3f}
+#m{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+#m button{border:0;border-radius:999px;padding:11px 20px;font:inherit;background:#e9714f;color:#fff}#m button.g{background:#e3ead6;color:#2f4a3f}</style></head>
+<body><div id="m"><div id="mt">Finishing the update…</div><button id="retry">Try again</button><button class="g" id="old">Use the version I have</button></div>
+<script>
+/* Over-the-air bridge. The app keeps this small page in localStorage (the full page is too big for it)
+   and keeps the full page in IndexedDB. On launch it swaps in the full page; the first time, it downloads it. */
+(function(){
+  var V = __OTA_V__, BASE = "__OTA_BASE__";
+  function idb(){ return new Promise(function(res, rej){ var r = indexedDB.open('dinoday', 1); r.onupgradeneeded = function(){ r.result.createObjectStore('ota'); }; r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; }); }
+  function get(db){ return new Promise(function(res, rej){ var q = db.transaction('ota').objectStore('ota').get('page'); q.onsuccess = function(){ res(q.result); }; q.onerror = function(){ rej(q.error); }; }); }
+  function put(db, rec){ return new Promise(function(res, rej){ var t = db.transaction('ota', 'readwrite'); t.objectStore('ota').put(rec, 'page'); t.oncomplete = function(){ res(); }; t.onerror = function(){ rej(t.error); }; }); }
+  function buildOf(html){ var m = /window\.DINO_BUILD = (\d+)/.exec(html); return m ? +m[1] : 0; }
+  function show(html, v){ window.__OTA = v; window.DINO_BUILD = v;
+    var doc = new DOMParser().parseFromString(html, 'text/html'); document.replaceChild(document.adoptNode(doc.documentElement), document.documentElement);
+    Array.prototype.slice.call(document.querySelectorAll('script')).forEach(function(s){ var n = document.createElement('script'); if (s.src) n.src = s.getAttribute('src'); else n.textContent = s.textContent; s.replaceWith(n); }); }
+  function fail(){ document.getElementById('m').style.display = 'flex'; document.getElementById('mt').textContent = 'The update needs the internet once to finish.'; }
+  document.getElementById('retry').onclick = function(){ location.reload(); };
+  document.getElementById('old').onclick = function(){ try { localStorage.removeItem('dinoday.ota'); } catch(_){} location.reload(); };
+  var t = setTimeout(function(){ document.getElementById('m').style.display = 'flex'; }, 2500);
+  (async function(){ var db = null, rec = null;
+    try { db = await idb(); rec = await get(db); } catch(_){}
+    if (!rec || !(rec.v >= V) || !rec.html){
+      try { var r = await fetch(BASE + 'page.html?t=' + Date.now(), { cache:'no-store' }); if (!r.ok) throw 0; var html = await r.text(); if (!/<\/html>\s*$/i.test(html.trim())) throw 0;
+        rec = { v: buildOf(html) || V, html: html }; if (db) { try { await put(db, rec); } catch(_){} } }
+      catch(_){ clearTimeout(t); fail(); return; } }
+    clearTimeout(t); show(rec.html, rec.v); })();
+})();
+</script></body></html>

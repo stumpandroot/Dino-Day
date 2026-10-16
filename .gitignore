@@ -1,0 +1,5 @@
+rig/rig_frag.svg
+rig/rig_parts.json
+__pycache__/
+.claude-tmp/
+dist/

@@ -1,0 +1,75 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rex</title>
+<style>
+/* The Mac desk pet: Rex's rig in a small transparent window that floats over the desktop */
+:root{--card:#FFF8EF;--ink:#24453A;--muted:#7D867C;--coral:#EE7F62;--line:#EADFCF}
+@media (prefers-color-scheme:dark){:root{--card:#2A3248;--ink:#F1EADF;--muted:#9AA2B6;--coral:#F08D70;--line:#363F57}}
+html,body{margin:0;height:100%;background:transparent;overflow:hidden;-webkit-user-select:none;user-select:none;font:600 14px "Nunito",ui-rounded,system-ui,sans-serif}
+#petStage{position:absolute;inset:0}
+#pet{position:absolute;left:50%;bottom:16px;width:150px;margin-left:-75px;cursor:grab;transform-origin:50% 0}
+#pet.drag{cursor:grabbing}
+#rexSvg{display:block;width:100%;height:auto;overflow:visible}
+.shadow{position:absolute;left:50%;bottom:9px;width:96px;height:14px;margin-left:-44px;border-radius:50%;background:radial-gradient(closest-side,rgba(25,20,35,.35),rgba(25,20,35,0));transition:opacity .15s}
+.lifted .shadow{opacity:0}
+.bub{position:absolute;left:50%;top:10px;width:250px;margin-left:-125px;background:var(--card);color:var(--ink);border-radius:18px;padding:10px 13px;box-shadow:0 6px 20px rgba(0,0,0,.18);opacity:0;transform:translateY(6px) scale(.96);transition:opacity .18s,transform .18s;pointer-events:none}
+.bub.on{opacity:1;transform:none;pointer-events:auto}
+.bub::after{content:"";position:absolute;left:50%;bottom:-7px;width:14px;height:14px;margin-left:-7px;background:var(--card);transform:rotate(45deg);border-radius:3px}
+.bub .lbl{font:800 10px ui-rounded,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.bub .t{font-weight:700;line-height:1.3}
+.bub .row{display:flex;gap:8px;margin-top:8px}
+.bub button{font:800 12px ui-rounded,system-ui,sans-serif;border:0;background:var(--line);color:var(--ink);border-radius:999px;padding:6px 13px;cursor:pointer}
+.bub button.go{background:var(--coral);color:#fff}
+.hint{position:absolute;left:0;right:0;bottom:0;text-align:center;font:700 11px ui-rounded,system-ui,sans-serif;color:rgba(36,69,58,.55);opacity:0;transition:opacity .2s}
+#petStage:hover .hint{opacity:1}
+</style></head>
+<body>
+<div id="petStage">
+  <div class="bub" id="bub"><div class="lbl" id="bubL">Up next</div><div class="t" id="bubT"></div><div class="row" id="bubR"></div></div>
+  <div class="shadow"></div>
+  <div id="pet"><svg id="rexSvg" viewBox="0 0 536 688" aria-hidden="true"><g id="flip"><g id="rexHit">__RIG__</g></g></svg></div>
+  <div class="hint">Drag me · double-click to open</div>
+</div>
+<!--RIG_ENGINE-->
+<script>
+const D = window.desk ? window.desk.pet : { menu(){}, ready(){}, open(){}, dragStart(){}, dragEnd(){}, toggle(){}, onState(){}, onSay(){}, onMode(){} };
+const R = window.RexRig, pet = document.getElementById('pet'), stage = document.getElementById("petStage");
+const bub = document.getElementById('bub'), bubT = document.getElementById('bubT'), bubL = document.getElementById('bubL'), bubR = document.getElementById('bubR');
+let state = { next:null, asleep:false }, dragging = false, quiet = 0, bubTimer = 0;
+document.getElementById('shadow') && document.getElementById('shadow').setAttribute('display', 'none');   // the page draws its own soft shadow
+// ---- bubble ----
+function showBub(ms){ bub.classList.add('on'); clearTimeout(bubTimer); if (ms) bubTimer = setTimeout(() => bub.classList.remove('on'), ms); }
+function btn(label, go, fn){ const b = document.createElement('button'); b.textContent = label; if (go) b.className = 'go'; b.onclick = fn; bubR.appendChild(b); }
+function paintNext(){ bubR.innerHTML = '';
+  if (!state.next){ bubL.textContent = 'All clear'; bubT.textContent = 'Nothing waiting. Enjoy the quiet.'; return; }
+  bubL.textContent = state.next.label || 'Up next'; bubT.textContent = state.next.t;
+  btn('Done', true, () => { D.toggle(state.next.id); cheer(); }); btn('Open', false, () => D.open()); }
+function cheer(){ bub.classList.remove('on'); R.face('excited', 1600); R.hop(560); R.hearts(4); }
+// ---- life on the desk: his idle breaths come from the rig; now and then he does something ----
+const IDLE = ['Look around', 'Turn around', 'Wave', 'Think', 'Turn around', 'Read'];
+setInterval(() => { if (dragging || state.asleep || R.act || bub.classList.contains('on')) return; quiet++;
+  if (Math.random() < .35){ const a = IDLE[Math.floor(Math.random()*IDLE.length)]; R.action(a); if (a === 'Read') setTimeout(() => R.stopReading(), 15000 + Math.random()*20000); } }, 9000);
+stage.addEventListener('mouseenter', () => { quiet = 0; if (!dragging){ paintNext(); showBub(0); } });
+stage.addEventListener('mouseleave', () => { bubTimer = setTimeout(() => bub.classList.remove('on'), 1200); });
+// ---- carry: the window follows the cursor; Rex dangles and swings with how fast it moves ----
+let lastX = 0, lastT = 0, vx = 0, ang = 0, av = 0;
+pet.addEventListener('mousedown', e => { if (e.button !== 0) return; dragging = true; pet.classList.add('drag'); stage.classList.add('lifted'); bub.classList.remove('on');
+  pet.style.transformOrigin = `${e.offsetX}px ${e.offsetY}px`; lastX = window.screenX; lastT = performance.now(); R.pickUp(); D.dragStart(); });
+addEventListener('mouseup', () => { if (!dragging) return; dragging = false; pet.classList.remove('drag'); D.dragEnd(); R.drop(); setTimeout(() => { stage.classList.remove('lifted'); R.land(900); }, 120); });
+pet.addEventListener('dblclick', () => D.open());
+(function swing(){ const now = performance.now(), dt = Math.max(.008, (now - lastT)/1000);
+  if (dragging){ vx = vx*.6 + ((window.screenX - lastX)/dt)*.4; lastX = window.screenX; } else vx *= .8; lastT = now;
+  const tgt = dragging ? Math.max(-40, Math.min(40, -vx*.035)) : 0; av += ((tgt - ang)*60 - av*7)*dt; ang += av*dt;
+  pet.style.transform = Math.abs(ang) > .05 ? `rotate(${ang.toFixed(2)}deg)` : ''; if (dragging) R.swing(ang*.9);
+  requestAnimationFrame(swing); })();
+// ---- messages from the app ----
+D.onState(st => { const was = state.asleep; state = Object.assign(state, st || {}); if (was !== state.asleep) R.sleep(!!state.asleep); if (bub.classList.contains('on')) paintNext(); });
+D.onMode && D.onMode(m => { if (m === 'desk' && !dragging){ R.hop(480); setTimeout(() => R.action('Wave'), 450); } });
+D.onSay((text, opts) => { bubL.textContent = opts.label || 'Rex'; bubT.textContent = text; bubR.innerHTML = '';
+  if (opts.taskId){ btn('Done', true, () => { D.toggle(opts.taskId); cheer(); }); btn('Open', false, () => D.open()); } else btn('Okay', false, () => bub.classList.remove('on'));
+  showBub(opts.ms || 20000); if (!dragging && !state.asleep) R.action('Wave'); });
+setTimeout(() => { R.hop(480); D.ready(); }, 300);
+
+// right-click (or Control-click) Rex for Open, Hide Rex, and Quit
+addEventListener('contextmenu', e => { e.preventDefault(); D.menu && D.menu(); });
+</script>
+</body></html>

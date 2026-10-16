@@ -1,0 +1,61 @@
+# Builds "Dino Day.app" for Apple Silicon Macs and attaches it to a GitHub release.
+# Runs on every push to rex-rig-app or main that changes the app, on a "mac-v*" tag,
+# or from Actions > Mac release > Run workflow. Each run makes release mac-v1.0.<run number>.
+name: Mac release
+
+on:
+  push:
+    branches: [rex-rig-app, main]
+    paths: ['mac/**', 'src/**', 'rig/**', 'build.py', '.github/workflows/mac-release.yml']
+    tags: ['mac-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (blank: mac-v1.0.<run number>)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build the page
+        run: |
+          python3 build.py
+          mkdir -p mac/www
+          cp dist/www/* mac/www/
+
+      - name: Package the app
+        working-directory: mac
+        run: |
+          npm install --no-audit --no-fund
+          iconutil -c icns icon.iconset -o icon.icns
+          npx @electron/packager . "Dino Day" --platform=darwin --arch=arm64 --icon=icon.icns --overwrite --out=dist \
+            --app-bundle-id=co.stumpandroot.dinoday.mac --app-category-type=public.app-category.productivity
+          APP="dist/Dino Day-darwin-arm64/Dino Day.app"
+          codesign --force --deep --sign - "$APP"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "../Dino-Day-mac.zip"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || format('mac-v1.0.{0}', github.run_number) }}
+        run: |
+          NOTES="Dino Day for Mac (Apple Silicon). Download Dino-Day-mac.zip, unzip it, and drag Dino Day.app into Applications. First launch: open it once, then go to System Settings > Privacy & Security and click Open Anyway."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Dino-Day-mac.zip --clobber
+          else
+            gh release create "$TAG" Dino-Day-mac.zip --title "Dino Day for Mac ($TAG)" --notes "$NOTES" --target "$GITHUB_SHA" --latest
+          fi
