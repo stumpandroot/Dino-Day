@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1792109764; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1792166056; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1032,6 +1032,8 @@ a.dchip{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .dchip.ai.claude{background:#F8E2D6;color:#9A4A2E}.dchip.ai.gpt{background:#DDEEE6;color:#2D5E4C}
 .dhint{flex-basis:100%;font-size:12px;color:var(--muted);margin-top:2px}
 @media (pointer:coarse){.dlinkadd input{font-size:16px}}
+
+.mutebtn[aria-pressed=true]{color:var(--coral)}
 </style>
 </head>
 <body>
@@ -2021,6 +2023,8 @@ function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){
 
 /* ---------- icons ---------- */
 const IC = {
+  vol:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke-width="1.6"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/></svg>',
+  volX:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke-width="1.6"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
   house:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.2 11.2 12 4l8.8 7.2a1 1 0 0 1-.6 1.8H19v6.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5h-4V21H6.5A1.5 1.5 0 0 1 5 19.5V13h-1.2a1 1 0 0 1-.6-1.8z"/></svg>',
   starO:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
   person:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.2c0-4 3.6-6.7 8-6.7s8 2.7 8 6.7c0 .5-.4.8-.8.8H4.8c-.4 0-.8-.3-.8-.8z"/></svg>',
@@ -2779,6 +2783,9 @@ const ambient = (() => { let ctx = null, nodes = [], timers = [], cur = null;
   }
   return { start, stop }; })();
 
+// one switch for every sound in the app: chimes, Rex's noises, and the focus background sound
+function setSound(on){ S.sound = !!on; save(); if (!on){ ambient.stop(); try { SND.ctx && SND.ctx.suspend(); } catch(_){} } else { try { SND.ctx && SND.ctx.resume(); } catch(_){} if (session && !session.over) ambient.start(S.ambient); SFX.pop && SFX.pop(); }
+  render(); toast(on ? 'Sounds on' : 'Muted. Tap the speaker to turn sounds back on.'); }
 function removeTask(t){ touch(); const i = S.tasks.indexOf(t); S.tasks.splice(i, 1); if (focusId === t.id) focusId = null; SFX.del(); save(); render();
   snack(`Deleted "${t.t}"`, () => { S.tasks.splice(i, 0, t); }); bus.emit('task_deleted', t); }
 function celebrate(){ if (S.allDoneDay === today()) return; S.allDoneDay = today(); S.pendingKeep = true; save(); SFX.done();
@@ -2791,7 +2798,7 @@ function startSession(t){ if (!t) return; touch(); const len = sessLen(t); focus
 function endSession(stretch){ if (!session) return; session = null; ambient.stop(); rex.reading = false; rex.sitting = 0; clearProp('book'); render();
   if (stretch && S.habits.stretch) setTimeout(() => rex.say('Stretch with me?', 3000, [['Okay', () => { rex.hop = 1; rex.say('Reach up high…', 1600); }], ['Not now', null, true]]), 1600); }
 function sessionTick(){ if (!session) return; const left = session.end - Date.now(), el = $('#sTime'), ring = $('#ringFill');
-  if (left <= 0 && !session.over){ session.over = true; SFX.session(); render(); rex.hop = 1; rex.say(session.len <= 5 ? 'Five minutes! You started, and that\'s the hard part.' : `${session.len} minutes! Nice focus.`, 3400); return; }
+  if (left <= 0 && !session.over){ session.over = true; ambient.stop(); SFX.session(); render(); rex.hop = 1; rex.say(session.len <= 5 ? 'Five minutes! You started, and that\'s the hard part.' : `${session.len} minutes! Nice focus.`, 3400); return; }
   if (el) el.textContent = session.over ? '0:00' : `${Math.floor(left/60e3)}:${pad(Math.floor(left/1000)%60)}`;
   if (ring){ const f = Math.max(0, left)/(session.len*60e3); ring.style.strokeDashoffset = String(113 * (1 - f)); } }
 setInterval(sessionTick, 500);
@@ -3569,7 +3576,7 @@ function render(){
     const later = S.tasks.filter(t => /^\d{4}/.test(t.when)).sort((a, b) => a.when < b.when ? -1 : 1).concat(S.tasks.filter(t => t.when === 'someday'));
     sc.innerHTML = `<div class="dk">
       <header class="dkbar">${logoHTML()}<div class="dkseg" role="tablist" aria-label="View">${[['today','Today'],['projects','Projects']].map(([k, l]) => `<button role="tab" data-pjmode="${k}" aria-selected="${dkMode === k}">${l}</button>`).join('')}</div>
-        <span class="thr">${dkMode === 'today' && open.length > 1 && !S.asleep && !picking && !nudges.some(n => n.ask && /first today/i.test(n.text)) ? `<button class="pill ghost mint sm" data-pickone>${focusId && byId(focusId) && !byId(focusId).done ? 'Pick again' : 'Pick one'}</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
+        <span class="thr">${dkMode === 'today' && open.length > 1 && !S.asleep && !picking && !nudges.some(n => n.ask && /first today/i.test(n.text)) ? `<button class="pill ghost mint sm" data-pickone>${focusId && byId(focusId) && !byId(focusId).done ? 'Pick again' : 'Pick one'}</button>` : ''}<button class="avatar mutebtn" data-mute aria-pressed="${!S.sound}" aria-label="${S.sound ? 'Mute sounds' : 'Turn sounds on'}" title="${S.sound ? 'Mute' : 'Sounds off'}">${S.sound ? IC.vol : IC.volX}</button><button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></header>
       ${dkMode === 'projects' ? `<div class="dkleft pjleft">${projectsLeft()}</div><div class="dkright"><div class="dkcard" id="dkCard" aria-hidden="true"></div>${projectsRight()}</div></div>` : `
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
@@ -3598,7 +3605,7 @@ function render(){
   } else if (tab === 'today'){
     const open = openToday(), done = todays().filter(t => t.done).sort((a, b) => (b.doneAt||0) - (a.doneAt||0));
     sc.innerHTML = `
-      <div class="tophead">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></div>
+      <div class="tophead">${logoHTML()}<span class="thr">${open.length > 1 ? `<button class="pill ghost mint sm" data-pickone>Pick one</button>` : ''}<button class="avatar mutebtn" data-mute aria-pressed="${!S.sound}" aria-label="${S.sound ? 'Mute sounds' : 'Turn sounds on'}" title="${S.sound ? 'Mute' : 'Sounds off'}">${S.sound ? IC.vol : IC.volX}</button><button class="avatar" data-tab="settings" aria-label="Profile and settings">${IC.personO}</button></span></div>
       <div class="hello compact"><div><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div></div>
       ${nudgeCards()}
       ${focusCard()}
@@ -3762,6 +3769,7 @@ $('#scroll').addEventListener('click', e => {
   if (q('[data-restore]')){ restore(); return; }
   if (q('[data-stats]')){ tab = 'stats'; render(); $('#scroll').scrollTop = 0; return; }
   if ((el = q('[data-dktab]'))){ dkTab = el.dataset.dktab; render(); return; }
+  if (q('[data-mute]')){ setSound(!S.sound); return; }
   if ((el = q('.hello [data-tab], .tophead [data-tab], .dkbar [data-tab], .dklater [data-tab], .dkback'))){ tab = el.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
   if (q('[data-daybtn]')){ if (S.asleep) wake(); else if (openToday().length){ tab = 'today'; wrapUp(true); } else goToBed(); render(); return; }
   if ((el = q('[data-sim]'))){ const s = el.dataset.sim;
@@ -3776,6 +3784,7 @@ $('#scroll').addEventListener('click', e => {
   if (st){ let v = st.dataset.val; if (v === 'true') v = true; else if (v === 'false') v = false; else if (/^\d+$/.test(v)) v = +v; const key = st.dataset.set;
     const prevPlace = S.place; if (key.includes('.')){ const [a, b] = key.split('.'); S[a][b] = v; } else S[key] = v;
     if (key === 'lockDay'){ preview = null; drawScene(); }
+    if (key === 'sound'){ setSound(v); return; }
     if (key === 'place'){ S.place = prevPlace; if (v !== prevPlace) travelTo(v); }
     if (key === 'suggest') pvPop = true; SFX.pop(); save(); render(); if (['chat','suggest','place'].includes(key)) pvReact(key); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
