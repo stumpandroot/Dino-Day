@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>window.DINO_ACCOUNT = { url: "https://qwwvrvjdvfzfnkhmbdla.supabase.co", anonKey: "sb_publishable__D-Nsgqkr3GJJv6FyW86ew_HBd2TMj2" };
-window.DINO_BUILD = 1792075018; window.DINO_PACKV = "rig1";
+window.DINO_BUILD = 1792109764; window.DINO_PACKV = "rig1";
 window.IS_APP = !!((window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) || location.protocol === "app:");</script>
 <script src="supabase.js"></script>
 <title>Dino Day App</title>
@@ -1015,6 +1015,23 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .tlmini .tle{top:26px;line-height:1}
 .tlmini .tlic{box-shadow:0 0 0 1.5px var(--line)}.tlmini .nowm{z-index:2}
 .app.desk .tlmini .nowm{width:9px;height:9px;top:5px;bottom:auto;margin:4px 0 0 -4.5px}
+
+/* links on tasks */
+.tlinks{display:inline-flex;flex-wrap:wrap;gap:6px}
+.lchip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;font:600 12px/1.3 var(--display);text-decoration:none;color:var(--olive-ink);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);transition:transform .15s,background-color .15s;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lchip svg{flex:none}.lchip:hover{transform:translateY(-1px)}.lchip:active{transform:scale(.95)}
+.lchip.claude{background:#F8E2D6;color:#9A4A2E}.lchip.gpt{background:#DDEEE6;color:#2D5E4C}.lchip.mail{background:#FBE1E1;color:#9A3B3B}.lchip.doc{background:#E1ECF4;color:#2F5677}
+.app[data-phase=night] .lchip{background:var(--chip);color:var(--text)}
+.fcard .tlinks.fc{margin-top:6px}.fmeta .tlinks.fc{margin:0}
+.dlink{display:inline-flex;align-items:center;gap:2px}.dlink .lchip{padding:6px 11px 6px 9px;font-size:13px}
+.dx2{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:var(--muted);font:600 15px/1 var(--body)}.dx2:hover{background:var(--chip);color:var(--text)}
+.dlinkadd{display:inline-flex;gap:6px;align-items:center;flex:1 1 240px;min-width:0}
+.dlinkadd input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font:14px var(--body);background:var(--card);color:var(--text)}
+.dlinkadd input:focus{outline:none;border-color:var(--olive)}
+a.dchip{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.dchip.ai.claude{background:#F8E2D6;color:#9A4A2E}.dchip.ai.gpt{background:#DDEEE6;color:#2D5E4C}
+.dhint{flex-basis:100%;font-size:12px;color:var(--muted);margin-top:2px}
+@media (pointer:coarse){.dlinkadd input{font-size:16px}}
 </style>
 </head>
 <body>
@@ -2916,7 +2933,7 @@ function meta(t){ const c = CAT[t.cat]; const bits = []; const frog = S.frogDay 
   if (t.repeat) bits.push(REPEAT_LABEL[t.repeat]);
   if (t.eff && !frog) bits.push(EFF[t.eff]);
   if (t.steps.length) bits.push(`${t.steps.filter(s => s.done).length} of ${t.steps.length} steps`);
-  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}" ${c.style || ''}>${c.icon}${esc(c.label)}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : ''); }
+  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}" ${c.style || ''}>${c.icon}${esc(c.label)}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : '') + linkChips(t); }
 function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.steps.length ? t.steps.filter(s => s.done).length / t.steps.length : 0;
   return `<div class="trow ${openId === t.id ? 'open' : ''}" data-id="${t.id}" data-flip="t${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
   <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0" aria-expanded="${openId === t.id}">
@@ -2945,8 +2962,8 @@ function focusCard(){
   const open = fcOpen || inS || panel;
   const fc = CAT[f.cat], L0 = sessLen(f);
   if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div>${isDesk() ? pose('wave', 44, 'fcpose') : ''}<span class="chev">${IC.chev}</span></button>
-    <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
-  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${isDesk() ? pose(inS ? 'read' : 'wave', 44, 'fcpose') : ''}${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
+    <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}${linkChips(f, 'fc')}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
+  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}${linkChips(f, 'fc')}</div>${isDesk() ? pose(inS ? 'read' : 'wave', 44, 'fcpose') : ''}${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
     ${f.steps.length ? `<div class="steps">${f.steps.map((s, i) => `<button class="step ${s.done?'done':''} ${s === next ? 'next' : ''}" data-step="${i}"><span class="sb">${s.done ? IC.check : ''}</span>${esc(s.t)}</button>`).join('')}</div>` : ''}
     ${body}</div>`; }
 function timeline(){ if (S.timeline === false) return '';
@@ -3117,6 +3134,51 @@ document.addEventListener('submit', e => { const f = e.target; if (!f.matches('[
   else { const p = projOf(f.dataset.pjphadd); if (!p) return; const ph = { id:pjid(), name:v, tasks:[] }; p.phases.push(ph); pjOpenPh[ph.id] = true; }
   save(); render(); SFX.add(); const again = document.querySelector(f.dataset.pjadd ? `[data-pjadd="${f.dataset.pjadd}"] input` : `[data-pjphadd="${f.dataset.pjphadd}"] input`); if (again) again.focus(); }, true);
 
+/* ================= links on tasks, and "ask AI" =================
+   A task can carry links: a Claude or ChatGPT chat, a Google Doc, a Gmail draft, any website. They show as chips on the task
+   and on the Up next card; tapping one opens it (on iPhone, Claude and ChatGPT links open in their apps when installed).
+   Paste a link while adding a task and it becomes a link. "Ask Claude" and "Ask ChatGPT" start a new chat about the task. */
+const L_IC = {
+  claude:'<svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M12 2.5l1.6 6.2 5.9-2.6-4.1 5 5.2 3-6.3.2 1.5 6.2-3.8-5.1-3.8 5.1 1.5-6.2-6.3-.2 5.2-3-4.1-5 5.9 2.6z"/></svg>',
+  gpt:'<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" width="13" height="13"><rect x="3" y="5.5" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 7.5l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" width="13" height="13"><path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  web:'<svg viewBox="0 0 24 24" width="13" height="13"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' };
+function normUrl(s){ s = String(s || '').trim().replace(/[),.;!?]+$/, ''); if (!s) return null; if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s;
+  try { const u = new URL(s); return /^(https?|mailto):$/.test(u.protocol) ? u.href : null; } catch(_){ return null; } }
+function linkInfo(href){ let u; try { u = new URL(href); } catch(_){ return { name:'Link', ic:'web', k:'web' }; }
+  const h = u.hostname.replace(/^www\./, ''), p = u.pathname;
+  if (h === 'claude.ai') return { name: /\/project\//.test(p) ? 'Claude project' : /\/artifact|\/public\//.test(p) ? 'Claude artifact' : 'Claude chat', ic:'claude', k:'claude' };
+  if (h === 'chatgpt.com' || h === 'chat.openai.com') return { name: /\/g\/|\/project/.test(p) ? 'ChatGPT project' : 'ChatGPT chat', ic:'gpt', k:'gpt' };
+  if (u.protocol === 'mailto:' || h === 'mail.google.com' || /outlook\.(live|office)\.com/.test(h)) return { name:'Email', ic:'mail', k:'mail' };
+  if (h === 'docs.google.com') return { name: /spreadsheets/.test(p) ? 'Google Sheet' : /presentation/.test(p) ? 'Google Slides' : /forms/.test(p) ? 'Google Form' : 'Google Doc', ic:'doc', k:'doc' };
+  if (h === 'drive.google.com') return { name:'Drive file', ic:'doc', k:'doc' };
+  if (/notion\.(so|site)$/.test(h)) return { name:'Notion', ic:'doc', k:'doc' };
+  if (/dropbox\.com$/.test(h)) return { name:'Dropbox', ic:'doc', k:'doc' };
+  if (/figma\.com$/.test(h)) return { name:'Figma', ic:'doc', k:'doc' };
+  const base = h.split('.').slice(-2, -1)[0] || h; return { name: base.charAt(0).toUpperCase() + base.slice(1), ic:'web', k:'web' }; }
+function linkChips(t, cls = ''){ const L = t.links || []; if (!L.length) return '';
+  return `<span class="tlinks ${cls}">${L.map(x => { const i = linkInfo(x.u); return `<a class="lchip ${i.k}" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer" title="${esc(x.u)}">${L_IC[i.ic]}${esc(x.l || i.name)}</a>`; }).join('')}</span>`; }
+// pull links out of what you typed: "Send proposal https://claude.ai/chat/…" → task "Send proposal" with a Claude chat link
+function splitLinks(text){ const links = []; const rest = text.replace(/\b((?:https?:\/\/|www\.)[^\s<>"]+|(?:claude\.ai|chatgpt\.com|docs\.google\.com|mail\.google\.com)\/[^\s<>"]*)/gi, m => { const u = normUrl(m); if (u) { links.push({ u }); return ' '; } return m; });
+  return { text: rest.replace(/\s{2,}/g, ' ').trim(), links }; }
+function aiPrompt(t){ const steps = (t.steps || []).filter(s => !s.done).map(s => '- ' + s.t).join('\n');
+  return `Help me get this done: ${t.t}` + (steps ? `\n\nSteps I have so far:\n${steps}` : '') + `\n\nAsk me anything you need, then help me finish it.`; }
+const AI_URL = { claude: q => 'https://claude.ai/new?q=' + encodeURIComponent(q), gpt: q => 'https://chatgpt.com/?q=' + encodeURIComponent(q) };
+function linksRowHTML(t){ const L = t.links || [];
+  return `<div class="drow"><span class="dl">Links</span><div class="dchips">${L.map((x, i) => { const n = linkInfo(x.u); return `<span class="dlink"><a class="lchip ${n.k}" href="${esc(x.u)}" target="_blank" rel="noopener noreferrer" title="${esc(x.u)}">${L_IC[n.ic]}${esc(x.l || n.name)}</a><button type="button" class="dx2" data-dlinkdel="${i}" aria-label="Remove link">×</button></span>`; }).join('')}
+      <span class="dlinkadd"><input type="url" inputmode="url" id="dLinkIn" placeholder="Paste a link: chat, doc, email…" aria-label="Add a link" autocomplete="off"><button type="button" class="dchip" data-dlinkadd>${IC.plus}Add</button></span></div></div>
+    <div class="drow"><span class="dl">Ask AI</span><div class="dchips"><a class="dchip ai claude" href="${AI_URL.claude(aiPrompt(t))}" target="_blank" rel="noopener noreferrer">${L_IC.claude}Ask Claude</a><a class="dchip ai gpt" href="${AI_URL.gpt(aiPrompt(t))}" target="_blank" rel="noopener noreferrer">${L_IC.gpt}Ask ChatGPT</a><span class="dhint">Starts a new chat about this task. Paste that chat's link above to come back to it.</span></div></div>`; }
+function addLinkFromInput(t){ const i = document.getElementById('dLinkIn'); if (!i) return; const u = normUrl(i.value); if (!u){ if (i.value.trim()) toast('That doesn’t look like a link'); return; }
+  t.links = t.links || []; if (!t.links.some(x => x.u === u)) t.links.push({ u }); touch(); save(); render(); SFX.tick && SFX.tick(); toast(`Added ${linkInfo(u).name}`); }
+$('#scroll').addEventListener('click', e => { const det = e.target.closest('.tdet'); if (!det) return; const t = byId(+det.dataset.det); if (!t) return; let el;
+  if ((el = e.target.closest('[data-dlinkdel]'))){ e.stopImmediatePropagation(); t.links.splice(+el.dataset.dlinkdel, 1); touch(); save(); render(); return; }
+  if (e.target.closest('[data-dlinkadd]')){ e.stopImmediatePropagation(); addLinkFromInput(t); return; }
+  if (e.target.closest('a[href]')) e.stopImmediatePropagation(); }, true);
+$('#scroll').addEventListener('keydown', e => { if (e.target.id === 'dLinkIn' && e.key === 'Enter'){ e.preventDefault(); const det = e.target.closest('.tdet'), t = det && byId(+det.dataset.det); if (t) addLinkFromInput(t); } });
+// a pasted link in the detail panel adds itself
+$('#scroll').addEventListener('paste', e => { if (e.target.id !== 'dLinkIn') return; setTimeout(() => { const det = e.target.closest('.tdet'), t = det && byId(+det.dataset.det); if (t && normUrl(e.target.value)) addLinkFromInput(t); }, 0); });
+
 /* ================= task details, custom categories, drag to reorder, motion =================
    Clicking a task opens its details in place: category (with your own), when, time, size, importance, project, repeat.
    Every list change animates: rows slide to their new spots (FLIP), new rows pop in, views slide. */
@@ -3154,6 +3216,7 @@ function detailHTML(t){ const chip = (attr, on, label, extra = '') => `<button t
     <div class="drow"><span class="dl">Size</span><div class="dchips">${SIZES.map(([m, l]) => chip(`data-dsize="${m}"`, t.est === m, l)).join('')}${chip('data-dhigh', !!t.high, '<b class="imp">!</b>Important', 'class="dchip hi"')}</div></div>
     <div class="drow two"><span class="dl">Project</span><div class="dchips"><span class="dsel"><select data-dproj aria-label="Project"><option value="">None</option>${S.projects.filter(q => !projDone(q) || q.id === t.proj).map(q => `<option value="${q.id}" ${p && p.id === q.id ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select>${IC.chev}</span>
       <span class="dl in">Repeat</span><span class="dsel"><select data-drep aria-label="Repeat"><option value="">Never</option>${Object.entries(REPEAT_LABEL).map(([k, l]) => `<option value="${k}" ${t.repeat === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${IC.chev}</span></div></div>
+    ${linksRowHTML(t)}
     <div class="dacts"><button type="button" class="pill coral sm" data-dfocus>${IC.play}Work on this</button><button type="button" class="pill ghost sm" data-dsteps>${t.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><span></span><button type="button" class="link danger" data-ddel>Delete</button><button type="button" class="link" data-dclose>Done</button></div>
   </div>`; }
 
@@ -3255,7 +3318,7 @@ function endGesture(cancel){ const g = gest; gest = null; if (!g) return; clearT
       if (!cancel && n !== i0){ const list = openToday(), [m] = list.splice(i0, 1); list.splice(n, 0, m); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); touch(); save(); }
       _render(); SFX.pop && SFX.pop(); }, 220); } }
 $('#scroll').addEventListener('pointerdown', e => { if (gest) endGesture(true);
-  const row = e.target.closest('.task'); if (!row || !row.closest('#list') || e.target.closest('button,input,select,.tdet')) return;
+  const row = e.target.closest('.task'); if (!row || !row.closest('#list') || e.target.closest('button,a,input,select,.tdet')) return;
   const grip = e.target.closest('.grip'), touchy = e.pointerType !== 'mouse';
   if (!grip && !touchy) return;   // a mouse click opens the details; reordering with a mouse uses the grip
   const wrap = row.closest('.trow'); gest = { row, wrap, cap:grip || row, id:+row.dataset.row, pid:e.pointerId, x:e.clientX, y:e.clientY, lastY:e.clientY, dx:0, mode:null, touchy };
@@ -3511,7 +3574,7 @@ function render(){
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
         ${S.asleep ? '' : focusCard()}
-        <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+        <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="600" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
         <div class="qprev" id="qPrev"></div>
         <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
           <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
@@ -3539,7 +3602,7 @@ function render(){
       <div class="hello compact"><div><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div></div>
       ${nudgeCards()}
       ${focusCard()}
-      <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+      <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="600" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
       <div class="qprev" id="qPrev"></div>
       <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
         <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
@@ -3716,7 +3779,7 @@ $('#scroll').addEventListener('click', e => {
     if (key === 'place'){ S.place = prevPlace; if (v !== prevPlace) travelTo(v); }
     if (key === 'suggest') pvPop = true; SFX.pop(); save(); render(); if (['chat','suggest','place'].includes(key)) pvReact(key); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
-  const r = q('[data-row]'); if (r && !q('button') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
+  const r = q('[data-row]'); if (r && !q('button,a') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
 });
 $('#scroll').addEventListener('input', e => {
   if (e.target.id === 'spice'){ S.spice = +e.target.value; save(); const sv = document.querySelector('.spv'); if (sv) sv.textContent = SPICE[S.spice-1][0]; return; }
@@ -3729,9 +3792,10 @@ $('#scroll').addEventListener('focusin', e => { if (e.target.id === 'addInput' &
 document.addEventListener('pointerdown', e => { if (addOpen && !e.target.closest('#addForm,#addOpts')){ const v = $('#addInput'); if (!v || !v.value.trim()){ addOpen = false; $('#addOpts') && $('#addOpts').classList.remove('on'); } } });
 $('#scroll').addEventListener('submit', e => { e.preventDefault();
   if (e.target.id === 'mhForm'){ const v = $('#mhIn').value.trim(); if (!v) return; S.myHabits = S.myHabits || []; S.myHabits.push({ id:Date.now(), n:v.slice(0,40), log:{} }); save(); render(); setTimeout(() => $('#mhIn') && $('#mhIn').focus(), 0); return; }
-  const inp = $('#addInput'), v = inp.value.trim(); if (!v) return; const q = parseQuick(v); if (!q.text){ toast('Add a few words for the task'); return; }
+  const inp = $('#addInput'), v0 = inp.value.trim(); if (!v0) return; const sl = splitLinks(v0), v = sl.text || (sl.links.length ? 'Open ' + linkInfo(sl.links[0].u).name : ''); const q = parseQuick(v); if (!q.text){ toast('Add a few words for the task'); return; }
   const w0 = q.when || (addWhen === 'tomorrow' ? tomorrow() : addWhen), rp = q.repeat || addRepeat;
   const t = addTask({ t:q.text.slice(0,90), est:q.est, when:w0, repeat:rp, dow: q.dow ?? (rp === 'weekly' ? new Date().getDay() : undefined), high:q.high, startAt: startAtFor(w0 === 'someday' ? 'today' : w0, q.at) });
+  if (sl.links.length) t.links = sl.links;
   if (t.repeat && !isDue(t) && t.when === 'today') t.when = 'rest';
   addRepeat = ''; if (isDesk()) addOpen = false; save(); render(); SFX.add(); touch(); const ni = $('#addInput'); ni.focus();
   if (t.when !== 'today') toast(t.when === 'someday' ? 'Saved to Someday' : t.when === 'rest' ? `Repeats ${REPEAT_LABEL[t.repeat].toLowerCase()}` : `Saved for ${labelDay(t.when)}`);

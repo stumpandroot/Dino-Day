@@ -1015,6 +1015,23 @@ button:active:not(:disabled),.dchip:active{transform:scale(.92)}
 .tlmini .tle{top:26px;line-height:1}
 .tlmini .tlic{box-shadow:0 0 0 1.5px var(--line)}.tlmini .nowm{z-index:2}
 .app.desk .tlmini .nowm{width:9px;height:9px;top:5px;bottom:auto;margin:4px 0 0 -4.5px}
+
+/* links on tasks */
+.tlinks{display:inline-flex;flex-wrap:wrap;gap:6px}
+.lchip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;font:600 12px/1.3 var(--display);text-decoration:none;color:var(--olive-ink);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);transition:transform .15s,background-color .15s;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lchip svg{flex:none}.lchip:hover{transform:translateY(-1px)}.lchip:active{transform:scale(.95)}
+.lchip.claude{background:#F8E2D6;color:#9A4A2E}.lchip.gpt{background:#DDEEE6;color:#2D5E4C}.lchip.mail{background:#FBE1E1;color:#9A3B3B}.lchip.doc{background:#E1ECF4;color:#2F5677}
+.app[data-phase=night] .lchip{background:var(--chip);color:var(--text)}
+.fcard .tlinks.fc{margin-top:6px}.fmeta .tlinks.fc{margin:0}
+.dlink{display:inline-flex;align-items:center;gap:2px}.dlink .lchip{padding:6px 11px 6px 9px;font-size:13px}
+.dx2{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:var(--muted);font:600 15px/1 var(--body)}.dx2:hover{background:var(--chip);color:var(--text)}
+.dlinkadd{display:inline-flex;gap:6px;align-items:center;flex:1 1 240px;min-width:0}
+.dlinkadd input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font:14px var(--body);background:var(--card);color:var(--text)}
+.dlinkadd input:focus{outline:none;border-color:var(--olive)}
+a.dchip{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.dchip.ai.claude{background:#F8E2D6;color:#9A4A2E}.dchip.ai.gpt{background:#DDEEE6;color:#2D5E4C}
+.dhint{flex-basis:100%;font-size:12px;color:var(--muted);margin-top:2px}
+@media (pointer:coarse){.dlinkadd input{font-size:16px}}
 </style>
 </head>
 <body>
@@ -1919,7 +1936,7 @@ function meta(t){ const c = CAT[t.cat]; const bits = []; const frog = S.frogDay 
   if (t.repeat) bits.push(REPEAT_LABEL[t.repeat]);
   if (t.eff && !frog) bits.push(EFF[t.eff]);
   if (t.steps.length) bits.push(`${t.steps.filter(s => s.done).length} of ${t.steps.length} steps`);
-  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}" ${c.style || ''}>${c.icon}${esc(c.label)}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : ''); }
+  return (frog ? `<span class="frog">Today's frog</span>` : '') + (c ? `<span class="tag ${c.k}" ${c.style || ''}>${c.icon}${esc(c.label)}</span>` : '') + (t.est ? `<span class="dur">${IC.clock}${fmtDur(t.est)}</span>` : '') + (bits.length ? `<span class="mt">${esc(bits.join(' · '))}</span>` : '') + linkChips(t); }
 function row(t, opts = {}){ const c = CAT[t.cat] || CAT.self; const prog = t.steps.length ? t.steps.filter(s => s.done).length / t.steps.length : 0;
   return `<div class="trow ${openId === t.id ? 'open' : ''}" data-id="${t.id}" data-flip="t${t.id}"><div class="swbg r" aria-hidden="true">${SWIPE_LABEL[S.swipeR]||''}</div><div class="swbg l" aria-hidden="true">${SWIPE_LABEL[S.swipeL]||''}</div>
   <div class="task ${t.done?'done':''} ${t.high?'hi':''} ${focusId===t.id?'sel':''}" data-row="${t.id}" tabindex="0" aria-expanded="${openId === t.id}">
@@ -1948,8 +1965,8 @@ function focusCard(){
   const open = fcOpen || inS || panel;
   const fc = CAT[f.cat], L0 = sessLen(f);
   if (!open) return `<div class="fcard mini"><button class="fmini" data-fcopen aria-expanded="false"><div class="txt"><div class="k">${esc(why)}</div><div class="ft1">${esc(f.t)}</div></div>${isDesk() ? pose('wave', 44, 'fcpose') : ''}<span class="chev">${IC.chev}</span></button>
-    <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
-  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}</div>${isDesk() ? pose(inS ? 'read' : 'wave', 44, 'fcpose') : ''}${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
+    <div class="fmeta">${f.est ? `<span>${IC.clock}${fmtDur(f.est)}</span>` : ''}${fc ? `<span>${IC.folder}${fc.label}</span>` : ''}${f.steps.length && next ? `<span class="one">Next: ${esc(next.t)}</span>` : ''}${linkChips(f, 'fc')}<button class="pill coral go" data-act="start" aria-label="Start with Rex for ${L0} minutes">${IC.play}Start with Rex · ${L0} min</button></div></div>`;
+  return `<div class="fcard ${inS ? 'insess' : ''}"><div class="fhead"><div class="txt"><div class="k">${esc(why)}</div><div class="ft">${esc(f.t)}</div>${sub && !f.steps.length ? `<div class="hint">${esc(sub)}</div>` : (f.est || (f.startAt && f.startAt.label)) ? `<div class="hint">${esc([f.est ? fmtDur(f.est) : '', f.startAt && f.startAt.label || ''].filter(Boolean).join(' · '))}</div>` : ''}${linkChips(f, 'fc')}</div>${isDesk() ? pose(inS ? 'read' : 'wave', 44, 'fcpose') : ''}${inS ? '' : `<button class="x fold" data-fcclose aria-label="Fold">${IC.chevup}</button>`}</div>
     ${f.steps.length ? `<div class="steps">${f.steps.map((s, i) => `<button class="step ${s.done?'done':''} ${s === next ? 'next' : ''}" data-step="${i}"><span class="sb">${s.done ? IC.check : ''}</span>${esc(s.t)}</button>`).join('')}</div>` : ''}
     ${body}</div>`; }
 function timeline(){ if (S.timeline === false) return '';
@@ -1976,6 +1993,7 @@ function myHabits(){ if (!S.habitsOn) return '';
     <form class="add mh" id="mhForm"><input id="mhIn" placeholder="Add a habit, like Drink water" aria-label="New habit" maxlength="40"><button aria-label="Add habit">${IC.plus}</button></form></div>`; }
 let dkTab = 'later';
 /*__PROJECTS__*/
+/*__LINKS__*/
 /*__TASKDETAIL__*/
 /*__TRAVEL__*/
 /*__PERF__*/
@@ -2005,7 +2023,7 @@ function render(){
       <div class="dkleft">
         <div class="dkgreet"><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div>
         ${S.asleep ? '' : focusCard()}
-        <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+        <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="600" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
         <div class="qprev" id="qPrev"></div>
         <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
           <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
@@ -2033,7 +2051,7 @@ function render(){
       <div class="hello compact"><div><h1>${greet()}, ${esc(S.name)}!</h1><div class="date">${dateStr}</div></div></div>
       ${nudgeCards()}
       ${focusCard()}
-      <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="90" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
+      <form class="add" id="addForm"><input id="addInput" placeholder="Add a task" autocomplete="off" maxlength="600" aria-label="New task"><button aria-label="Add task">${IC.plus}</button></form>
       <div class="qprev" id="qPrev"></div>
       <div class="addopts ${addOpen ? 'on' : ''}" id="addOpts">
         <div class="seg" role="group" aria-label="When">${[['today','Today'],['tomorrow','Tomorrow'],['someday','Someday']].map(([v, l]) => `<button type="button" data-addwhen="${v}" aria-pressed="${addWhen===v}">${l}</button>`).join('')}</div>
@@ -2210,7 +2228,7 @@ $('#scroll').addEventListener('click', e => {
     if (key === 'place'){ S.place = prevPlace; if (v !== prevPlace) travelTo(v); }
     if (key === 'suggest') pvPop = true; SFX.pop(); save(); render(); if (['chat','suggest','place'].includes(key)) pvReact(key); return; }
   if (e.target.id === 'resetBtn'){ if (S._confirmReset){ S.tasks = sampleTasks(); S._confirmReset = false; focusId = null; save(); render(); toast('Example tasks restored'); } else { S._confirmReset = true; render(); setTimeout(() => { S._confirmReset = false; if (tab === 'settings') render(); }, 4000); } return; }
-  const r = q('[data-row]'); if (r && !q('button') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
+  const r = q('[data-row]'); if (r && !q('button,a') && !q('.grip') && Date.now() - dragEnded > 400){ openDetail(+r.dataset.row); }
 });
 $('#scroll').addEventListener('input', e => {
   if (e.target.id === 'spice'){ S.spice = +e.target.value; save(); const sv = document.querySelector('.spv'); if (sv) sv.textContent = SPICE[S.spice-1][0]; return; }
@@ -2223,9 +2241,10 @@ $('#scroll').addEventListener('focusin', e => { if (e.target.id === 'addInput' &
 document.addEventListener('pointerdown', e => { if (addOpen && !e.target.closest('#addForm,#addOpts')){ const v = $('#addInput'); if (!v || !v.value.trim()){ addOpen = false; $('#addOpts') && $('#addOpts').classList.remove('on'); } } });
 $('#scroll').addEventListener('submit', e => { e.preventDefault();
   if (e.target.id === 'mhForm'){ const v = $('#mhIn').value.trim(); if (!v) return; S.myHabits = S.myHabits || []; S.myHabits.push({ id:Date.now(), n:v.slice(0,40), log:{} }); save(); render(); setTimeout(() => $('#mhIn') && $('#mhIn').focus(), 0); return; }
-  const inp = $('#addInput'), v = inp.value.trim(); if (!v) return; const q = parseQuick(v); if (!q.text){ toast('Add a few words for the task'); return; }
+  const inp = $('#addInput'), v0 = inp.value.trim(); if (!v0) return; const sl = splitLinks(v0), v = sl.text || (sl.links.length ? 'Open ' + linkInfo(sl.links[0].u).name : ''); const q = parseQuick(v); if (!q.text){ toast('Add a few words for the task'); return; }
   const w0 = q.when || (addWhen === 'tomorrow' ? tomorrow() : addWhen), rp = q.repeat || addRepeat;
   const t = addTask({ t:q.text.slice(0,90), est:q.est, when:w0, repeat:rp, dow: q.dow ?? (rp === 'weekly' ? new Date().getDay() : undefined), high:q.high, startAt: startAtFor(w0 === 'someday' ? 'today' : w0, q.at) });
+  if (sl.links.length) t.links = sl.links;
   if (t.repeat && !isDue(t) && t.when === 'today') t.when = 'rest';
   addRepeat = ''; if (isDesk()) addOpen = false; save(); render(); SFX.add(); touch(); const ni = $('#addInput'); ni.focus();
   if (t.when !== 'today') toast(t.when === 'someday' ? 'Saved to Someday' : t.when === 'rest' ? `Repeats ${REPEAT_LABEL[t.repeat].toLowerCase()}` : `Saved for ${labelDay(t.when)}`);

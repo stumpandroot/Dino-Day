@@ -35,6 +35,7 @@ function detailHTML(t){ const chip = (attr, on, label, extra = '') => `<button t
     <div class="drow"><span class="dl">Size</span><div class="dchips">${SIZES.map(([m, l]) => chip(`data-dsize="${m}"`, t.est === m, l)).join('')}${chip('data-dhigh', !!t.high, '<b class="imp">!</b>Important', 'class="dchip hi"')}</div></div>
     <div class="drow two"><span class="dl">Project</span><div class="dchips"><span class="dsel"><select data-dproj aria-label="Project"><option value="">None</option>${S.projects.filter(q => !projDone(q) || q.id === t.proj).map(q => `<option value="${q.id}" ${p && p.id === q.id ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select>${IC.chev}</span>
       <span class="dl in">Repeat</span><span class="dsel"><select data-drep aria-label="Repeat"><option value="">Never</option>${Object.entries(REPEAT_LABEL).map(([k, l]) => `<option value="${k}" ${t.repeat === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${IC.chev}</span></div></div>
+    ${linksRowHTML(t)}
     <div class="dacts"><button type="button" class="pill coral sm" data-dfocus>${IC.play}Work on this</button><button type="button" class="pill ghost sm" data-dsteps>${t.steps.length ? 'Redo the steps' : 'Make it smaller'}</button><span></span><button type="button" class="link danger" data-ddel>Delete</button><button type="button" class="link" data-dclose>Done</button></div>
   </div>`; }
 
@@ -136,7 +137,7 @@ function endGesture(cancel){ const g = gest; gest = null; if (!g) return; clearT
       if (!cancel && n !== i0){ const list = openToday(), [m] = list.splice(i0, 1); list.splice(n, 0, m); list.forEach((t, k) => t.order = k + 1); S.planDay = today(); touch(); save(); }
       _render(); SFX.pop && SFX.pop(); }, 220); } }
 $('#scroll').addEventListener('pointerdown', e => { if (gest) endGesture(true);
-  const row = e.target.closest('.task'); if (!row || !row.closest('#list') || e.target.closest('button,input,select,.tdet')) return;
+  const row = e.target.closest('.task'); if (!row || !row.closest('#list') || e.target.closest('button,a,input,select,.tdet')) return;
   const grip = e.target.closest('.grip'), touchy = e.pointerType !== 'mouse';
   if (!grip && !touchy) return;   // a mouse click opens the details; reordering with a mouse uses the grip
   const wrap = row.closest('.trow'); gest = { row, wrap, cap:grip || row, id:+row.dataset.row, pid:e.pointerId, x:e.clientX, y:e.clientY, lastY:e.clientY, dx:0, mode:null, touchy };
